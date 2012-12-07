@@ -14,9 +14,11 @@ class Game:
 
     def process_letter_guess(self, guess):
         """docstring for process_letter_guess"""
+        for index, letter in enumerate(self.word):
+            if guess == letter: self.current_guess[index] = guess
+
         if guess in self.word:
             self.known_letters.append(guess)
-            self.current_guess = [(guess if guess == word_letter else '-') for word_letter in self.word]
             self.score += self.rules['letter_hit']
         else:
             self.missed_letters.append(guess)
@@ -35,10 +37,10 @@ class Game:
             self.score += self.rules['word_miss']
 
     def won(self):
-        self.current_guess == self.word
+        return self.current_guess == self.word
 
     def lost(self):
-        self.ended and not(self.won)
+        return self.ended and not(self.won)
 
     def to_s(self):
         """docstring for to_s"""
