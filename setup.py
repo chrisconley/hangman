@@ -65,23 +65,31 @@
 
 def score(word, guesses):
     """docstring for score"""
-    pass
+    words = [guess for guess in guesses if len(guess) == len(word)]
+    missed_words = [guess for guess in words if guess != word]
+    letters = [guess for guess in guesses if len(guess) != len(word)]
+    known_letters = [letter for letter in letters if letter in word]
+    missed_letters = [letter for letter in letters if letter not in word]
+    if len(missed_words) >= 5:
+        return 25
+    else:
+        return (len(missed_letters) * 1) + (len(missed_words) * 1)
 
-def guess(current, word, guesses):
+def guess(word, guesses):
     """docstring for guess"""
     words = [guess for guess in guesses if len(guess) == word]
     letters = [guess for guess in guesses if len(guess) != word]
-    new = list(current)
     if word in guesses:
         return [word, guesses]
     else:
-        for guess in letters:
-            for index, letter in enumerate(word):
-                if guess == letter: new[index] = guess
-        return (''.join(new), guesses)
+        result = []
+        for index, letter in enumerate(word):
+            result.append(letter if letter in letters else '-')
+        return (''.join(result), guesses)
 
-print guess("---", "cat", ["a"])
-print guess("-a-", "cat", ["a", 'x'])
-print guess("-a-", "cat", ["a", 'x', 't'])
-print guess("-at", "cat", ["a", 'x', 't', 'bat'])
-print guess("-at", "cat", ["a", 'x', 't', 'bat', 'cat'])
+print guess("cat", ["a"])
+print guess("cat", ["a", 'x'])
+print guess("cat", ["a", 'x', 't'])
+print guess("cat", ["a", 'x', 't', 'bat'])
+print guess("cat", ["a", 'x', 't', 'bat', 'cat'])
+print score("cat", ["a", 'x', 't', 'bat', 'cat'])
