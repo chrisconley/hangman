@@ -63,13 +63,19 @@
 #print g.to_s()
 #print calculate_score(g)
 
+def extract(word, guesses):
+    """docstring for extract"""
+    words = {guess for guess in guesses if len(guess) == len(word)}
+    missed_words = {guess for guess in words if guess != word}
+    match = len(words - missed_words) == 1
+    letters = guesses - words
+    known_letters = {letter for letter in letters if letter in word}
+    missed_letters = letters - known_letters
+    return [missed_letters, known_letters, missed_words, match]
+
 def score(word, guesses):
     """docstring for score"""
-    words = [guess for guess in guesses if len(guess) == len(word)]
-    missed_words = [guess for guess in words if guess != word]
-    letters = [guess for guess in guesses if len(guess) != len(word)]
-    known_letters = [letter for letter in letters if letter in word]
-    missed_letters = [letter for letter in letters if letter not in word]
+    missed_letters, known_letters, missed_words, _ = extract(word, guesses)
     if len(missed_words) >= 5:
         return 25
     else:
@@ -77,19 +83,18 @@ def score(word, guesses):
 
 def guess(word, guesses):
     """docstring for guess"""
-    words = [guess for guess in guesses if len(guess) == word]
-    letters = [guess for guess in guesses if len(guess) != word]
-    if word in guesses:
-        return [word, guesses]
+    missed_letters, known_letters, _, match = extract(word, guesses)
+    if match:
+        return word
     else:
         result = []
         for index, letter in enumerate(word):
-            result.append(letter if letter in letters else '-')
-        return (''.join(result), guesses)
+            result.append(letter if letter in known_letters else '-')
+        return ''.join(result)
 
-print guess("cat", ["a"])
-print guess("cat", ["a", 'x'])
-print guess("cat", ["a", 'x', 't'])
-print guess("cat", ["a", 'x', 't', 'bat'])
-print guess("cat", ["a", 'x', 't', 'bat', 'cat'])
-print score("cat", ["a", 'x', 't', 'bat', 'cat'])
+print guess("cat", {"a"})
+print guess("cat", {"a", 'x'})
+print guess("cat", {"a", 'x', 't'})
+print guess("cat", {"a", 'x', 't', 'bat'})
+print guess("cat", {"a", 'x', 't', 'bat', 'cat'})
+print score("cat", {"a", 'x', 't', 'bat', 'cat'})
