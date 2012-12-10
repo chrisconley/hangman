@@ -92,13 +92,6 @@ def check(word, guesses):
             result.append(letter if letter in known_letters else '-')
         return ''.join(result)
 
-def next_guess(current, previous_guesses):
-    """docstring for next_guess"""
-    possible_guesses = 'eariotnslcudpmhgbfywkvxzjq'
-    for letter in possible_guesses:
-        if letter not in previous_guesses:
-            return previous_guesses | set(letter)
-
 def play(strategy, word, guesses=set()):
     """docstring for play"""
     _,_,_, match = extract(word, guesses)
@@ -107,6 +100,13 @@ def play(strategy, word, guesses=set()):
     else:
         return play(strategy, word, strategy(check(word, guesses), guesses))
 
+def strategy(current, previous_guesses):
+    """docstring for next_guess"""
+    possible_guesses = 'eariotnslcudpmhgbfywkvxzjq'
+    for letter in possible_guesses:
+        if letter not in previous_guesses:
+            return previous_guesses | set(letter)
+
 import random
 words = ['cat', 'eat', 'cash', 'bet', 'ear', 'teach']
-print play(next_guess, random.choice(words))
+print play(strategy, random.choice(words))
