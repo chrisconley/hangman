@@ -1,48 +1,25 @@
-import string
-class Game:
+from hangman.mystery_string import subclazz as mystery_string
 
-    def __init__(self, word, rules):
-        """docstring for __init__"""
-        self.word = list(word)
-        self.rules = rules
-        self.current_guess = ['-' for letter in word]
-        self.score = 0
-        self.known_letters = []
-        self.missed_letters = []
-        self.guessed_words = []
-        self.ended = False
+def default_scorer(result):
+    """docstring for score"""
+    if len(result.missed_words()) >= 5:
+        return 25
+    else:
+        return (len(result.missed_letters()) * 1) + (len(result.missed_words()) * 1)
 
-    def process_letter_guess(self, guess):
-        """docstring for process_letter_guess"""
-        for index, letter in enumerate(self.word):
-            if guess == letter: self.current_guess[index] = guess
+def naive_strategy(previous_result):
+    """docstring for next_guess"""
+    possible_guesses = 'eariotnslcudpmhgbfywkvxzjq'
+    for letter in possible_guesses:
+        if letter not in previous_result.guesses():
+            return previous_result.guesses() | set(letter)
 
-        if guess in self.word:
-            self.known_letters.append(guess)
-            self.score += self.rules['letter_hit']
-        else:
-            self.missed_letters.append(guess)
-            self.score += self.rules['letter_miss']
+def play(word, strategy=naive_strategy, scorer=default_scorer, guesses=set()):
+    """docstring for play"""
+    result = mystery_string(word, guesses)
+    if result == word:
+        return [word, guesses, scorer(result)]
+    else:
+        new_guesses = strategy(result)
+        return play(word, strategy, scorer, new_guesses)
 
-    def process_word_guess(self, guess):
-        """docstring for process_word_guess"""
-        self.guessed_words.append(guess)
-        if guess == self.word:
-            self.current_guess = self.word
-            self.ended = True
-        elif len(self.guessed_words) >= self.rules['max_word_guesses']:
-            self.score = self.rules['max_word_guess_score']
-            self.ended = True
-        else:
-            self.score += self.rules['word_miss']
-
-    def won(self):
-        return self.current_guess == self.word
-
-    def lost(self):
-        return self.ended and not(self.won)
-
-    def to_s(self):
-        """docstring for to_s"""
-        template = string.Template("${current_guess} | ${missed_letters} | ${guessed_words} | ${score}")
-        return template.substitute(self.__dict__)
