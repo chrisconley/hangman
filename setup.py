@@ -66,24 +66,24 @@
 class check:
     def __init__(self, word, guesses):
         """docstring for __init__"""
-        self.word = word
-        self.guesses = guesses
+        self.__word = word
+        self.__guesses = guesses
 
     def words(self):
         """docstring for words"""
-        return {guess for guess in self.guesses if len(guess) == len(self.word)}
+        return {guess for guess in self.__guesses if len(guess) == len(self.__word)}
 
     def missed_words(self):
         """docstring for missed_words"""
-        return {guess for guess in self.words() if guess != self.word}
+        return {guess for guess in self.words() if guess != self.__word}
 
     def letters(self):
         """docstring for letters"""
-        return self.guesses - self.words()
+        return self.__guesses - self.words()
 
     def known_letters(self):
         """docstring for known_letters"""
-        return {letter for letter in self.letters() if letter in self.word}
+        return {letter for letter in self.letters() if letter in self.__word}
 
     def missed_letters(self):
         """docstring for missed_letters"""
@@ -92,9 +92,13 @@ class check:
     def match(self):
         """docstring for match"""
         result = []
-        for index, letter in enumerate(self.word):
+        for index, letter in enumerate(self.__word):
             result.append(letter if letter in self.known_letters() else '-')
         return ''.join(result)
+
+    def guesses(self):
+        """docstring for word"""
+        return self.__guesses
 
 def play(strategy, scorer, word, guesses=set()):
     """docstring for play"""
@@ -116,8 +120,8 @@ def naive(previous_result):
     """docstring for next_guess"""
     possible_guesses = 'eariotnslcudpmhgbfywkvxzjq'
     for letter in possible_guesses:
-        if letter not in previous_result.guesses:
-            return previous_result.guesses | set(letter)
+        if letter not in previous_result.guesses():
+            return previous_result.guesses() | set(letter)
 
 import random
 words = ['cat', 'eat', 'cash', 'bet', 'ear', 'teach']
