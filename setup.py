@@ -67,10 +67,10 @@ def extract(word, guesses):
     """docstring for extract"""
     words = {guess for guess in guesses if len(guess) == len(word)}
     missed_words = {guess for guess in words if guess != word}
-    match = len(words - missed_words) == 1
     letters = guesses - words
     known_letters = {letter for letter in letters if letter in word}
     missed_letters = letters - known_letters
+    match = (len(words - missed_words) == 1) | (known_letters == set(word))
     return [missed_letters, known_letters, missed_words, match]
 
 def score(word, guesses):
@@ -81,7 +81,7 @@ def score(word, guesses):
     else:
         return (len(missed_letters) * 1) + (len(missed_words) * 1)
 
-def guess(word, guesses):
+def check(word, guesses):
     """docstring for guess"""
     missed_letters, known_letters, _, match = extract(word, guesses)
     if match:
@@ -92,9 +92,21 @@ def guess(word, guesses):
             result.append(letter if letter in known_letters else '-')
         return ''.join(result)
 
-print guess("cat", {"a"})
-print guess("cat", {"a", 'x'})
-print guess("cat", {"a", 'x', 't'})
-print guess("cat", {"a", 'x', 't', 'bat'})
-print guess("cat", {"a", 'x', 't', 'bat', 'cat'})
-print score("cat", {"a", 'x', 't', 'bat', 'cat'})
+def next_guess(current, previous_guesses):
+    """docstring for next_guess"""
+    possible_guesses = 'eariotnslcudpmhgbfywkvxzjq'
+    for letter in possible_guesses:
+        if letter not in previous_guesses:
+            return previous_guesses | set(letter)
+
+def play(strategy, word, guesses=set()):
+    """docstring for play"""
+    _,_,_, match = extract(word, guesses)
+    if match:
+        return [word, guesses, score(word, guesses)]
+    else:
+        return play(strategy, word, strategy(check(word, guesses), guesses))
+
+import random
+words = ['cat', 'eat', 'cash', 'bet', 'ear', 'teach']
+print play(next_guess, random.choice(words))
