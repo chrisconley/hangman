@@ -63,50 +63,62 @@
 #print g.to_s()
 #print calculate_score(g)
 
-def extract(word, guesses):
-    """docstring for extract"""
-    words = {guess for guess in guesses if len(guess) == len(word)}
-    missed_words = {guess for guess in words if guess != word}
-    letters = guesses - words
-    known_letters = {letter for letter in letters if letter in word}
-    missed_letters = letters - known_letters
-    match = (len(words - missed_words) == 1) | (known_letters == set(word))
-    return [missed_letters, known_letters, missed_words, match]
+class check:
+    def __init__(self, word, guesses):
+        """docstring for __init__"""
+        self.word = word
+        self.guesses = guesses
 
-def score(word, guesses):
-    """docstring for score"""
-    missed_letters, known_letters, missed_words, _ = extract(word, guesses)
-    if len(missed_words) >= 5:
-        return 25
-    else:
-        return (len(missed_letters) * 1) + (len(missed_words) * 1)
+    def words(self):
+        """docstring for words"""
+        return {guess for guess in self.guesses if len(guess) == len(self.word)}
 
-def check(word, guesses):
-    """docstring for guess"""
-    missed_letters, known_letters, _, match = extract(word, guesses)
-    if match:
-        return word
-    else:
+    def missed_words(self):
+        """docstring for missed_words"""
+        return {guess for guess in self.words() if guess != self.word}
+
+    def letters(self):
+        """docstring for letters"""
+        return self.guesses - self.words()
+
+    def known_letters(self):
+        """docstring for known_letters"""
+        return {letter for letter in self.letters() if letter in self.word}
+
+    def missed_letters(self):
+        """docstring for missed_letters"""
+        return self.letters() - self.known_letters()
+
+    def match(self):
+        """docstring for match"""
         result = []
-        for index, letter in enumerate(word):
-            result.append(letter if letter in known_letters else '-')
+        for index, letter in enumerate(self.word):
+            result.append(letter if letter in self.known_letters() else '-')
         return ''.join(result)
 
-def play(strategy, word, guesses=set()):
+def play(strategy, scorer, word, guesses=set()):
     """docstring for play"""
-    _,_,_, match = extract(word, guesses)
-    if match:
-        return [word, guesses, score(word, guesses)]
+    result = check(word, guesses)
+    if result.match() == word:
+        return [word, guesses, scorer(result)]
     else:
-        return play(strategy, word, strategy(check(word, guesses), guesses))
+        new_guesses = strategy(result)
+        return play(strategy, scorer, word, new_guesses)
 
-def strategy(current, previous_guesses):
+def score(result):
+    """docstring for score"""
+    if len(result.missed_words()) >= 5:
+        return 25
+    else:
+        return (len(result.missed_letters()) * 1) + (len(result.missed_words()) * 1)
+
+def naive(previous_result):
     """docstring for next_guess"""
     possible_guesses = 'eariotnslcudpmhgbfywkvxzjq'
     for letter in possible_guesses:
-        if letter not in previous_guesses:
-            return previous_guesses | set(letter)
+        if letter not in previous_result.guesses:
+            return previous_result.guesses | set(letter)
 
 import random
 words = ['cat', 'eat', 'cash', 'bet', 'ear', 'teach']
-print play(strategy, random.choice(words))
+print play(naive, score, random.choice(words))
