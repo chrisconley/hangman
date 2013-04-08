@@ -179,8 +179,12 @@ class DAWG:
             state = self.q0
         for c in pattern:
             if c == '-':
-                for child in state.children.values():
-                    self.search(pattern, child, (index+child.number), indices)
+                if not state.final:
+                    for child in state.children.values():
+                        self.search(pattern, child, (index+child.number), indices)
+                else:
+                    indices.append(index)
+                    print 'hi'
             else:
                 try:
                     next = state.children[c]
