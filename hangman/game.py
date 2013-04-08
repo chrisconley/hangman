@@ -29,10 +29,6 @@ class MysteryString(str):
     def missed_letters(self):
         return self.letters - self.known_letters
 
-    @property
-    def match(self):
-        return self
-
 def default_scorer(result):
     if len(result.missed_words) >= 5:
         return 25
