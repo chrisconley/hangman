@@ -1,8 +1,9 @@
 class MysteryString(str):
-    def __new__(cls, word, guesses):
-        result = []
-        for index, letter in enumerate(word):
-            result.append(letter if letter in guesses else '-')
+    def __new__(cls, word, guesses, delimiter='-'):
+        result = [
+            (letter if letter in guesses else delimiter)
+            for index, letter
+            in enumerate(word)]
         match = ''.join(result)
         obj = str.__new__(cls, match)
         obj.word = word
@@ -10,24 +11,24 @@ class MysteryString(str):
         return obj
 
     @property
-    def words(self):
+    def guessed_words(self):
         return {guess for guess in self.guesses if len(guess) == len(self.word)}
 
     @property
     def missed_words(self):
-        return {guess for guess in self.words if guess != self.word}
+        return {guess for guess in self.guessed_words if guess != self.word}
 
     @property
-    def letters(self):
-        return self.guesses - self.words
+    def guessed_letters(self):
+        return self.guesses - self.guessed_words
 
     @property
     def known_letters(self):
-        return {letter for letter in self.letters if letter in self.word}
+        return {letter for letter in self.guessed_letters if letter in self.word}
 
     @property
     def missed_letters(self):
-        return self.letters - self.known_letters
+        return self.guessed_letters - self.known_letters
 
 def default_scorer(result):
     if len(result.missed_words) >= 5:
