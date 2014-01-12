@@ -53,5 +53,12 @@ class Tests(unittest.TestCase):
         self.assertEqual(counts.get('s----'), expected_counter)
 
 if __name__ == '__main__':
+    with open('words-short.txt', 'r') as f:
+        counts = {}
+        for word in f:
+            #print word.strip()
+            counts = learn_word(word, counts)
+        print len(counts)
     unittest.main()
+
 
