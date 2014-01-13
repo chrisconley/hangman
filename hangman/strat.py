@@ -1,3 +1,6 @@
+"""
+Usage: time head -n 5000 words.txt | python2.7 hangman/strat.py
+"""
 from collections import Counter
 import itertools
 import re
@@ -79,7 +82,12 @@ if __name__ == '__main__':
     counts = {}
     for word in fileinput.input():
         learn_word(word.strip(), counts)
-    print len(counts)
+    #http://stackoverflow.com/questions/10264874/python-reducing-memory-usage-of-dictionary
+    key_size = len(counts)
+    print key_size
+    hash_bucket_size = key_size * 24 # hash buckets
+    int_size = key_size * 24 * 26# ints in the counters
+    print "Maybe", ((key_size + int_size) / 1000000.0), "MB"
 
     unittest.main()
 
