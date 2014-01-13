@@ -5,7 +5,6 @@ from collections import Counter
 import itertools
 import re
 import unittest
-import hashlib
 
 from hangman.game import MysteryString
 
@@ -38,42 +37,56 @@ LETTER_MAP = {
     'z': 25
 }
 
-def get_int_hash(key):
-    return int(hashlib.md5(key).hexdigest(), 16)
-
-def learn_word(word, counts={}):
+def learn_word(word, counts={}, thorough=False):
     for length in range(0, len(word)+1):
         word_set = set(word)
         combinations = itertools.combinations(word_set, length)
         for subset in combinations:
             if not len(subset):
                 continue
-            ms = MysteryString(word, set(subset))
 
-            ms_hash = get_int_hash(ms)
-            counter = counts.setdefault(ms_hash, [0]*26)
+            if thorough:
+                key = MysteryString(word, set(subset))
+            else:
+                key = ''.join(subset)
+
+            counter = counts.setdefault(key, [0]*26)
             remaining_letters = word_set.difference(subset)
             for letter in remaining_letters:
                 counter[LETTER_MAP[letter]] += 1
     return counts
 
 class Tests(unittest.TestCase):
+    def test_non_thorough(self):
+        counts = {}
+        counts = learn_word('sites', counts=counts, thorough=False)
+        counts = learn_word('synth', counts=counts, thorough=False)
+        counts = learn_word('siete', counts=counts, thorough=False)
 
-    def test_duplicate_letters(self):
-        counts = learn_word('sites')
-
-        key = get_int_hash('s----')
+        key = 'ss'
         self.assertIsNone(counts.get(key))
 
-        key = get_int_hash('s---s')
+        key = 's'
+        expected_counter = [0, 0, 0, 0, 2, 0, 0, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 1, 0]
+        self.assertEqual(counts.get(key), expected_counter)
+
+
+    def test_duplicate_letters(self):
+        counts = learn_word('sites', thorough=True)
+
+        key = 's----'
+        self.assertIsNone(counts.get(key))
+
+        key = 's---s'
         expected_counter = [0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
         self.assertEqual(counts.get(key), expected_counter)
 
     def test_overlapping_words(self):
-        counts = learn_word('synth')
-        counts = learn_word('siete')
+        counts = {}
+        counts = learn_word('synth', counts=counts, thorough=True)
+        counts = learn_word('siete', counts=counts, thorough=True)
 
-        key = get_int_hash('s----')
+        key = 's----'
         expected_counter = [0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0]
         self.assertEqual(counts.get(key), expected_counter)
 
@@ -82,12 +95,8 @@ if __name__ == '__main__':
     counts = {}
     for word in fileinput.input():
         learn_word(word.strip(), counts)
-    #http://stackoverflow.com/questions/10264874/python-reducing-memory-usage-of-dictionary
     key_size = len(counts)
     print key_size
-    hash_bucket_size = key_size * 24 # hash buckets
-    int_size = key_size * 24 * 26# ints in the counters
-    print "Maybe", ((key_size + int_size) / 1000000.0), "MB"
 
     unittest.main()
 
