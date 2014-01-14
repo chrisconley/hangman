@@ -1,5 +1,7 @@
 """
-Usage: time head -n 5000 words.txt | python2.7 hangman/strat.py
+Usage:
+
+time head -n 5000 words.txt | python2.7 hangman/strat.py
 """
 from collections import Counter
 import itertools
@@ -50,10 +52,13 @@ def learn_word(word, counts={}, thorough=False):
             else:
                 key = ''.join(subset)
 
-            counter = counts.setdefault(key, [0]*26)
             remaining_letters = word_set.difference(subset)
             for letter in remaining_letters:
-                counter[LETTER_MAP[letter]] += 1
+                letter_key = "{}:{}".format(key, letter)
+                if counts.get(letter_key):
+                    counts[letter_key] += 1
+                else:
+                    counts[letter_key] = 1
     return counts
 
 class Tests(unittest.TestCase):
@@ -63,32 +68,31 @@ class Tests(unittest.TestCase):
         counts = learn_word('synth', counts=counts, thorough=False)
         counts = learn_word('siete', counts=counts, thorough=False)
 
-        key = 'ss'
-        self.assertIsNone(counts.get(key))
+        self.assertIsNone(counts.get('ss:t'))
 
-        key = 's'
-        expected_counter = [0, 0, 0, 0, 2, 0, 0, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 1, 0]
-        self.assertEqual(counts.get(key), expected_counter)
+        self.assertIsNone(counts.get('s:a'))
+        self.assertEqual(counts.get('s:e'), 2)
+        self.assertEqual(counts.get('s:h'), 1)
+        self.assertEqual(counts.get('s:i'), 2)
+        self.assertEqual(counts.get('s:t'), 3)
 
 
     def test_duplicate_letters(self):
         counts = learn_word('sites', thorough=True)
 
-        key = 's----'
-        self.assertIsNone(counts.get(key))
+        self.assertIsNone(counts.get('s----:t'))
 
-        key = 's---s'
-        expected_counter = [0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
-        self.assertEqual(counts.get(key), expected_counter)
+        self.assertIsNone(counts.get('s---s:a'))
+        self.assertEqual(counts.get('s---s:t'), 1)
 
     def test_overlapping_words(self):
         counts = {}
         counts = learn_word('synth', counts=counts, thorough=True)
         counts = learn_word('siete', counts=counts, thorough=True)
 
-        key = 's----'
-        expected_counter = [0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0]
-        self.assertEqual(counts.get(key), expected_counter)
+        self.assertIsNone(counts.get('s----:a'))
+        self.assertEqual(counts.get('s----:e'), 1)
+        self.assertEqual(counts.get('s----:t'), 2)
 
 if __name__ == '__main__':
     import fileinput
