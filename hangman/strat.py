@@ -55,15 +55,12 @@ def learn_word(word, counts={}, thorough=False):
             remaining_letters = word_set.difference(subset)
             for letter in remaining_letters:
                 letter_key = "{}:{}".format(key, letter)
-                if counts.get(letter_key):
-                    counts[letter_key] += 1
-                else:
-                    counts[letter_key] = 1
+                counts[letter_key] += 1
     return counts
 
 class Tests(unittest.TestCase):
     def test_non_thorough(self):
-        counts = {}
+        counts = Counter()
         counts = learn_word('sites', counts=counts, thorough=False)
         counts = learn_word('synth', counts=counts, thorough=False)
         counts = learn_word('siete', counts=counts, thorough=False)
@@ -78,7 +75,7 @@ class Tests(unittest.TestCase):
 
 
     def test_duplicate_letters(self):
-        counts = learn_word('sites', thorough=True)
+        counts = learn_word('sites', Counter(), thorough=True)
 
         self.assertIsNone(counts.get('s----:t'))
 
@@ -86,7 +83,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(counts.get('s---s:t'), 1)
 
     def test_overlapping_words(self):
-        counts = {}
+        counts = Counter()
         counts = learn_word('synth', counts=counts, thorough=True)
         counts = learn_word('siete', counts=counts, thorough=True)
 
@@ -94,13 +91,40 @@ class Tests(unittest.TestCase):
         self.assertEqual(counts.get('s----:e'), 1)
         self.assertEqual(counts.get('s----:t'), 2)
 
+def batch_learn(words, counts, thorough=False):
+    for word in words:
+        learn_word(word, counts, thorough)
+    return counts
+
+def callback(something):
+    #print something
+    pass
+
 if __name__ == '__main__':
     import fileinput
-    counts = {}
+    counts = Counter()
+    words = []
     for word in fileinput.input():
-        learn_word(word.strip(), counts)
+        words.append(word.strip())
+        #learn_word(word.strip(), counts)
     key_size = len(counts)
     print key_size
+
+    from multiprocessing import Pool, Manager
+    pool = Pool(processes=2)
+    counts1 = Counter()
+    counts2 = Counter()
+    length = len(words)
+    half = int(length / 2.0)
+    results1 = pool.apply_async(batch_learn, [words[0:half], counts1], {}, callback)
+    results2 = pool.apply_async(batch_learn, [words[half:-1], counts2])
+    #pool.close()
+    #pool.join()
+    print len(results1.get())
+    counts1 = results1.get()
+    counts2 = results2.get()
+    counts = counts1 + counts2
+    print 'async: ', len(counts)
 
     unittest.main()
 
