@@ -1,7 +1,7 @@
 """
 Usage:
 
-time head -n 5000 words.txt | python2.7 hangman/strat.py
+time head -n 5000 words.txt | python2.7 hangman/strat.py > hangman/distinct_letter_counts.csv
 """
 from collections import Counter
 import itertools
@@ -42,7 +42,7 @@ LETTER_MAP = {
 def learn_word(word, counts={}, thorough=False):
     for length in range(0, len(word)+1):
         word_set = set(word)
-        combinations = itertools.combinations(word_set, length)
+        combinations = itertools.combinations(sorted(word_set), length)
         for subset in combinations:
             if not len(subset):
                 continue
@@ -95,12 +95,18 @@ class Tests(unittest.TestCase):
         self.assertEqual(counts.get('s----:t'), 2)
 
 if __name__ == '__main__':
+    import csv
     import fileinput
+    import sys
     counts = {}
     for word in fileinput.input():
         learn_word(word.strip(), counts)
     key_size = len(counts)
-    print key_size
+    #print key_size
+
+    writer = csv.writer(sys.stdout)
+    for key, count in counts.items():
+        writer.writerow([key, count])
 
     unittest.main()
 
