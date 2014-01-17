@@ -44,6 +44,7 @@ def learn_word(word, counts={}, thorough=False):
         word_set = set(word)
         combinations = itertools.combinations(sorted(word_set), length)
         for subset in combinations:
+            #print subset
             if not len(subset):
                 continue
 
@@ -53,8 +54,15 @@ def learn_word(word, counts={}, thorough=False):
                 key = ''.join(subset)
 
             remaining_letters = word_set.difference(subset)
-            for letter in remaining_letters:
-                letter_key = "{}:{}".format(key, letter)
+            if remaining_letters:
+                for letter in remaining_letters:
+                    letter_key = "{}:{}".format(key, letter)
+                    if counts.get(letter_key):
+                        counts[letter_key] += 1
+                    else:
+                        counts[letter_key] = 1
+            else:
+                letter_key = ":".join([key, "$"])
                 if counts.get(letter_key):
                     counts[letter_key] += 1
                 else:
@@ -75,6 +83,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(counts.get('s:h'), 1)
         self.assertEqual(counts.get('s:i'), 2)
         self.assertEqual(counts.get('s:t'), 3)
+        self.assertEqual(counts.get('hnsty:$'), 1)
 
 
     def test_duplicate_letters(self):
@@ -95,18 +104,18 @@ class Tests(unittest.TestCase):
         self.assertEqual(counts.get('s----:t'), 2)
 
 if __name__ == '__main__':
-    import csv
-    import fileinput
-    import sys
-    counts = {}
-    for word in fileinput.input():
-        learn_word(word.strip(), counts)
-    key_size = len(counts)
-    #print key_size
+    #import csv
+    #import fileinput
+    #import sys
+    #counts = {}
+    #for word in fileinput.input():
+        #learn_word(word.strip(), counts)
+    #key_size = len(counts)
+    ##print key_size
 
-    writer = csv.writer(sys.stdout)
-    for key, count in counts.items():
-        writer.writerow([key, count])
+    #writer = csv.writer(sys.stdout)
+    #for key, count in counts.items():
+        #writer.writerow([key, count])
 
     unittest.main()
 
