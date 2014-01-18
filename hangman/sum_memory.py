@@ -60,6 +60,15 @@ class SumMemoryTests(unittest.TestCase):
         count_memory = load_count_memory(reader)
         sum_memory = generate_sum_memory(count_memory)
 
+        """
+        This is saying if my current guesses are "es", then there are two words with an "i" in them and two words
+        with a "t" in them.
+
+        The sum_memory can then say, if my guesses are currently "e", the sum of the total words available is 4 if
+        I guess "s" on my next guess.
+        """
+        self.assertEqual(count_memory['e'], Counter({'s': 2, 'i': 2, 't': 2}))
+
         self.assertEqual(count_memory['es'], Counter({'i': 2, 't': 2}))
         self.assertEqual(sum_memory['e:s'], 4)
 
