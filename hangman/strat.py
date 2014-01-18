@@ -45,8 +45,8 @@ def learn_word(word, counts={}, thorough=False):
         combinations = itertools.combinations(sorted(word_set), length)
         for subset in combinations:
             #print subset
-            if not len(subset):
-                continue
+            #if not len(subset):
+                #continue
 
             if thorough:
                 key = MysteryString(word, set(subset))
