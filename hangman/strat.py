@@ -104,18 +104,18 @@ class Tests(unittest.TestCase):
         self.assertEqual(counts.get('s----:t'), 2)
 
 if __name__ == '__main__':
-    #import csv
-    #import fileinput
-    #import sys
-    #counts = {}
-    #for word in fileinput.input():
-        #learn_word(word.strip(), counts)
-    #key_size = len(counts)
-    ##print key_size
+    import csv
+    import fileinput
+    import sys
+    counts = {}
+    for word in fileinput.input():
+        learn_word(word.strip(), counts)
+    key_size = len(counts)
+    #print key_size
 
-    #writer = csv.writer(sys.stdout)
-    #for key, count in counts.items():
-        #writer.writerow([key, count])
+    writer = csv.writer(sys.stdout)
+    for key, count in counts.items():
+        writer.writerow([key, count])
 
     unittest.main()
 

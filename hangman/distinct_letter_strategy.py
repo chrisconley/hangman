@@ -8,7 +8,7 @@ with open('hangman/distinct_letter_counts.csv') as csvfile:
     reader = csv.reader(csvfile)
     for row in reader:
         key, letter = row[0].split(':')
-        count = int(row[1])
+        count = float(row[1])
         counter = MEMORY.setdefault(key, Counter())
         counter[letter] = count
 
@@ -28,16 +28,21 @@ def strategy(previous_result):
 
     key = ''.join(sorted(previous_result.known_letters))
     counter = MEMORY[key]
-    print previous_result
-    print counter
+    #print previous_result
+    #print counter
     for letter, count in counter.most_common():
         if letter not in previous_result.guesses:
-            print previous_result.guesses
-            print letter
+            #print previous_result.guesses
+            #print letter
             return previous_result.guesses | set(letter)
-    print 'hi'
+    #print 'hi'
 
 if __name__ == '__main__':
-    print game.play('eating', strategy=strategy)
-    #for key, counter in MEMORY.items():
-        #print key, counter
+    import csv
+    import fileinput
+    import sys
+    total = 0
+    for word in fileinput.input():
+        result = game.play(word.strip(), strategy=strategy)
+        total += result[2]
+    print total

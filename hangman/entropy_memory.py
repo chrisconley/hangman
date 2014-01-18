@@ -1,5 +1,6 @@
 from __future__ import print_function
 from collections import Counter
+import math
 import unittest
 
 from hangman.strat import learn_word
@@ -32,12 +33,15 @@ def generate_sum_memory(count_memory):
         for letter, count in counter.items():
 
             if letter == "$":
-                guess_sum = count
+                guess_sum = 0
             else:
                 guess_sum = 0
                 count_key = "".join(sorted("".join([guesses, letter])))
+                total = float(sum(count_memory[count_key].values()))
                 for next_letter in ALPHABET:
-                    guess_sum += count_memory[count_key][next_letter]
+                    if count_memory[count_key][next_letter]:
+                        plausibility = count_memory[count_key][next_letter] / total
+                        guess_sum += -(plausibility * math.log(plausibility))
 
             sum_memory.setdefault(guesses, {})
             sum_memory[guesses][letter] = guess_sum
@@ -72,22 +76,13 @@ class SumMemoryTests(unittest.TestCase):
         self.assertEqual(count_memory['e'], Counter({'s': 2, 'i': 2, 't': 2}))
 
         self.assertEqual(count_memory['es'], Counter({'i': 2, 't': 2}))
-        self.assertEqual(sum_memory[''], {'e': 6, 'i': 6, 'h': 4, 'n': 4, 's': 10, 't': 10, 'y': 4})
-        self.assertEqual(sum_memory['e'], {'s': 4, 'i': 4, 't': 4})
-        self.assertEqual(sum_memory['t'], {'e': 4, 'i': 4, 'h': 3, 'n': 3, 's': 7, 'y': 3})
-        self.assertEqual(sum_memory['es'], {'i': 2, 't': 2})
-        self.assertEqual(sum_memory['eis'], {'t': 2})
-        self.assertEqual(sum_memory['est'], {'i': 2})
-        self.assertEqual(sum_memory['eist'], {'$': 2})
-
-        self.assertEqual(count_memory['hnsy'], Counter({'t': 1}))
-
-        self.assertEqual(count_memory['hnsty'], Counter({'$': 1}))
+        self.assertAlmostEqual(sum_memory['']['e'], 1.1, places=1)
+        self.assertAlmostEqual(sum_memory['']['h'], 1.4, places=1)
+        self.assertAlmostEqual(sum_memory['']['s'], 1.7, places=1)
 
 if __name__ == '__main__':
     import csv
     import sys
-
     print("loading", end='\n', file=sys.stderr)
     memory = load_count_memory(csv.reader(sys.stdin))
     print("generating", end='\n', file=sys.stderr)
@@ -101,3 +96,4 @@ if __name__ == '__main__':
             writer.writerow([key, count])
 
     unittest.main()
+
