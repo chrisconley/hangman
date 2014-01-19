@@ -5,7 +5,7 @@ import hangman.game as game
 
 MEMORY = {}
 # we need to pass this in as an argument
-with open('hangman/entropy_counts.csv') as csvfile:
+with open('hangman/distinct_letter_counts.csv') as csvfile:
     reader = csv.reader(csvfile)
     for row in reader:
         key, letter = row[0].split(':')
@@ -32,7 +32,7 @@ def strategy(previous_result):
     #print previous_result
     #print counter
     for letter, count in counter.most_common():
-        if letter not in previous_result.guesses:
+        if letter not in previous_result.guesses and letter != 'total':
             #print previous_result.guesses
             #print letter
             return previous_result.guesses | set(letter)

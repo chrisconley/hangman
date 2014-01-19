@@ -67,6 +67,10 @@ def learn_word(word, counts={}, thorough=False):
                     counts[letter_key] += 1
                 else:
                     counts[letter_key] = 1
+
+            total_key = ":".join([key, 'total'])
+            counts.setdefault(total_key, 0)
+            counts[total_key] += 1
     return counts
 
 class Tests(unittest.TestCase):

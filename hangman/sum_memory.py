@@ -30,6 +30,8 @@ def generate_sum_memory(count_memory):
     for guesses, counter in count_memory.items():
 
         for letter, count in counter.items():
+            if letter == 'total':
+                continue
 
             if letter == "$":
                 guess_sum = count

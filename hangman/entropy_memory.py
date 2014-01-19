@@ -31,20 +31,22 @@ def generate_sum_memory(count_memory):
     for guesses, counter in count_memory.items():
 
         for letter, count in counter.items():
+            if letter == 'total':
+                continue
 
             if letter == "$":
                 guess_sum = 0
             else:
                 guess_sum = 0
                 count_key = "".join(sorted("".join([guesses, letter])))
-                total_words = float(sum(count_memory[guesses].values()))
+                total_words = float(count_memory[guesses]['total'])
                 for next_letter in ALPHABET:
                     if count_memory[count_key][next_letter]:
                         plausibility = count_memory[count_key][next_letter] / total_words
                         guess_sum += -(plausibility * math.log(plausibility))
 
                 # Miss
-                total = float(sum(count_memory[count_key].values()))
+                total = float(count_memory[count_key]['total'])
                 miss_count = (total_words - total)
                 if miss_count:
                     plausibility = miss_count / total_words
