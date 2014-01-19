@@ -4,7 +4,8 @@ import csv
 import hangman.game as game
 
 MEMORY = {}
-with open('hangman/distinct_letter_counts.csv') as csvfile:
+# we need to pass this in as an argument
+with open('hangman/entropy_counts.csv') as csvfile:
     reader = csv.reader(csvfile)
     for row in reader:
         key, letter = row[0].split(':')
