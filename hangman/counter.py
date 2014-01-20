@@ -109,16 +109,29 @@ if __name__ == '__main__':
     import json
     import fileinput
     import sys
-    counters = {}
+    buckets = {}
     for word in fileinput.input():
-        learn_word(word.strip(), counters, thorough=True)
-    key_size = len(counters)
-    print key_size
+        word = word.strip()
+        length = len(word)
+        bucket = buckets.setdefault(length, [])
+        bucket.append(word)
 
-    for key, counts in counters.items():
-        line = json.dumps({'key': key, 'counts': counts})
-        sys.stdout.write("".join([line, '\n']))
+    bucket_counts = [len(words) for words in buckets.values()]
+    print bucket_counts
+    print sum(bucket_counts)
 
-    unittest.main()
+    # We may be able to save time/memory by bucketing into word lengths
+
+    #counters = {}
+    #for word in fileinput.input():
+        #learn_word(word.strip(), counters, thorough=True)
+    #key_size = len(counters)
+    #print key_size
+
+    #for key, counts in counters.items():
+        #line = json.dumps({'key': key, 'counts': counts})
+        #sys.stdout.write("".join([line, '\n']))
+
+    #unittest.main()
 
 
