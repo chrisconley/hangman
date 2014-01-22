@@ -10,71 +10,25 @@ import unittest
 
 from hangman.game import MysteryString
 
-LETTER_MAP = {
-    'a': 0,
-    'b': 1,
-    'c': 2,
-    'd': 3,
-    'e': 4,
-    'f': 5,
-    'g': 6,
-    'h': 7,
-    'i': 8,
-    'j': 9,
-    'k': 10,
-    'l': 11,
-    'm': 12,
-    'n': 13,
-    'o': 14,
-    'p': 15,
-    'q': 16,
-    'r': 17,
-    's': 18,
-    't': 19,
-    'u': 20,
-    'v': 21,
-    'w': 22,
-    'x': 23,
-    'y': 24,
-    'z': 25
-}
-
-def learn_word(word, counters={}, thorough=False):
+def learn_word(word, counter):
     for length in range(0, len(word)+1):
         word_set = set(word)
         combinations = itertools.combinations(sorted(word_set), length)
         for subset in combinations:
 
-            if thorough:
-                key = MysteryString(word, set(subset))
-            else:
-                key = ''.join(subset)
-
-            counters.setdefault(key, {})
+            key = str(MysteryString(word, set(subset)))
 
             remaining_letters = word_set.difference(subset)
             if remaining_letters:
                 for letter in remaining_letters:
-                    counter = counters[key].setdefault(letter, Counter())
                     next_subset = set(subset)
                     next_subset.add(letter)
-                    next_key = MysteryString(word, next_subset)
-                    counter[next_key] += 1
-                    counter['total'] += 1
-            #else:
-                ## this might not be needed - (if we're doing thorough because if we're here,
-                ## it's the word
-                #letter = '$'
-                #counter = counters[key].setdefault(letter, Counter())
-                #next_subset = set(subset)
-                #next_subset.add(letter)
-                #next_key = MysteryString(word, next_subset)
-                #counter[next_key] += 1
-                #counter['total'] += 1
+                    next_key = str(MysteryString(word, next_subset))
+                    counter[":".join([key, letter, next_key])] += 1
+                    counter[":".join([key, letter, 'total'])] += 1
 
-            counters[key].setdefault('total', 0)
-            counters[key]['total'] += 1
-    return counters
+            counter[":".join([key, 'total'])] += 1
+    return counter
 
 class Tests(unittest.TestCase):
     def test_overlapping_words(self):
@@ -105,32 +59,49 @@ class Tests(unittest.TestCase):
             't': Counter({'total': 1, 's-t-s': 1}),
         })
 
+import sys
+def show_sizeof(x, level=0):
+    print "\t" * level, x.__class__, sys.getsizeof(x), x
+    if hasattr(x, '__iter__'):
+        if hasattr(x, 'items'):
+            for xx in x.items():
+                show_sizeof(xx, level + 1)
+        else:
+            for xx in x:
+                show_sizeof(xx, level + 1)
+
 if __name__ == '__main__':
     import json
     import fileinput
     import sys
-    buckets = {}
-    for word in fileinput.input():
-        word = word.strip()
-        length = len(word)
-        bucket = buckets.setdefault(length, [])
-        bucket.append(word)
+    import csv
+    #buckets = {}
+    #for word in fileinput.input():
+        #word = word.strip()
+        #length = len(word)
+        #bucket = buckets.setdefault(length, [])
+        #bucket.append(word)
 
-    bucket_counts = [len(words) for words in buckets.values()]
-    print bucket_counts
-    print sum(bucket_counts)
+    #bucket_counts = [len(words) for words in buckets.values()]
+    #print bucket_counts
+    #print sum(bucket_counts)
+
+
+    #rand_obj = random.choice(objgraph.by_type('set'))
+    #objgraph.show_chain(objgraph.find_backref_chain(rand_obj,inspect.ismodule),filename='chain.png')
 
     # We may be able to save time/memory by bucketing into word lengths
 
-    #counters = {}
-    #for word in fileinput.input():
-        #learn_word(word.strip(), counters, thorough=True)
-    #key_size = len(counters)
-    #print key_size
+    counter = Counter()
+    for word in fileinput.input():
+        learn_word(word.strip(), counter)
+    key_size = len(counter)
+    print 'key_size'
+    print key_size
 
-    #for key, counts in counters.items():
-        #line = json.dumps({'key': key, 'counts': counts})
-        #sys.stdout.write("".join([line, '\n']))
+    writer = csv.writer(sys.stdout)
+    for key, count in counter.items():
+        writer.writerow([key, count])
 
     #unittest.main()
 
