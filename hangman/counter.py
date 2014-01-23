@@ -8,6 +8,9 @@ import itertools
 import re
 import unittest
 
+import redis
+REDIS = redis.StrictRedis(host='localhost', port=6379, db=0)
+
 from hangman.game import MysteryString
 
 def learn_word(word, counter):
@@ -24,6 +27,9 @@ def learn_word(word, counter):
                     next_subset = set(subset)
                     next_subset.add(letter)
                     next_key = str(MysteryString(word, next_subset))
+                    #redis_key = ":".join([key, letter])
+                    #REDIS.hincrby(redis_key, next_key, 1)
+                    #REDIS.hincrby(redis_key, 'total', 1)
                     counter[":".join([key, letter, next_key])] += 1
                     counter[":".join([key, letter, 'total'])] += 1
 
@@ -75,12 +81,12 @@ if __name__ == '__main__':
     import fileinput
     import sys
     import csv
-    #buckets = {}
-    #for word in fileinput.input():
-        #word = word.strip()
-        #length = len(word)
-        #bucket = buckets.setdefault(length, [])
-        #bucket.append(word)
+    buckets = {}
+    for word in fileinput.input():
+        word = word.strip()
+        length = len(word)
+        bucket = buckets.setdefault(length, [])
+        bucket.append(word)
 
     #bucket_counts = [len(words) for words in buckets.values()]
     #print bucket_counts
@@ -92,16 +98,17 @@ if __name__ == '__main__':
 
     # We may be able to save time/memory by bucketing into word lengths
 
-    counter = Counter()
-    for word in fileinput.input():
-        learn_word(word.strip(), counter)
-    key_size = len(counter)
-    print 'key_size'
-    print key_size
+    for word_length, words in buckets.items():
+        counter = Counter()
+        for word in words:
+            learn_word(word.strip(), counter)
+        key_size = len(counter)
+        print 'key_size'
+        print key_size
 
-    writer = csv.writer(sys.stdout)
-    for key, count in counter.items():
-        writer.writerow([key, count])
+        writer = csv.writer(sys.stdout)
+        for key, count in counter.items():
+            writer.writerow([key, count])
 
     #unittest.main()
 
