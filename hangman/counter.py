@@ -13,7 +13,6 @@ REDIS = redis.StrictRedis(host='localhost', port=6379, db=12)
 
 from hangman.game import MysteryString
 
----, c--, -a-, --t, ca-, c-t, -at, cat
 
 def learn_word(word, counter):
     pipe = REDIS.pipeline()
