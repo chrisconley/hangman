@@ -9,11 +9,14 @@ import re
 import unittest
 
 import redis
-REDIS = redis.StrictRedis(host='localhost', port=6379, db=0)
+REDIS = redis.StrictRedis(host='localhost', port=6379, db=12)
 
 from hangman.game import MysteryString
 
+---, c--, -a-, --t, ca-, c-t, -at, cat
+
 def learn_word(word, counter):
+    pipe = REDIS.pipeline()
     for length in range(0, len(word)+1):
         word_set = set(word)
         combinations = itertools.combinations(sorted(word_set), length)
@@ -27,13 +30,13 @@ def learn_word(word, counter):
                     next_subset = set(subset)
                     next_subset.add(letter)
                     next_key = str(MysteryString(word, next_subset))
-                    #redis_key = ":".join([key, letter])
-                    #REDIS.hincrby(redis_key, next_key, 1)
-                    #REDIS.hincrby(redis_key, 'total', 1)
-                    counter[":".join([key, letter, next_key])] += 1
-                    counter[":".join([key, letter, 'total'])] += 1
+                    redis_key = ":".join([key, letter])
+                    pipe.hincrby(redis_key, next_key, 1)
+                    pipe.hincrby(redis_key, 'total', 1)
 
-            counter[":".join([key, 'total'])] += 1
+            total_key = ":".join([key, 'total'])
+            pipe.incrby(total_key, 1)
+    pipe.execute()
     return counter
 
 class Tests(unittest.TestCase):
@@ -98,6 +101,7 @@ if __name__ == '__main__':
 
     # We may be able to save time/memory by bucketing into word lengths
 
+    REDIS.flushdb()
     for word_length, words in buckets.items():
         counter = Counter()
         for word in words:
