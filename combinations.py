@@ -13,7 +13,7 @@ def distinct_combinator(iterable):
     n = len(iterable)
     for subset_length in range(n+1):
         for subset in itertools.combinations(set(iterable), subset_length):
-            yield subset
+            yield sorted(subset)
 
 def combinator(iterable):
     for combination in positional_combinator(iterable):
@@ -25,7 +25,7 @@ def unknown_combinator(iterable):
     alphabet = set(ALPHABET)
     remaining = alphabet.difference(word_set)
     for subset in distinct_combinator(remaining):
-        yield subset
+        yield sorted(subset)
 
 
 if __name__ == '__main__':
