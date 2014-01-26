@@ -5,13 +5,13 @@ import hangman.game as game
 
 MEMORY = {}
 # we need to pass this in as an argument
-with open('hangman/distinct_letter_counts.csv') as csvfile:
+with open('/tmp/distinct_combinator.csv') as csvfile:
     reader = csv.reader(csvfile)
+    counter = Counter()
     for row in reader:
-        key, letter = row[0].split(':')
+        key = str(row[0])
         count = float(row[1])
-        counter = MEMORY.setdefault(key, Counter())
-        counter[letter] = count
+        counter[key] = count
 
 FIRST_GUESSES = 'eariotnslcudpmhgbfywkvxzjq'
 

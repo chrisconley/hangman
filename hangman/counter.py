@@ -1,7 +1,7 @@
 """
 Usage:
 
-time head -n 5000 words.txt | python2.7 hangman/strat.py > hangman/distinct_letter_counts.csv
+time head -n 100 words.txt | python2.7 hangman/counter.py - -c positional_combinator
 """
 from collections import Counter
 import itertools
@@ -10,11 +10,12 @@ import unittest
 
 from hangman.game import MysteryString
 
-from combinations import combinator, distinct_combinator, positional_combinator
+#from combinations import combinator, distinct_combinator, positional_combinator
+import combinations
 
 
-def learn_word(word, counter):
-    for subset in distinct_combinator(word):
+def learn_word(word, counter, combinator):
+    for subset in combinator(word):
         counter["".join(subset)] += 1
     return counter
 
@@ -59,13 +60,20 @@ def show_sizeof(x, level=0):
                 show_sizeof(xx, level + 1)
 
 if __name__ == '__main__':
+    from argparse import ArgumentParser
     import json
     import fileinput
     import sys
     import csv
+    parser = ArgumentParser()
+    parser.add_argument('file', help='input dictionary')
+    parser.add_argument('-c', dest='combinator', help='combinator', default='distinct_combinator')
+    args = parser.parse_args()
+
     counter = Counter()
-    for word in fileinput.input():
-        learn_word(word.strip(), counter)
+    for word in fileinput.input(args.file):
+        combinator = getattr(combinations, args.combinator)
+        learn_word(word.strip(), counter, combinator)
 
     writer = csv.writer(sys.stdout)
     for key, count in counter.items():
