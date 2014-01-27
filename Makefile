@@ -1,21 +1,23 @@
-./build/naive.distinct.csv: ./naive/counter.py
-	time head -n 100 words.txt | python2.7 $< - --counter distinct > $@
+./build/naive/%: ./build/splits/% ./naive/counter.py
+	python2.7 ./naive/counter.py $< > $@
 
-./build/naive.duplicates.csv: ./naive/counter.py
-	time head -n 100 words.txt | python2.7 $< - --counter duplicates > $@
+lengths:= 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 27 28
 
-splits:= 2.csv 3.csv 4.csv 5.csv 6.csv 7.csv 8.csv 9.csv 10.csv 11.csv 12.csv 13.csv 14.csv 15.csv 16.csv 17.csv
-naive_splits_build:= $(addprefix ./build/split/,$(splits))
-$(naive_splits_build): ./split/counter.sh
-	time head -n 100 words.txt | ./split/counter.sh $(splits)
-# hi
-nsb: $(naive_splits_build)
+naive_counts: $(addprefix ./build/naive/,$(lengths))
 
-./build/feedback.distinct.csv: ./feedback/counter.py
-	time head -n 100 words.txt | python2.7 $< - --counter distinct > $@
+splits:= $(addprefix ./build/splits/,$(lengths))
+$(splits): ./words.txt ./splitter.py
+	python2.7 ./splitter.py ./words.txt ./build/splits
 
-./build/feedback.duplicates.csv: ./feedback/counter.py
-	time head -n 100 words.txt | python2.7 $< - --counter duplicates > $@
+split: $(splits)
 
-./build/feedback.positional.csv: ./feedback/counter.py
-	time head -n 100 words.txt | python2.7 $< - --counter positional > $@
+clean:
+	rm -rf ./build
+	mkdir -p ./build/splits
+	mkdir -p ./build/naive
+
+setup: ./build/splits ./build/naive
+
+.PHONY : split
+
+#time make naive_counts -j4
