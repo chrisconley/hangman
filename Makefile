@@ -1,18 +1,46 @@
 lengths:= 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 27 28
 
 splits:= $(addprefix ./build/splits/,$(lengths))
-$(splits): ./words.txt ./splitter.py
+$(splits): ./build ./words.txt ./splitter.py
 	python2.7 ./splitter.py ./words.txt ./build/splits
 splits: $(splits)
 
-naive_counts: $(addprefix ./build/naive/,$(lengths))
-./build/naive/%: ./build/splits/% ./naive/counter.py
-	python2.7 ./naive/counter.py $< > $@
+naive_distinct_counts: $(addprefix ./build/naive_distinct/,$(lengths))
+./build/naive_distinct/%: ./build/splits/% ./naive/counter.py
+	python2.7 ./naive/counter.py $< --counter distinct > $@
+
+naive_duplicates_counts: $(addprefix ./build/naive_duplicates/,$(lengths))
+./build/naive_duplicates/%: ./build/splits/% ./naive/counter.py
+	python2.7 ./naive/counter.py $< --counter duplicates > $@
+
+feedback_distinct_counts: $(addprefix ./build/feedback_distinct/,$(lengths))
+./build/feedback_distinct/%: ./build/splits/% ./feedback/counter.py
+	python2.7 ./feedback/counter.py $< --counter distinct > $@
+
+feedback_duplicates_counts: $(addprefix ./build/feedback_duplicates/,$(lengths))
+./build/feedback_duplicates/%: ./build/splits/% ./feedback/counter.py
+	python2.7 ./feedback/counter.py $< --counter duplicates > $@
+
+feedback_positional_counts: $(addprefix ./build/feedback_positional/,$(lengths))
+./build/feedback_positional/%: ./build/splits/% ./feedback/counter.py
+	python2.7 ./feedback/counter.py $< --counter positional > $@
+
+play_naive_distinct:
+	head -n 100 ./build/splits/5 | python2.7 ./naive/play.py - ./build/naive_distinct/5 --strategy distinct
+
+play_naive_duplicates:
+	head -n 100 ./build/splits/5 | python2.7 ./naive/play.py - ./build/naive_duplicates/5 --strategy duplicates
+
+./build:
+	mkdir -p ./build/splits
+	mkdir -p ./build/naive_distinct
+	mkdir -p ./build/naive_duplicates
+	mkdir -p ./build/feedback_distinct
+	mkdir -p ./build/feedback_duplicates
+	mkdir -p ./build/feedback_positional
 
 clean:
 	rm -rf ./build
-	mkdir -p ./build/splits
-	mkdir -p ./build/naive
 
 .PHONY : split
 
