@@ -11,6 +11,10 @@ def duplicates_generator(iterable):
     for combination in positional_generator(iterable):
         yield tuple(l for l in sorted(combination) if l != '-')
 
+def ordered_generator(iterable):
+    for combination in positional_generator(iterable):
+        yield tuple(l for l in combination if l != '-')
+
 def positional_generator(iterable):
     pool = tuple(iterable)
     n = len(pool)

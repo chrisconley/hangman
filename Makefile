@@ -1,5 +1,9 @@
 lengths:= 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 27 28
 
+random_words: ./build ./build/random_words.txt
+./build/random_words.txt: ./words.txt
+	cat ./words.txt | awk 'BEGIN {srand()} !/^$$/ { if (rand() <= .10) print $$0}' > $@
+
 splits:= $(addprefix ./build/splits/,$(lengths))
 $(splits): ./build ./words.txt ./splitter.py
 	python2.7 ./splitter.py ./words.txt ./build/splits
@@ -29,8 +33,11 @@ feedback_positional_counts: $(addprefix ./build/feedback_positional/,$(lengths))
 ./build/feedback_positional/%: ./build/splits/% ./feedback/counter.py
 	python2.7 ./feedback/counter.py $< --counter positional > $@
 
-play_naive:
-	head -n 100 ./words.txt | python2.7 ./naive/play.py - ./build/naive_counts.csv
+play_naive: ./build/naive_counts.csv
+	cat ./build/random_words.txt | python2.7 ./naive/play.py - ./build/naive_counts.csv
+
+play_naive_split: naive_split_counts
+	cat ./build/random_words.txt | python2.7 ./naive/play_split.py - ./build/naive_split/
 
 ./build:
 	mkdir -p ./build/splits
