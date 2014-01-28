@@ -5,9 +5,13 @@ $(splits): ./build ./words.txt ./splitter.py
 	python2.7 ./splitter.py ./words.txt ./build/splits
 splits: $(splits)
 
-naive_distinct_counts: $(addprefix ./build/naive_distinct/,$(lengths))
-./build/naive_distinct/%: ./build/splits/% ./naive/counter.py
-	python2.7 ./naive/counter.py $< --counter distinct > $@
+naive_counts: ./build ./build/naive_counts.csv
+./build/naive_counts.csv: ./words.txt ./naive/counter.py
+	python2.7 ./naive/counter.py $< > $@
+
+naive_split_counts: $(addprefix ./build/naive_split/,$(lengths))
+./build/naive_split/%: ./build/splits/% ./naive/counter.py
+	python2.7 ./naive/counter.py $< > $@
 
 naive_duplicates_counts: $(addprefix ./build/naive_duplicates/,$(lengths))
 ./build/naive_duplicates/%: ./build/splits/% ./naive/counter.py
@@ -25,16 +29,12 @@ feedback_positional_counts: $(addprefix ./build/feedback_positional/,$(lengths))
 ./build/feedback_positional/%: ./build/splits/% ./feedback/counter.py
 	python2.7 ./feedback/counter.py $< --counter positional > $@
 
-play_naive_distinct:
-	head -n 100 ./build/splits/5 | python2.7 ./naive/play.py - ./build/naive_distinct/5 --strategy distinct
-
-play_naive_duplicates:
-	head -n 100 ./build/splits/5 | python2.7 ./naive/play.py - ./build/naive_duplicates/5 --strategy duplicates
+play_naive:
+	head -n 100 ./words.txt | python2.7 ./naive/play.py - ./build/naive_counts.csv
 
 ./build:
 	mkdir -p ./build/splits
-	mkdir -p ./build/naive_distinct
-	mkdir -p ./build/naive_duplicates
+	mkdir -p ./build/naive_split
 	mkdir -p ./build/feedback_distinct
 	mkdir -p ./build/feedback_duplicates
 	mkdir -p ./build/feedback_positional
