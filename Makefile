@@ -1,3 +1,6 @@
+# ubuntu box needs PYTHONPATH set
+# PYTHONPATH=./ make play_naive_split
+
 lengths:= 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 27 28
 
 random_words: ./build ./build/random_words.txt
@@ -33,10 +36,10 @@ feedback_positional_counts: $(addprefix ./build/feedback_positional/,$(lengths))
 ./build/feedback_positional/%: ./build/splits/% ./feedback/counter.py
 	python2.7 ./feedback/counter.py $< --counter positional > $@
 
-play_naive: ./build/naive_counts.csv
+play_naive: random_words ./build/naive_counts.csv
 	cat ./build/random_words.txt | python2.7 ./naive/play.py - ./build/naive_counts.csv
 
-play_naive_split: naive_split_counts
+play_naive_split: random_words naive_split_counts
 	cat ./build/random_words.txt | python2.7 ./naive/play_split.py - ./build/naive_split/
 
 ./build:

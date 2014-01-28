@@ -42,5 +42,6 @@ if __name__ == '__main__':
         result = game.play(word.strip(), strategy=strategy)
         scores.append(result[2])
 
+    # TODO: hook in univariate to check significance between to methods
     avg = sum(scores) / float(len(scores))
     print avg
