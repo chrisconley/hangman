@@ -3,17 +3,21 @@
 
 lengths:= 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 27 28
 
-random_words: ./build ./build/random_words.txt
-./build/random_words.txt: ./words.txt
+words: ./build ./build/words.txt
+./build/words.txt: ./build ./words.txt
 	cat ./words.txt | awk 'BEGIN {srand()} !/^$$/ { if (rand() <= .10) print $$0}' > $@
 
+random_words: ./build ./build/random_words.txt
+./build/random_words.txt: ./build/words.txt
+	cat ./build/words.txt | awk 'BEGIN {srand()} !/^$$/ { if (rand() <= .10) print $$0}' > $@
+
 splits:= $(addprefix ./build/splits/,$(lengths))
-$(splits): ./build ./words.txt ./splitter.py
-	python2.7 ./splitter.py ./words.txt ./build/splits
+$(splits): ./build/words.txt ./splitter.py
+	python2.7 ./splitter.py ./build/words.txt ./build/splits
 splits: $(splits)
 
 naive_counts: ./build ./build/naive_counts.csv
-./build/naive_counts.csv: ./words.txt ./naive/counter.py
+./build/naive_counts.csv: ./build/words.txt ./naive/counter.py
 	python2.7 ./naive/counter.py $< > $@
 
 naive_split_counts: $(addprefix ./build/naive_split/,$(lengths))
