@@ -2,10 +2,15 @@ from collections import Counter
 import itertools
 
 def distinct_generator(iterable):
+    word_set = set(iterable)
     n = len(iterable)
     for subset_length in range(n+1):
         for subset in itertools.combinations(set(iterable), subset_length):
-            yield sorted(subset)
+            remaining_letters = word_set.difference(subset)
+            subset = sorted(subset)
+            if remaining_letters:
+                for letter in remaining_letters:
+                    yield subset, letter
 
 def duplicates_generator(iterable):
     for combination in positional_generator(iterable):
@@ -50,15 +55,15 @@ if __name__ == '__main__':
     parser.add_argument('--counter', default='distinct', type=GeneratorType)
     args = parser.parse_args()
 
-    counter = Counter()
+    counters = {}
     for word in fileinput.input(args.file):
         word = word.strip()
 
         generator = GENERATORS[args.counter]
-        for letter in generator(word):
-            counter[''.join(letter)] += 1
-        counter['*'] += 1
+        for subset, letter in generator(word):
+            counter = counters.setdefault(''.join(subset), Counter())
+            counter[letter] += 1
+            counter['*'] += 1
 
-    writer = csv.writer(sys.stdout)
-    for key, count in counter.items():
-        writer.writerow([key, count])
+    for key, counter in counters.items():
+        sys.stdout.write("{}\n".format(json.dumps([key, counter])))

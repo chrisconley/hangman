@@ -46,6 +46,9 @@ play_naive: random_words ./build/naive_counts.csv
 play_naive_split: random_words naive_split_counts
 	cat ./build/random_words.txt | python2.7 ./naive/play_split.py - ./build/naive_split/
 
+play_feedback_distinct: random_words feedback_distinct_counts
+	cat ./build/random_words.txt | python2.7 ./feedback/play.py - ./build/feedback_distinct/ --strategy distinct
+
 ./build:
 	mkdir -p ./build/splits
 	mkdir -p ./build/naive_split
