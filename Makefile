@@ -5,11 +5,11 @@ lengths:= 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 27 28
 
 words: ./build ./build/words.txt
 ./build/words.txt: ./build ./words.txt
-	cat ./words.txt | awk 'BEGIN {srand()} !/^$$/ { if (rand() <= .10) print $$0}' > $@
+	cat ./words.txt | awk 'BEGIN {srand()} !/^$$/ { if (rand() <= .01) print $$0}' > $@
 
 random_words: ./build ./build/random_words.txt
 ./build/random_words.txt: ./build/words.txt
-	cat ./build/words.txt | awk 'BEGIN {srand()} !/^$$/ { if (rand() <= .10) print $$0}' > $@
+	cat ./build/words.txt | awk 'BEGIN {srand()} !/^$$/ { if (rand() <= 1.0) print $$0}' > $@
 
 splits:= $(addprefix ./build/splits/,$(lengths))
 $(splits): ./build/words.txt ./splitter.py
@@ -32,6 +32,10 @@ feedback_distinct_counts: $(addprefix ./build/feedback_distinct/,$(lengths))
 ./build/feedback_distinct/%: ./build/splits/% ./feedback/counter.py
 	python2.7 ./feedback/counter.py $< --counter distinct > $@
 
+feedback_ordered_counts: $(addprefix ./build/feedback_ordered/,$(lengths))
+./build/feedback_ordered/%: ./build/splits/% ./feedback/counter.py
+	python2.7 ./feedback/counter.py $< --counter ordered > $@
+
 feedback_duplicates_counts: $(addprefix ./build/feedback_duplicates/,$(lengths))
 ./build/feedback_duplicates/%: ./build/splits/% ./feedback/counter.py
 	python2.7 ./feedback/counter.py $< --counter duplicates > $@
@@ -49,10 +53,20 @@ play_naive_split: random_words naive_split_counts
 play_feedback_distinct: random_words feedback_distinct_counts
 	cat ./build/random_words.txt | python2.7 ./feedback/play.py - ./build/feedback_distinct/ --strategy distinct
 
+play_feedback_ordered: random_words feedback_ordered_counts
+	cat ./build/random_words.txt | python2.7 ./feedback/play.py - ./build/feedback_ordered/ --strategy ordered
+
+play_feedback_duplicates: random_words feedback_duplicates_counts
+	cat ./build/random_words.txt | python2.7 ./feedback/play.py - ./build/feedback_duplicates/ --strategy duplicates
+
+play_feedback_positional: random_words feedback_positional_counts
+	cat ./build/random_words.txt | python2.7 ./feedback/play.py - ./build/feedback_positional/ --strategy positional
+
 ./build:
 	mkdir -p ./build/splits
 	mkdir -p ./build/naive_split
 	mkdir -p ./build/feedback_distinct
+	mkdir -p ./build/feedback_ordered
 	mkdir -p ./build/feedback_duplicates
 	mkdir -p ./build/feedback_positional
 

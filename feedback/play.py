@@ -3,12 +3,43 @@ from hangman import game
 
 COUNTERS = {}
 
-def strategy(previous_result):
+def distinct_strategy(previous_result):
     word_length = len(previous_result)
     counter = COUNTERS[word_length][''.join(sorted(previous_result.known_letters))]
     for letter, count in counter.most_common():
         if letter not in previous_result.guesses and letter != '*':
             return previous_result.guesses | set(letter)
+
+def duplicates_strategy(previous_result):
+    word_length = len(previous_result)
+    key = ''.join(sorted([l for l in previous_result if l in previous_result.known_letters]))
+    counter = COUNTERS[word_length][key]
+    for letter, count in counter.most_common():
+        if letter not in previous_result.guesses and letter != '*':
+            return previous_result.guesses | set(letter)
+
+def ordered_strategy(previous_result):
+    word_length = len(previous_result)
+    key = ''.join([l for l in previous_result if l in previous_result.known_letters])
+    counter = COUNTERS[word_length][key]
+    for letter, count in counter.most_common():
+        if letter not in previous_result.guesses and letter != '*':
+            return previous_result.guesses | set(letter)
+
+def positional_strategy(previous_result):
+    word_length = len(previous_result)
+    key = str(previous_result)
+    counter = COUNTERS[word_length][key]
+    for letter, count in counter.most_common():
+        if letter not in previous_result.guesses and letter != '*':
+            return previous_result.guesses | set(letter)
+
+STRATEGIES = {
+    'distinct': distinct_strategy,
+    'duplicates': duplicates_strategy,
+    'ordered': ordered_strategy,
+    'positional': positional_strategy,
+}
 
 if __name__ == '__main__':
     from argparse import ArgumentParser, ArgumentTypeError
@@ -23,6 +54,8 @@ if __name__ == '__main__':
     parser.add_argument('counts', help='counts directory')
     parser.add_argument('--strategy', default='distinct')
     args = parser.parse_args()
+
+    strategy = STRATEGIES[args.strategy]
 
     dirname = os.path.abspath(args.counts)
     filenames = [

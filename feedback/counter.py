@@ -8,31 +8,31 @@ def distinct_generator(iterable):
         for subset in itertools.combinations(set(iterable), subset_length):
             remaining_letters = word_set.difference(subset)
             subset = sorted(subset)
+            # We should probably yield remaining letters so we can properly count '*'
             if remaining_letters:
                 for letter in remaining_letters:
                     yield subset, letter
 
 def duplicates_generator(iterable):
-    for combination in positional_generator(iterable):
-        yield tuple(l for l in sorted(combination) if l != '-')
+    for combination, letter in distinct_generator(iterable):
+        subset = set(combination)
+        yield tuple(l for l in sorted(iterable) if l in subset), letter
 
 def ordered_generator(iterable):
-    for combination in positional_generator(iterable):
-        yield tuple(l for l in combination if l != '-')
+    for combination, letter in distinct_generator(iterable):
+        subset = set(combination)
+        yield tuple(l for l in iterable if l in subset), letter
 
 def positional_generator(iterable):
-    pool = tuple(iterable)
-    n = len(pool)
-    word_indices = range(n)
-    for subset_length in range(n+1):
-        for subset in itertools.combinations(word_indices, subset_length):
-            t = tuple(pool[i] if i in subset else '-' for i in word_indices)
-            yield t
+    for combination, letter in distinct_generator(iterable):
+        subset = set(combination)
+        yield tuple(l if l in subset else '-' for l in iterable), letter
 
 
 GENERATORS = {
     'distinct': distinct_generator,
     'duplicates': duplicates_generator,
+    'ordered': ordered_generator,
     'positional': positional_generator
 }
 
@@ -63,6 +63,8 @@ if __name__ == '__main__':
         for subset, letter in generator(word):
             counter = counters.setdefault(''.join(subset), Counter())
             counter[letter] += 1
+            # We're counting too much here but doesn't matter much for our
+            # feedback strategies
             counter['*'] += 1
 
     for key, counter in counters.items():
