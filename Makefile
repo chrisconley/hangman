@@ -32,17 +32,21 @@ feedback_distinct_counts: $(addprefix ./build/feedback_distinct/,$(lengths))
 ./build/feedback_distinct/%: ./build/splits/% ./feedback/counter.py
 	python2.7 ./feedback/counter.py $< --counter distinct > $@
 
-feedback_ordered_counts: $(addprefix ./build/feedback_ordered/,$(lengths))
-./build/feedback_ordered/%: ./build/splits/% ./feedback/counter.py
-	python2.7 ./feedback/counter.py $< --counter ordered > $@
-
 feedback_duplicates_counts: $(addprefix ./build/feedback_duplicates/,$(lengths))
 ./build/feedback_duplicates/%: ./build/splits/% ./feedback/counter.py
 	python2.7 ./feedback/counter.py $< --counter duplicates > $@
 
+feedback_ordered_counts: $(addprefix ./build/feedback_ordered/,$(lengths))
+./build/feedback_ordered/%: ./build/splits/% ./feedback/counter.py
+	python2.7 ./feedback/counter.py $< --counter ordered > $@
+
 feedback_positional_counts: $(addprefix ./build/feedback_positional/,$(lengths))
 ./build/feedback_positional/%: ./build/splits/% ./feedback/counter.py
 	python2.7 ./feedback/counter.py $< --counter positional > $@
+
+lookahead_duplicates_counts: $(addprefix ./build/lookahead_duplicates/,$(lengths))
+./build/lookahead_duplicates/%: ./build/splits/% ./lookahead/counter.py
+	python2.7 ./lookahead/counter.py $< --counter duplicates > $@
 
 play_naive: random_words ./build/naive_counts.csv
 	cat ./build/random_words.txt | python2.7 ./naive/play.py - ./build/naive_counts.csv
@@ -53,22 +57,26 @@ play_naive_split: random_words naive_split_counts
 play_feedback_distinct: random_words feedback_distinct_counts
 	cat ./build/random_words.txt | python2.7 ./feedback/play.py - ./build/feedback_distinct/ --strategy distinct
 
-play_feedback_ordered: random_words feedback_ordered_counts
-	cat ./build/random_words.txt | python2.7 ./feedback/play.py - ./build/feedback_ordered/ --strategy ordered
-
 play_feedback_duplicates: random_words feedback_duplicates_counts
 	cat ./build/random_words.txt | python2.7 ./feedback/play.py - ./build/feedback_duplicates/ --strategy duplicates
 
+play_feedback_ordered: random_words feedback_ordered_counts
+	cat ./build/random_words.txt | python2.7 ./feedback/play.py - ./build/feedback_ordered/ --strategy ordered
+
 play_feedback_positional: random_words feedback_positional_counts
 	cat ./build/random_words.txt | python2.7 ./feedback/play.py - ./build/feedback_positional/ --strategy positional
+
+play_lookahead_duplicates: random_words lookahead_duplicates_counts
+	cat ./build/random_words.txt | python2.7 ./lookahead/play.py - ./build/lookahead_duplicates/ --strategy duplicates
 
 ./build:
 	mkdir -p ./build/splits
 	mkdir -p ./build/naive_split
 	mkdir -p ./build/feedback_distinct
-	mkdir -p ./build/feedback_ordered
 	mkdir -p ./build/feedback_duplicates
+	mkdir -p ./build/feedback_ordered
 	mkdir -p ./build/feedback_positional
+	mkdir -p ./build/lookahead_duplicates
 
 clean:
 	rm -rf ./build
