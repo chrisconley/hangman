@@ -8,25 +8,23 @@ def distinct_generator(iterable):
         for subset in itertools.combinations(set(iterable), subset_length):
             remaining_letters = word_set.difference(subset)
             subset = sorted(subset)
-            # We should probably yield remaining letters so we can properly count '*'
             if remaining_letters:
-                for letter in remaining_letters:
-                    yield subset, letter
+                yield subset, remaining_letters
 
 def duplicates_generator(iterable):
-    for combination, letter in distinct_generator(iterable):
+    for combination, remaining_letters in distinct_generator(iterable):
         subset = set(combination)
-        yield tuple(l for l in sorted(iterable) if l in subset), letter
+        yield tuple(l for l in sorted(iterable) if l in subset), remaining_letters
 
 def ordered_generator(iterable):
-    for combination, letter in distinct_generator(iterable):
+    for combination, remaining_letters in distinct_generator(iterable):
         subset = set(combination)
-        yield tuple(l for l in iterable if l in subset), letter
+        yield tuple(l for l in iterable if l in subset), remaining_letters
 
 def positional_generator(iterable):
-    for combination, letter in distinct_generator(iterable):
+    for combination, remaining_letters in distinct_generator(iterable):
         subset = set(combination)
-        yield tuple(l if l in subset else '-' for l in iterable), letter
+        yield tuple(l if l in subset else '-' for l in iterable), remaining_letters
 
 
 GENERATORS = {
@@ -60,12 +58,11 @@ if __name__ == '__main__':
         word = word.strip()
 
         generator = GENERATORS[args.counter]
-        for subset, letter in generator(word):
+        for subset, remaining_letters in generator(word):
             counter = counters.setdefault(''.join(subset), Counter())
-            counter[letter] += 1
-            # We're counting too much here but doesn't matter much for our
-            # feedback strategies
             counter['*'] += 1
+            for letter in remaining_letters:
+                counter[letter] += 1
 
     for key, counter in counters.items():
         sys.stdout.write("{}\n".format(json.dumps([key, counter])))
