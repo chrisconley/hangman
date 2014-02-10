@@ -12,7 +12,7 @@ def most_common(counters):
             continue
         total = counter['*']
         totals[letter] = total
-    for letter, count in entropies.most_common():
+    for letter, count in totals.most_common():
         yield letter, count
 
 def most_entropy(counters):
@@ -40,20 +40,16 @@ def most_entropy(counters):
     for letter, count in entropies.most_common():
         yield letter, count
 
+def distinct_key(mystery_string):
+    subset = sorted(set([l for l in mystery_string if l in mystery_string.known_letters]))
+    key = ''.join(subset)
+    return key
+
 def duplicates_key(mystery_string):
     #dupes = sorted([l for l in mystery_string if l != mystery_string.delimiter])
     dupes = sorted([l for l in mystery_string if l in mystery_string.known_letters])
     key = ''.join(dupes)
     return key
-
-def duplicates_strategy(previous_result):
-    word_length = len(previous_result)
-    key = duplicates_key(previous_result)
-    counter = COUNTERS[word_length][key]
-
-    for letter, count in most_entropy(counter):
-        if letter not in previous_result.guesses and letter != '*':
-            return previous_result.guesses | set(letter)
 
 def strategy(mystery_string, key_generator, sorter):
     word_length = len(mystery_string)
@@ -64,8 +60,14 @@ def strategy(mystery_string, key_generator, sorter):
         if letter not in mystery_string.guesses and letter != '*':
             return mystery_string.guesses | set(letter)
 
-STRATEGIES = {
-    'duplicates': duplicates_strategy,
+KEYS = {
+    'distinct': distinct_key,
+    'duplicates': duplicates_key,
+}
+
+SORTERS = {
+    'most_common': most_common,
+    'most_entropy': most_entropy
 }
 
 if __name__ == '__main__':
@@ -79,10 +81,12 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('file', help='input words')
     parser.add_argument('counts', help='counts directory')
-    parser.add_argument('--strategy', default='duplicates')
+    parser.add_argument('--key-generator', default='duplicates')
+    parser.add_argument('--sorter', default='most_entropy')
     args = parser.parse_args()
 
-    #strategy = STRATEGIES[args.strategy]
+    key_generator = KEYS[args.key_generator]
+    sorter = SORTERS[args.sorter]
 
     dirname = os.path.abspath(args.counts)
     filenames = [
@@ -106,7 +110,7 @@ if __name__ == '__main__':
         g = game.play(word.strip(), strategy=strategy)
         result = ''
         for mystery_string in g:
-            guesses = strategy(mystery_string, duplicates_key, most_entropy)
+            guesses = strategy(mystery_string, key_generator, sorter)
             try:
                 g.send(guesses)
             except StopIteration:

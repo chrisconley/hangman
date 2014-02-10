@@ -9,7 +9,7 @@ def distinct_generator(iterable):
             remaining_letters = word_set.difference(subset)
             subset = sorted(subset)
             if remaining_letters:
-                yield subset, remaining_letters
+                yield tuple(subset), remaining_letters
 
 def duplicates_generator(iterable):
     for combination, remaining_letters in distinct_generator(iterable):
@@ -17,6 +17,7 @@ def duplicates_generator(iterable):
         yield tuple(l for l in sorted(iterable) if l in subset), remaining_letters
 
 GENERATORS = {
+    'distinct': distinct_generator,
     'duplicates': duplicates_generator,
 }
 
@@ -49,6 +50,7 @@ if __name__ == '__main__':
             letter_counter['*'] += 1
             for letter in remaining_letters:
                 counter = letter_counter.setdefault(letter, Counter())
+                # TODO: How do we change between letter counts and letter positions?
                 duplicates = tuple(l for l in sorted(word) if l == letter)
                 counter["".join(duplicates)] += 1
                 counter['*'] += 1 # this doesn't seem quite right

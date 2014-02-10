@@ -44,6 +44,10 @@ feedback_positional_counts: $(addprefix ./build/feedback_positional/,$(lengths))
 ./build/feedback_positional/%: ./build/splits/% ./feedback/counter.py
 	python2.7 ./feedback/counter.py $< --counter positional > $@
 
+lookahead_distinct_counts: $(addprefix ./build/lookahead_distinct/,$(lengths))
+./build/lookahead_distinct/%: ./build/splits/% ./lookahead/counter.py
+	python2.7 ./lookahead/counter.py $< --counter distinct > $@
+
 lookahead_duplicates_counts: $(addprefix ./build/lookahead_duplicates/,$(lengths))
 ./build/lookahead_duplicates/%: ./build/splits/% ./lookahead/counter.py
 	python2.7 ./lookahead/counter.py $< --counter duplicates > $@
@@ -66,8 +70,11 @@ play_feedback_ordered: random_words feedback_ordered_counts
 play_feedback_positional: random_words feedback_positional_counts
 	cat ./build/random_words.txt | python2.7 ./feedback/play.py - ./build/feedback_positional/ --strategy positional
 
+play_lookahead_distinct: random_words lookahead_distinct_counts
+	cat ./build/random_words.txt | python2.7 ./lookahead/play.py - ./build/lookahead_distinct/ --key-generator distinct --sorter most_entropy
+
 play_lookahead_duplicates: random_words lookahead_duplicates_counts
-	cat ./build/random_words.txt | python2.7 ./lookahead/play.py - ./build/lookahead_duplicates/ --strategy duplicates
+	cat ./build/random_words.txt | python2.7 ./lookahead/play.py - ./build/lookahead_duplicates/ --key-generator duplicates --sorter most_entropy
 
 ./build:
 	mkdir -p ./build/splits
@@ -76,6 +83,7 @@ play_lookahead_duplicates: random_words lookahead_duplicates_counts
 	mkdir -p ./build/feedback_duplicates
 	mkdir -p ./build/feedback_ordered
 	mkdir -p ./build/feedback_positional
+	mkdir -p ./build/lookahead_distinct
 	mkdir -p ./build/lookahead_duplicates
 
 clean:
