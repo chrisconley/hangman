@@ -44,11 +44,11 @@ def naive_strategy(previous_result):
 
 def play(word, strategy=naive_strategy, scorer=default_scorer, guesses=set()):
     result = MysteryString(word, guesses)
-    if result == word:
-        return [word, guesses, scorer(result)]
-    else:
-        new_guesses = strategy(result)
-        return play(word, strategy, scorer, new_guesses)
+    while result != word:
+        new_guesses = (yield result)
+        if new_guesses:
+            result = MysteryString(word, new_guesses)
+
 
 if __name__ == '__main__':
     import random

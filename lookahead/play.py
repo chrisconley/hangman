@@ -4,6 +4,17 @@ from hangman import game
 
 COUNTERS = {}
 
+def most_common(counters):
+    word_count = counters['*']
+    totals = Counter()
+    for letter, counter in counters.items():
+        if letter == '*':
+            continue
+        total = counter['*']
+        totals[letter] = total
+    for letter, count in entropies.most_common():
+        yield letter, count
+
 def most_entropy(counters):
     word_count = counters['*']
     entropies = Counter()
@@ -29,15 +40,29 @@ def most_entropy(counters):
     for letter, count in entropies.most_common():
         yield letter, count
 
+def duplicates_key(mystery_string):
+    #dupes = sorted([l for l in mystery_string if l != mystery_string.delimiter])
+    dupes = sorted([l for l in mystery_string if l in mystery_string.known_letters])
+    key = ''.join(dupes)
+    return key
+
 def duplicates_strategy(previous_result):
     word_length = len(previous_result)
-    key = ''.join(sorted([l for l in previous_result if l in previous_result.known_letters]))
+    key = duplicates_key(previous_result)
     counter = COUNTERS[word_length][key]
 
-    # TODO: choose max entropy instead of most_common
     for letter, count in most_entropy(counter):
         if letter not in previous_result.guesses and letter != '*':
             return previous_result.guesses | set(letter)
+
+def strategy(mystery_string, key_generator, sorter):
+    word_length = len(mystery_string)
+    key = key_generator(mystery_string)
+    counter = COUNTERS[word_length][key]
+
+    for letter, count in sorter(counter):
+        if letter not in mystery_string.guesses and letter != '*':
+            return mystery_string.guesses | set(letter)
 
 STRATEGIES = {
     'duplicates': duplicates_strategy,
@@ -57,7 +82,7 @@ if __name__ == '__main__':
     parser.add_argument('--strategy', default='duplicates')
     args = parser.parse_args()
 
-    strategy = STRATEGIES[args.strategy]
+    #strategy = STRATEGIES[args.strategy]
 
     dirname = os.path.abspath(args.counts)
     filenames = [
@@ -78,8 +103,15 @@ if __name__ == '__main__':
 
     scores = []
     for word in fileinput.input(args.file):
-        result = game.play(word.strip(), strategy=strategy)
-        scores.append(result[2])
+        g = game.play(word.strip(), strategy=strategy)
+        result = ''
+        for mystery_string in g:
+            guesses = strategy(mystery_string, duplicates_key, most_entropy)
+            try:
+                g.send(guesses)
+            except StopIteration:
+                result = mystery_string
+        scores.append(game.default_scorer(result))
 
     # TODO: hook in univariate to check significance between to methods
     avg = sum(scores) / float(len(scores))
