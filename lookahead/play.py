@@ -15,7 +15,31 @@ def most_common(counters):
     for letter, count in totals.most_common():
         yield letter, count
 
+def log_entropy(plausibility):
+    """
+    -xlog(x) (base 2)
+    """
+    if plausibility == 0.0:
+        return 0
+    return -plausibility * math.log(plausibility, 2)
+
+def reverse_log_entropy(plausibility):
+    """
+    xlog(x) (base 2)
+    """
+    plausibility = 1 - plausibility
+    if plausibility == 0.0:
+        return 0
+    return -plausibility * math.log(plausibility, 2)
+
+def square_entropy(plausibility):
+    """
+    x - x^2
+    """
+    return plausibility - (plausibility * plausibility)
+
 def most_entropy(counters):
+    print counters
     word_count = counters['*']
     entropies = Counter()
     for letter, counter in counters.items():
@@ -23,21 +47,29 @@ def most_entropy(counters):
             continue
         total = counter['*']
         miss_plausibility = float(word_count - total)/float(word_count)
+        print '-', miss_plausibility
         plausibilities = []
         if miss_plausibility != 0:
-            plausibilities.append(miss_plausibility * math.log(miss_plausibility))
+            #plausibilities.append(square_entropy(miss_plausibility))
+            plausibilities.append(log_entropy(miss_plausibility))
             for subset, count in counter.items():
                 if subset == '*':
+                    p = float(count) / float(word_count)
+                    print letter, p
+                    plausibilities.append(log_entropy(p))
                     continue
-                p = float(count) / float(word_count)
-                plausibilities.append(p * math.log(p))
+                #p = float(count) / float(word_count)
+                ##plausibilities.append(square_entropy(p))
+                #plausibilities.append(log_entropy(p))
 
-            entropy = -1.0 * sum(plausibilities)
+            entropy = sum(plausibilities)
             entropies[letter] = entropy
         else: # we know this letter is a match because there are no remaining misses possible
             # This is sorta cheating because entropy should actually be 0
             entropies[letter] = 1000000000
+    print entropies
     for letter, count in entropies.most_common():
+        print 'yielding', letter, count
         yield letter, count
 
 def distinct_key(mystery_string):
@@ -107,15 +139,19 @@ if __name__ == '__main__':
 
     scores = []
     for word in fileinput.input(args.file):
+        print '------'
         g = game.play(word.strip(), strategy=strategy)
         result = ''
         for mystery_string in g:
             guesses = strategy(mystery_string, key_generator, sorter)
+            print mystery_string, guesses, mystery_string.known_letters, mystery_string.missed_letters, game.default_scorer(mystery_string)
             try:
                 g.send(guesses)
             except StopIteration:
                 result = mystery_string
+        print result
         scores.append(game.default_scorer(result))
+        break
 
     # TODO: hook in univariate to check significance between to methods
     avg = sum(scores) / float(len(scores))

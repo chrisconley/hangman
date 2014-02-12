@@ -5,7 +5,7 @@ lengths:= 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 27 28
 
 words: ./build ./build/words.txt
 ./build/words.txt: ./build ./words.txt
-	cat ./words.txt | awk 'BEGIN {srand()} !/^$$/ { if (rand() <= .01) print $$0}' > $@
+	cat ./words.txt | awk 'BEGIN {srand()} !/^$$/ { if (rand() <= .02) print $$0}' > $@
 
 random_words: ./build ./build/random_words.txt
 ./build/random_words.txt: ./build/words.txt

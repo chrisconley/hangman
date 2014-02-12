@@ -51,8 +51,8 @@ if __name__ == '__main__':
             for letter in remaining_letters:
                 counter = letter_counter.setdefault(letter, Counter())
                 # TODO: How do we change between letter counts and letter positions?
-                #duplicates = tuple(l for l in sorted(word) if l == letter) # counts
-                duplicates = tuple(l if l == letter else '-' for l in word) # positions
+                duplicates = tuple(l for l in sorted(word) if l == letter) # counts
+                #duplicates = tuple(l if l == letter else '-' for l in word) # positions
                 counter["".join(duplicates)] += 1
                 counter['*'] += 1 # this doesn't seem quite right
 
