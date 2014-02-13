@@ -2,92 +2,78 @@ from collections import Counter
 import unittest
 from bitstring import BitArray
 
-def get_key(letter, next_letter, i):
-    key = "{}{}{}".format(letter, next_letter, i)
+def get_key(letter, i):
+    key = "{}{}".format(letter, i)
     return key
 
-
-def countit(counter, words):
+def encode_dictionary(words):
+    encoded_dictionary = {}
     dictionary_length = len(words)
     for word_index, word in enumerate(words):
         word_length = len(word)
         for i, letter in enumerate(word):
-            if i == word_length - 1:
-                continue
-            next_letter = word[i+1]
-            key = get_key(letter, next_letter, i)
-            bitarray = counter.setdefault(key, BitArray(dictionary_length))
+            key = get_key(letter, i)
+            bitarray = encoded_dictionary.setdefault(key, BitArray(dictionary_length))
             bitarray.set(1, word_index)
-    return counter
+    return encoded_dictionary
 
 ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
 
-def search(dictionary_length, graph, mystery_string):
+def search(dictionary_length, graph, mystery_string, possible_letters=ALPHABET):
     union = BitArray(dictionary_length)
-    #union.invert([0, -1])
+    union.invert()
     word_length = len(mystery_string)
-    for i, letter in enumerate(mystery_string):
-        print i, letter
-        if i == word_length - 1:
-            continue
-        next_letter = mystery_string[i+1]
-        if letter == '-' and next_letter == '-':
-            for first_letter in ALPHABET:
-                for second_letter in ALPHABET:
-                    key = get_key(first_letter, second_letter, i)
-                    bitarray = graph.get(key, None)
-                    if bitarray:
-                        print union, bitarray
-                        union = union | bitarray
-        elif letter == '-' and next_letter != '-':
-            for first_letter in ALPHABET:
-                    key = get_key(first_letter, next_letter, i)
-                    bitarray = graph.get(key, None)
-                    if bitarray:
-                        print union, bitarray
-                        union = union | bitarray
-        elif letter != '-' and next_letter == '-':
-            for second_letter in ALPHABET:
-                    key = get_key(letter, second_letter, i)
-                    bitarray = graph.get(key, None)
-                    if bitarray:
-                        print union, bitarray
-                        union = union | bitarray
-
+    for i, mystery_letter in enumerate(mystery_string):
+        if mystery_letter == '-':
+            array = BitArray(dictionary_length)
+            for letter in possible_letters:
+                key = get_key(letter, i)
+                bitarray = graph.get(key, None)
+                if bitarray:
+                    array |= bitarray
+            bitarray = array
         else:
-            key = get_key(letter, next_letter, i)
+            key = get_key(mystery_letter, i)
             bitarray = graph[key]
-            print union, bitarray
-            union = union | bitarray
-    count = len([x for x in BitArray(union) if x])
+        union &= bitarray
+
+    return union
+
+def count_bitarray(bitarray):
+    count = len([x for x in bitarray if x])
     return count
-
-
 
 class BitCounter(unittest.TestCase):
 
-    def test_countit(self):
-        counter = {}
+    def test_encode_dictionary(self):
         words = ['cat', 'cot', 'can']
-        counts = countit(counter, words)
-        expected_counts = {
-            'ca0': BitArray('0b101'),
-            'co0': BitArray('0b010'),
-            'at1': BitArray('0b100'),
-            'ot1': BitArray('0b010'),
-            'an1': BitArray('0b001')
+        encoded_dictionary = encode_dictionary(words)
+        expected_encoded = {
+            'c0': BitArray('0b111'),
+            'a1': BitArray('0b101'),
+            'o1': BitArray('0b010'),
+            'n2': BitArray('0b001'),
+            't2': BitArray('0b110'),
         }
-        self.assertEqual(counts, expected_counts)
+        self.assertEqual(encoded_dictionary, expected_encoded)
 
     def test_search(self):
-        graph = {}
         words = ['cat', 'cot', 'can']
-        countit(graph, words)
-        #self.assertEqual(search(len(words), graph, '-at'), 1)
-        #self.assertEqual(search(len(words), graph, '---'), 3)
-        #self.assertEqual(search(len(words), graph, '-a-'), 2)
-        #self.assertEqual(search(len(words), graph, 'ca-'), 2)
-        self.assertEqual(search(len(words), graph, 'can'), 1)
+        encoded_dictionary = encode_dictionary(words)
+        self.assertEqual(search(len(words), encoded_dictionary, '---'), BitArray('0b111'))
+        self.assertEqual(search(len(words), encoded_dictionary, '-a-'), BitArray('0b101'))
+        self.assertEqual(search(len(words), encoded_dictionary, 'ca-'), BitArray('0b101'))
+        self.assertEqual(search(len(words), encoded_dictionary, '-at'), BitArray('0b100'))
+        self.assertEqual(search(len(words), encoded_dictionary, 'can'), BitArray('0b001'))
+
+        # We don't need to search for 'a' or 't' if we've already guessed those letters
+        # Although passing it in allows us to shoot ourselves in the foot
+        self.assertEqual(search(len(words), encoded_dictionary, '-a-', possible_letters='cn'), BitArray('0b001'))
+
+    def test_count_bitarray(self):
+        self.assertEqual(count_bitarray(BitArray('0b111')), 3)
+        self.assertEqual(count_bitarray(BitArray('0b110')), 2)
+        self.assertEqual(count_bitarray(BitArray('0b001')), 1)
 
 if __name__ == '__main__':
     from argparse import ArgumentParser, ArgumentTypeError
@@ -97,14 +83,26 @@ if __name__ == '__main__':
     parser.add_argument('file', help='input words')
     args = parser.parse_args()
 
-    counter = {}
     words = [word.strip() for word in fileinput.input(args.file)]
     print len(words)
-    countit(counter, words)
+    encoded_dictionary = encode_dictionary(words)
 
-    for key, a in counter.items():
-        print key, a
-    print len(counter.keys())
+    #for key, a in encoded_dictionary.items():
+        #print key, a
+    print len(encoded_dictionary.keys())
+
+    print 'searching'
+    bitarray = search(len(words), encoded_dictionary, '---------')
+    print bitarray
+    print count_bitarray(bitarray)
+    print 'done'
+
+    print 'searching without "h"'
+    possible_letters = set(ALPHABET) - set('h')
+    bitarray = search(len(words), encoded_dictionary, '---------', possible_letters=possible_letters)
+    print bitarray
+    print count_bitarray(bitarray)
+    print 'done'
 
     import time
-    time.sleep(30)
+    #time.sleep(30)
