@@ -166,7 +166,9 @@ if __name__ == '__main__':
     bitarray = search(len(words), encoded_dictionary, '---------')
     print bitarray
     print count_bitarray(bitarray)
-    print get_remaining_words(bitarray, words)[0:9]
+    remaining_words = get_remaining_words(bitarray, words)
+    counts = count_positional_letters(remaining_words)
+    # TODO: Just need to hook up to hangman.game now
     print 'done'
 
     print 'searching without "h"'
