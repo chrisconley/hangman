@@ -1,7 +1,6 @@
 from collections import Counter
 import unittest
-from bitstring import BitArray
-
+from bitarray import bitarray
 from hangman import game
 
 def get_key(letter, i):
@@ -15,34 +14,34 @@ def encode_dictionary(words):
         word_length = len(word)
         for i, letter in enumerate(word):
             key = get_key(letter, i)
-            bitarray = encoded_dictionary.setdefault(key, BitArray(dictionary_length))
-            bitarray.set(1, word_index)
+            barray = encoded_dictionary.setdefault(key, bitarray(dictionary_length))
+            barray[word_index] = True
     return encoded_dictionary
 
 ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
 
 def search(dictionary_length, graph, mystery_string, possible_letters=ALPHABET):
-    union = BitArray(dictionary_length)
-    union.invert()
+    union = bitarray(dictionary_length)
+    union[0:] = True
     word_length = len(mystery_string)
     for i, mystery_letter in enumerate(mystery_string):
         if mystery_letter == '-':
-            array = BitArray(dictionary_length)
+            array = bitarray(dictionary_length)
             for letter in possible_letters:
                 key = get_key(letter, i)
-                bitarray = graph.get(key, None)
-                if bitarray is not None:
-                    array |= bitarray
-            bitarray = array
+                barray = graph.get(key, None)
+                if barray is not None:
+                    array |= barray
+            barray = array
         else:
             key = get_key(mystery_letter, i)
-            bitarray = graph[key]
-        union &= bitarray
+            barray = graph[key]
+        union &= barray
 
     return union
 
-def count_bitarray(bitarray):
-    count = len([x for x in bitarray if x])
+def count_bitarray(barray):
+    count = len([x for x in barray if x])
     return count
 
 def get_remaining_words(encoded_words, words):
@@ -83,31 +82,31 @@ class BitCounter(unittest.TestCase):
         words = ['cat', 'cot', 'can']
         encoded_dictionary = encode_dictionary(words)
         expected_encoded = {
-            'c0': BitArray('0b111'),
-            'a1': BitArray('0b101'),
-            'o1': BitArray('0b010'),
-            'n2': BitArray('0b001'),
-            't2': BitArray('0b110'),
+            'c0': bitarray('111'),
+            'a1': bitarray('101'),
+            'o1': bitarray('010'),
+            'n2': bitarray('001'),
+            't2': bitarray('110'),
         }
         self.assertEqual(encoded_dictionary, expected_encoded)
 
     def test_search(self):
         words = ['cat', 'cot', 'can']
         encoded_dictionary = encode_dictionary(words)
-        self.assertEqual(search(len(words), encoded_dictionary, '---'), BitArray('0b111'))
-        self.assertEqual(search(len(words), encoded_dictionary, '-a-'), BitArray('0b101'))
-        self.assertEqual(search(len(words), encoded_dictionary, 'ca-'), BitArray('0b101'))
-        self.assertEqual(search(len(words), encoded_dictionary, '-at'), BitArray('0b100'))
-        self.assertEqual(search(len(words), encoded_dictionary, 'can'), BitArray('0b001'))
+        self.assertEqual(search(len(words), encoded_dictionary, '---'), bitarray('111'))
+        self.assertEqual(search(len(words), encoded_dictionary, '-a-'), bitarray('101'))
+        self.assertEqual(search(len(words), encoded_dictionary, 'ca-'), bitarray('101'))
+        self.assertEqual(search(len(words), encoded_dictionary, '-at'), bitarray('100'))
+        self.assertEqual(search(len(words), encoded_dictionary, 'can'), bitarray('001'))
 
         # We don't need to search for 'a' or 't' if we've already guessed those letters
         # Although passing it in allows us to shoot ourselves in the foot
-        self.assertEqual(search(len(words), encoded_dictionary, '-a-', possible_letters='cn'), BitArray('0b001'))
+        self.assertEqual(search(len(words), encoded_dictionary, '-a-', possible_letters='cn'), bitarray('001'))
 
     def test_count_bitarray(self):
-        self.assertEqual(count_bitarray(BitArray('0b111')), 3)
-        self.assertEqual(count_bitarray(BitArray('0b110')), 2)
-        self.assertEqual(count_bitarray(BitArray('0b001')), 1)
+        self.assertEqual(count_bitarray(bitarray('111')), 3)
+        self.assertEqual(count_bitarray(bitarray('110')), 2)
+        self.assertEqual(count_bitarray(bitarray('001')), 1)
 
     def test_get_remaining_words(self):
         words = ['cat', 'cot', 'can']
