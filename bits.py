@@ -31,7 +31,7 @@ def search(dictionary_length, graph, mystery_string, possible_letters=ALPHABET):
             for letter in possible_letters:
                 key = get_key(letter, i)
                 bitarray = graph.get(key, None)
-                if bitarray:
+                if bitarray is not None:
                     array |= bitarray
             bitarray = array
         else:
