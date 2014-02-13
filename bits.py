@@ -176,21 +176,21 @@ if __name__ == '__main__':
         #print key, a
     print len(encoded_dictionary.keys())
 
-    print 'searching'
-    bitarray = search(len(words), encoded_dictionary, '---------')
-    print bitarray
-    print count_bitarray(bitarray)
-    remaining_words = get_remaining_words(bitarray, words)
-    counts = count_positional_letters(remaining_words)
-    # TODO: Just need to hook up to hangman.game now
-    print 'done'
+    #print 'searching'
+    #bitarray = search(len(words), encoded_dictionary, '---------')
+    #print bitarray
+    #print count_bitarray(bitarray)
+    #remaining_words = get_remaining_words(bitarray, words)
+    #counts = count_positional_letters(remaining_words)
+    ## TODO: Just need to hook up to hangman.game now
+    #print 'done'
 
-    print 'searching without "h"'
-    possible_letters = set(ALPHABET) - set('h')
-    bitarray = search(len(words), encoded_dictionary, '---------', possible_letters=possible_letters)
-    print bitarray
-    print count_bitarray(bitarray)
-    print 'done'
+    #print 'searching without "h"'
+    #possible_letters = set(ALPHABET) - set('h')
+    #bitarray = search(len(words), encoded_dictionary, '---------', possible_letters=possible_letters)
+    #print bitarray
+    #print count_bitarray(bitarray)
+    #print 'done'
 
     print 'playing'
     cached_guesses = {}
@@ -202,7 +202,6 @@ if __name__ == '__main__':
             key = "{}:{}".format(mystery_string, sorted("".join(mystery_string.missed_letters)))
             guesses = cached_guesses.get(key, None)
             if not guesses:
-                print 'cached miss'
                 possible_letters = set(ALPHABET) - set(mystery_string.guesses)
                 encoded_remaining_words = search(len(words), encoded_dictionary, mystery_string, possible_letters=possible_letters)
                 remaining_words = get_remaining_words(encoded_remaining_words, words)
@@ -210,7 +209,6 @@ if __name__ == '__main__':
                 guesses = strategy(mystery_string, counts)
                 cached_guesses[key] = guesses
             try:
-                print 'guesses', guesses, key
                 g.send(guesses)
             except StopIteration:
                 result = mystery_string
