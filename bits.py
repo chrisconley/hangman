@@ -2,6 +2,8 @@ from collections import Counter
 import unittest
 from bitstring import BitArray
 
+from hangman import game
+
 def get_key(letter, i):
     key = "{}{}".format(letter, i)
     return key
@@ -146,6 +148,18 @@ class BitCounter(unittest.TestCase):
         self.assertEqual(counter['o'], {'*': 3, '-o-': 1, '-o-o': 1, '-oo-': 1})
         self.assertEqual(counter['t'], {'*': 4, '--t': 2, '--t-': 1, '---t': 1})
 
+def most_common(counter):
+    counter = Counter(counter)
+    for letter, count in counter.most_common():
+        if letter == '*':
+            continue
+        yield letter, count
+
+def strategy(mystery_string, counter):
+    for letter, count in most_common(counter):
+        if letter not in mystery_string.guesses and letter != '*':
+            return mystery_string.guesses | set(letter)
+
 if __name__ == '__main__':
     from argparse import ArgumentParser, ArgumentTypeError
     import fileinput
@@ -178,5 +192,29 @@ if __name__ == '__main__':
     print count_bitarray(bitarray)
     print 'done'
 
-    import time
-    #time.sleep(30)
+    print 'playing'
+    cached_guesses = {}
+    for word in words[8000:8010]:
+        print word
+        g = game.play(word.strip(), strategy=strategy)
+        result = ''
+        for mystery_string in g:
+            key = "{}:{}".format(mystery_string, sorted("".join(mystery_string.missed_letters)))
+            guesses = cached_guesses.get(key, None)
+            if not guesses:
+                print 'cached miss'
+                possible_letters = set(ALPHABET) - set(mystery_string.guesses)
+                encoded_remaining_words = search(len(words), encoded_dictionary, mystery_string, possible_letters=possible_letters)
+                remaining_words = get_remaining_words(encoded_remaining_words, words)
+                counts = count_positional_letters(remaining_words)
+                guesses = strategy(mystery_string, counts)
+                cached_guesses[key] = guesses
+            try:
+                print 'guesses', guesses, key
+                g.send(guesses)
+            except StopIteration:
+                result = mystery_string
+
+        print result, result.known_letters, result.missed_letters
+        print 'score: ', game.default_scorer(result)
+
