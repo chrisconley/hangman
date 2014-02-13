@@ -43,6 +43,9 @@ def count_bitarray(bitarray):
     count = len([x for x in bitarray if x])
     return count
 
+def get_remaining_words(encoded_words, words):
+    return [words[index] for (index, bit) in enumerate(encoded_words) if bit]
+
 class BitCounter(unittest.TestCase):
 
     def test_encode_dictionary(self):
@@ -75,6 +78,19 @@ class BitCounter(unittest.TestCase):
         self.assertEqual(count_bitarray(BitArray('0b110')), 2)
         self.assertEqual(count_bitarray(BitArray('0b001')), 1)
 
+    def test_get_remaining_words(self):
+        words = ['cat', 'cot', 'can']
+        encoded_dictionary = encode_dictionary(words)
+
+        encoded_words = search(len(words), encoded_dictionary, '-a-', possible_letters='cn')
+        remaining_words = get_remaining_words(encoded_words, words)
+        self.assertEqual(remaining_words, ['can'])
+
+        encoded_words = search(len(words), encoded_dictionary, 'ca-', possible_letters='cnt')
+        remaining_words = get_remaining_words(encoded_words, words)
+        self.assertEqual(remaining_words, ['cat', 'can'])
+
+
 if __name__ == '__main__':
     from argparse import ArgumentParser, ArgumentTypeError
     import fileinput
@@ -95,6 +111,7 @@ if __name__ == '__main__':
     bitarray = search(len(words), encoded_dictionary, '---------')
     print bitarray
     print count_bitarray(bitarray)
+    print get_remaining_words(bitarray, words)[0:9]
     print 'done'
 
     print 'searching without "h"'
