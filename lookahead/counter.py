@@ -52,6 +52,10 @@ if __name__ == '__main__':
                 counter = letter_counter.setdefault(letter, Counter())
                 # TODO: How do we change between letter counts and letter positions?
                 duplicates = tuple(l for l in sorted(word) if l == letter) # counts
+                # NB: The reason `positions` is not better could be due to not including
+                # missed_letters in our count keys. So our entropy says if we miss a letter, we'll
+                # gain some information, but that's not really the case cause our
+                # counters aren't scoped with missed_letters, only known_letters.
                 #duplicates = tuple(l if l == letter else '-' for l in word) # positions
                 counter["".join(duplicates)] += 1
                 counter['*'] += 1 # this doesn't seem quite right

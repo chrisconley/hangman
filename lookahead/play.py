@@ -39,7 +39,7 @@ def square_entropy(plausibility):
     return plausibility - (plausibility * plausibility)
 
 def most_entropy(counters):
-    print counters
+    #print counters
     word_count = counters['*']
     entropies = Counter()
     for letter, counter in counters.items():
@@ -47,15 +47,15 @@ def most_entropy(counters):
             continue
         total = counter['*']
         miss_plausibility = float(word_count - total)/float(word_count)
-        print '-', miss_plausibility
+        #print '-', miss_plausibility
         plausibilities = []
         if miss_plausibility != 0:
             #plausibilities.append(square_entropy(miss_plausibility))
-            plausibilities.append(log_entropy(miss_plausibility))
+            #plausibilities.append(log_entropy(miss_plausibility))
             for subset, count in counter.items():
                 if subset == '*':
                     p = float(count) / float(word_count)
-                    print letter, p
+                    #print letter, p
                     plausibilities.append(log_entropy(p))
                     continue
                 #p = float(count) / float(word_count)
@@ -67,9 +67,9 @@ def most_entropy(counters):
         else: # we know this letter is a match because there are no remaining misses possible
             # This is sorta cheating because entropy should actually be 0
             entropies[letter] = 1000000000
-    print entropies
+    #print entropies
     for letter, count in entropies.most_common():
-        print 'yielding', letter, count
+        #print 'yielding', letter, count
         yield letter, count
 
 def distinct_key(mystery_string):
@@ -139,19 +139,19 @@ if __name__ == '__main__':
 
     scores = []
     for word in fileinput.input(args.file):
-        print '------'
+        #print '------'
         g = game.play(word.strip(), strategy=strategy)
         result = ''
         for mystery_string in g:
             guesses = strategy(mystery_string, key_generator, sorter)
-            print mystery_string, guesses, mystery_string.known_letters, mystery_string.missed_letters, game.default_scorer(mystery_string)
+            #print mystery_string, guesses, mystery_string.known_letters, mystery_string.missed_letters, game.default_scorer(mystery_string)
             try:
                 g.send(guesses)
             except StopIteration:
                 result = mystery_string
-        print result
+        #print result
         scores.append(game.default_scorer(result))
-        break
+        #break
 
     # TODO: hook in univariate to check significance between to methods
     avg = sum(scores) / float(len(scores))
