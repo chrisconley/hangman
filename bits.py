@@ -14,7 +14,11 @@ def encode_dictionary(words):
         word_length = len(word)
         for i, letter in enumerate(word):
             key = get_key(letter, i)
-            barray = encoded_dictionary.setdefault(key, bitarray(dictionary_length))
+            barray  = encoded_dictionary.get(key, None)
+            if barray is None:
+                barray = bitarray(dictionary_length)
+                barray[0:] = False
+                encoded_dictionary[key] = barray
             barray[word_index] = True
     return encoded_dictionary
 
@@ -27,6 +31,7 @@ def search(dictionary_length, graph, mystery_string, possible_letters=ALPHABET):
     for i, mystery_letter in enumerate(mystery_string):
         if mystery_letter == '-':
             array = bitarray(dictionary_length)
+            array[0:] = False
             for letter in possible_letters:
                 key = get_key(letter, i)
                 barray = graph.get(key, None)
