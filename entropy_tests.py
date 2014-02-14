@@ -29,7 +29,6 @@ class EntropyTests(unittest.TestCase):
         self.assertAlmostEqual(sum(pmf['e'].values()), 1.5784, places=4)
         self.assertEqual(pmf['x'], {'!': 0.0, '*': 1.0, 'x': 1.0})
 
-
     def test_most_entropy_duplicates(self):
         counters = {
             'e': {'ee': 18, 'eee': 2, '*': 107, 'e': 87},
@@ -47,13 +46,13 @@ class EntropyTests(unittest.TestCase):
         counters = {
             'e': {'e-e': 6, '-ee': 11, 'ee-': 1, 'eee': 2, '*': 107, 'e': 87},
             'x': {'x': 1, '*': 1},
-            'a': {'a': 185, '*': 185}
+            'a': {'--a': 180, 'a--': 5, '*': 185},
+            'b': {'b--': 185, '*': 185}
         }
         total = 185
         pmfs = entropy.get_pmfs(counters, total)
         g = entropy.most_entropy(pmfs, total)
-        self.assertEqual(g.next(), ('a', 1000000000))
+        self.assertEqual(g.next(), ('a', 1000000000.179256066928))
+        self.assertEqual(g.next(), ('b', 1000000000))
         self.assertEqual(g.next(), ('e', 1.551051838789653))
         self.assertEqual(g.next(), ('x', 0.04848740692447222))
-
-

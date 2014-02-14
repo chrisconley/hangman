@@ -1,14 +1,6 @@
 from collections import Counter
 import math
 
-def log_entropy(probability):
-    """
-    -xlog(x) (base 2)
-    """
-    if probability == 0.0:
-        return 0
-    return -probability * math.log(probability, 2)
-
 def get_pmfs(counters, total):
     """
     Takes a counter and returns a probability mass function in the form of
@@ -37,6 +29,14 @@ def get_pmfs(counters, total):
 
     return pmfs
 
+def log_entropy(probability):
+    """
+    -xlog(x) (base 2)
+    """
+    if probability == 0.0:
+        return 0
+    return -probability * math.log(probability, 2)
+
 def get_entropy(probabilities):
     entropy = sum([log_entropy(p) for p in probabilities])
     return entropy
@@ -48,11 +48,14 @@ def most_entropy(pmfs, word_count):
             raise Exception('* not allowed')
 
         pmf = pmfs[letter]
-        if pmf['!'] != 0.0:
-            probabilities = [p for (subset, p) in pmf.items() if subset != '*']
-            entropies[letter] = get_entropy(probabilities)
-        else: # we know this letter is a match because there are no remaining misses possible
-            # This is sorta cheating because entropy should actually be 0
-            entropies[letter] = 1000000000
+
+        probabilities = [p for (subset, p) in pmf.items() if subset != '*']
+        entropies[letter] = get_entropy(probabilities)
+
+        # If their is no chance of a miss, we want to make sure we pick it
+        # even though in some cases, entropy will be zero
+        if pmf['!'] == 0.0:
+            entropies[letter] += 1000000000
+
     for letter, count in entropies.most_common():
         yield letter, count
