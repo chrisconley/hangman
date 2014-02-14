@@ -180,26 +180,10 @@ if __name__ == '__main__':
         #print key, a
     print len(encoded_dictionary.keys())
 
-    #print 'searching'
-    #bitarray = search(len(words), encoded_dictionary, '---------')
-    #print bitarray
-    #print count_bitarray(bitarray)
-    #remaining_words = get_remaining_words(bitarray, words)
-    #counts = count_positional_letters(remaining_words)
-    ## TODO: Just need to hook up to hangman.game now
-    #print 'done'
-
-    #print 'searching without "h"'
-    #possible_letters = set(ALPHABET) - set('h')
-    #bitarray = search(len(words), encoded_dictionary, '---------', possible_letters=possible_letters)
-    #print bitarray
-    #print count_bitarray(bitarray)
-    #print 'done'
-
     print 'playing'
     cached_guesses = {}
-    for word in words[8000:8010]:
-        print word
+    scores = []
+    for word in words:
         g = game.play(word.strip(), strategy=strategy)
         result = ''
         for mystery_string in g:
@@ -217,6 +201,7 @@ if __name__ == '__main__':
             except StopIteration:
                 result = mystery_string
 
-        print result, result.known_letters, result.missed_letters
-        print 'score: ', game.default_scorer(result)
+        scores.append(game.default_scorer(result))
 
+    avg = sum(scores) / float(len(scores))
+    print 'Average Score: ', avg
