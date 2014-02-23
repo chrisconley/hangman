@@ -16,13 +16,21 @@ def encode_dictionary(words):
             bits[word_index] = True
     return encoded_dictionary
 
-def search(encoded_dictionary, mystery_string):
-    union = dictionary.initialize_bits(encoded_dictionary.length, True)
+def search(encoded_dictionary, mystery_string, rejected_letters=''):
+    bits = dictionary.initialize_bits(encoded_dictionary.length, True)
     for key in distinct_letters(mystery_string):
-        barray = encoded_dictionary[key]
-        union &= barray
+        key_bits = encoded_dictionary[key]
+        bits &= key_bits
 
-    return union
+    key_bits = dictionary.initialize_bits(encoded_dictionary.length, False)
+    for letter in rejected_letters:
+        for key in encoded_dictionary.get_keys(letter):
+            letter_bits = encoded_dictionary[key]
+            key_bits |= letter_bits
+    key_bits.invert()
+    bits &= key_bits
+
+    return bits
 
 from bitarray import bitarray
 class DistinctLetterTests(unittest.TestCase):
@@ -56,3 +64,20 @@ class DistinctLetterTests(unittest.TestCase):
         # Even though we know intuitively that '-o-o' can only match 'coto', we have only 
         # encoded our dictionary to know about distinct letters.
         self.assertEqual(search(encoded_dictionary, '-o-o'), bitarray('01011'))
+
+        # We don't need to search for 'a' or 't' if we've already guessed those letters
+        # Although passing it in allows us to shoot ourselves in the foot
+        filtered = search(encoded_dictionary, '-a--', rejected_letters='hot')
+        self.assertEqual(filtered, bitarray('00100'))
+
+        filtered = search(encoded_dictionary, '-o-o', rejected_letters='aehn')
+        self.assertEqual(filtered, bitarray('00011'))
+
+        filtered = search(encoded_dictionary, '-o-o', rejected_letters='aen')
+        self.assertEqual(filtered, bitarray('01011'))
+
+        filtered = search(encoded_dictionary, '-o--', rejected_letters='aen')
+        self.assertEqual(filtered, bitarray('01011'))
+
+        filtered = search(encoded_dictionary, '--t-', rejected_letters='aen')
+        self.assertEqual(filtered, bitarray('01011'))

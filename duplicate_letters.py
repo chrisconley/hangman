@@ -16,16 +16,19 @@ def encode_dictionary(words):
             bits[word_index] = True
     return encoded_dictionary
 
-def search(encoded_dictionary, mystery_string, possible_letters=None):
+def search(encoded_dictionary, mystery_string, rejected_letters=''):
     bits = dictionary.initialize_bits(encoded_dictionary.length, True)
     for key in duplicate_letters(mystery_string):
         key_bits = encoded_dictionary[key]
         bits &= key_bits
 
-    if possible_letters:
-        for key in duplicate_letters(possible_letters):
-            key_bits = encoded_dictionary[key]
-            bits &= key_bits
+    key_bits = dictionary.initialize_bits(encoded_dictionary.length, False)
+    for letter in rejected_letters:
+        for key in encoded_dictionary.get_keys(letter):
+            letter_bits = encoded_dictionary[key]
+            key_bits |= letter_bits
+    key_bits.invert()
+    bits &= key_bits
 
     return bits
 
@@ -66,11 +69,17 @@ class DuplicateLetterTests(unittest.TestCase):
 
         # We don't need to search for 'a' or 't' if we've already guessed those letters
         # Although passing it in allows us to shoot ourselves in the foot
-        filtered = search(encoded_dictionary, '-a--', possible_letters='cne')
+        filtered = search(encoded_dictionary, '-a--', rejected_letters='hot')
         self.assertEqual(filtered, bitarray('00100'))
 
-        filtered = search(encoded_dictionary, '-o-o', possible_letters='ct')
+        filtered = search(encoded_dictionary, '-o-o', rejected_letters='aehn')
         self.assertEqual(filtered, bitarray('00011'))
 
-        filtered = search(encoded_dictionary, '-o--', possible_letters='cth')
+        filtered = search(encoded_dictionary, '-o-o', rejected_letters='aen')
+        self.assertEqual(filtered, bitarray('00011'))
+
+        filtered = search(encoded_dictionary, '-o--', rejected_letters='aen')
         self.assertEqual(filtered, bitarray('01000'))
+
+        filtered = search(encoded_dictionary, '--t-', rejected_letters='aen')
+        self.assertEqual(filtered, bitarray('01011'))
