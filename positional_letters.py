@@ -23,20 +23,21 @@ def encode_dictionary(words):
 
 ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
 
-def search(dictionary_length, encoded_dictionary, mystery_string, possible_letters=ALPHABET):
+def search(dictionary_length, encoded_dictionary, mystery_string, possible_letters=None):
     bits = dictionary.initialize_bits(encoded_dictionary.length, True)
     for mystery_letter, position in positional_letters(mystery_string):
         key = get_key(mystery_letter, position)
-        if mystery_letter == '-':
+        if mystery_letter == '-' and possible_letters:
             key_bits = dictionary.initialize_bits(encoded_dictionary.length, False)
             for letter in possible_letters:
                 key = get_key(letter, position)
                 letter_bits = encoded_dictionary.get(key, None)
                 if letter_bits is not None:
                     key_bits |= letter_bits
-        else:
+            bits &= key_bits
+        elif mystery_letter != '-':
             key_bits = encoded_dictionary[key]
-        bits &= key_bits
+            bits &= key_bits
 
     return bits
 

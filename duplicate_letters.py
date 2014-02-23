@@ -16,13 +16,18 @@ def encode_dictionary(words):
             bits[word_index] = True
     return encoded_dictionary
 
-def search(encoded_dictionary, mystery_string):
-    union = dictionary.initialize_bits(encoded_dictionary.length, True)
+def search(encoded_dictionary, mystery_string, possible_letters=None):
+    bits = dictionary.initialize_bits(encoded_dictionary.length, True)
     for key in duplicate_letters(mystery_string):
-        barray = encoded_dictionary[key]
-        union &= barray
+        key_bits = encoded_dictionary[key]
+        bits &= key_bits
 
-    return union
+    if possible_letters:
+        for key in duplicate_letters(possible_letters):
+            key_bits = encoded_dictionary[key]
+            bits &= key_bits
+
+    return bits
 
 from bitarray import bitarray
 class DuplicateLetterTests(unittest.TestCase):
@@ -59,3 +64,13 @@ class DuplicateLetterTests(unittest.TestCase):
         self.assertEqual(search(encoded_dictionary, '-o--'), bitarray('01000'))
         self.assertEqual(search(encoded_dictionary, '-o-o'), bitarray('00011'))
 
+        # We don't need to search for 'a' or 't' if we've already guessed those letters
+        # Although passing it in allows us to shoot ourselves in the foot
+        filtered = search(encoded_dictionary, '-a--', possible_letters='cne')
+        self.assertEqual(filtered, bitarray('00100'))
+
+        filtered = search(encoded_dictionary, '-o-o', possible_letters='ct')
+        self.assertEqual(filtered, bitarray('00011'))
+
+        filtered = search(encoded_dictionary, '-o--', possible_letters='cth')
+        self.assertEqual(filtered, bitarray('01000'))
