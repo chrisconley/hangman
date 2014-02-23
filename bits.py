@@ -2,6 +2,7 @@ from collections import Counter
 import unittest
 from bitarray import bitarray
 from hangman import game
+import entropy
 
 def get_key(letter, i):
     key = "{}{}".format(letter, i)
@@ -26,12 +27,12 @@ ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
 
 def search(dictionary_length, graph, mystery_string, possible_letters=ALPHABET):
     union = bitarray(dictionary_length)
-    union[0:] = True
+    union[0:] = True # initialize all bits to 1
     word_length = len(mystery_string)
     for i, mystery_letter in enumerate(mystery_string):
         if mystery_letter == '-':
             array = bitarray(dictionary_length)
-            array[0:] = False
+            array[0:] = False # initalize all bits to 0
             for letter in possible_letters:
                 key = get_key(letter, i)
                 barray = graph.get(key, None)
@@ -164,6 +165,27 @@ def strategy(mystery_string, counter):
         if letter not in mystery_string.guesses and letter != '*':
             return mystery_string.guesses | set(letter)
 
+def entropy_strategy(mystery_string, counters, total):
+
+    #counters = {
+        #'e': {'e-e': 6, '-ee': 11, 'ee-': 1, 'eee': 2, '*': 107, 'e': 87},
+        #'x': {'x': 1, '*': 1},
+        #'a': {'--a': 180, 'a--': 5, '*': 185},
+        #'b': {'b--': 185, '*': 185}
+    #}
+    #total = 185
+    pmfs = entropy.get_pmfs(counters, total)
+
+    for letter, count in entropy.most_entropy(pmfs, total):
+        if letter not in mystery_string.guesses and letter != '*':
+            return mystery_string.guesses | set(letter)
+
+def other_scorer(result):
+    if len(result.missed_words) >= 5:
+        return 25
+    else:
+        return (len(result.guesses) * 1) + (len(result.missed_words) * 1)
+
 if __name__ == '__main__':
     from argparse import ArgumentParser, ArgumentTypeError
     import fileinput
@@ -183,6 +205,7 @@ if __name__ == '__main__':
     print 'playing'
     cached_guesses = {}
     scores = []
+    other_scores = []
     for word in words:
         g = game.play(word.strip(), strategy=strategy)
         result = ''
@@ -193,8 +216,8 @@ if __name__ == '__main__':
                 possible_letters = set(ALPHABET) - set(mystery_string.guesses)
                 encoded_remaining_words = search(len(words), encoded_dictionary, mystery_string, possible_letters=possible_letters)
                 remaining_words = get_remaining_words(encoded_remaining_words, words)
-                counts = count_positional_letters(remaining_words)
-                guesses = strategy(mystery_string, counts)
+                counts = count_duplicate_letters(remaining_words)
+                guesses = entropy_strategy(mystery_string, counts, len(remaining_words))
                 cached_guesses[key] = guesses
             try:
                 g.send(guesses)
@@ -202,6 +225,9 @@ if __name__ == '__main__':
                 result = mystery_string
 
         scores.append(game.default_scorer(result))
+        other_scores.append(other_scorer(result))
 
     avg = sum(scores) / float(len(scores))
+    other_avg = sum(other_scores) / float(len(other_scores))
     print 'Average Score: ', avg
+    print 'Average Other Score: ', other_avg
