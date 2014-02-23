@@ -1,33 +1,45 @@
 from bitarray import bitarray
 import unittest
 
-def get_key(letter):
-    return letter
+class EncodedDictionary(dict):
+    def __init__(self, words, *args, **kwargs):
+        self.words = words
+        self.length = len(words)
+        super(dict, self).__init__()
+
+def initialize_bits(length, initializer=False):
+    array = bitarray(length)
+    array[0:] = initializer
+    return array
+
+def set_default_bits(encoded_dictionary, key):
+    bits = encoded_dictionary.get(key)
+    if bits is None:
+        bits = initialize_bits(encoded_dictionary.length)
+        encoded_dictionary[key] = bits
+    return encoded_dictionary[key]
+
+def duplicate_letters(word):
+    for letter in set(word):
+        if letter == '-':
+            continue
+        yield ''.join([l for l in word if l == letter])
 
 def encode_dictionary(words):
-    encoded_dictionary = {}
-    dictionary_length = len(words)
+    encoded_dictionary = EncodedDictionary(words)
     for word_index, word in enumerate(words):
         word_length = len(word)
-        for i, letter in enumerate(set(word)):
-            key = ''.join([l for l in word if l == letter])
-            barray  = encoded_dictionary.get(key, None)
-            if barray is None:
-                barray = bitarray(dictionary_length)
-                barray[0:] = False
-                encoded_dictionary[key] = barray
-            barray[word_index] = True
+        for key in duplicate_letters(word):
+            bits = set_default_bits(encoded_dictionary, key)
+            bits[word_index] = True
     return encoded_dictionary
 
-def search(dictionary_length, graph, mystery_string):
-    union = bitarray(dictionary_length)
-    union[0:] = True # initialize all bits to 1
+def search(encoded_dictionary, mystery_string):
+    union = initialize_bits(encoded_dictionary.length, True)
     word_length = len(mystery_string)
-    for i, mystery_letter in enumerate(set(mystery_string)):
-        if mystery_letter != '-':
-            key = ''.join([l for l in mystery_string if l == mystery_letter])
-            barray = graph[key]
-            union &= barray
+    for key in duplicate_letters(mystery_string):
+        barray = encoded_dictionary[key]
+        union &= barray
 
     return union
 
@@ -52,16 +64,16 @@ class DuplicateLetterTests(unittest.TestCase):
         words = ['cate', 'coth', 'cane', 'coto', 'coot']
         encoded_dictionary = encode_dictionary(words)
         # TODO: self.AssertRaises length mismatch
-        #self.assertEqual(search(len(words), encoded_dictionary, '---'), bitarray('11111'))
+        #self.assertEqual(search(encoded_dictionary, '---'), bitarray('11111'))
 
-        self.assertEqual(search(len(words), encoded_dictionary, '----'), bitarray('11111'))
-        self.assertEqual(search(len(words), encoded_dictionary, '-a--'), bitarray('10100'))
-        self.assertEqual(search(len(words), encoded_dictionary, 'ca--'), bitarray('10100'))
-        self.assertEqual(search(len(words), encoded_dictionary, '-at-'), bitarray('10000'))
-        self.assertEqual(search(len(words), encoded_dictionary, 'can-'), bitarray('00100'))
+        self.assertEqual(search(encoded_dictionary, '----'), bitarray('11111'))
+        self.assertEqual(search(encoded_dictionary, '-a--'), bitarray('10100'))
+        self.assertEqual(search(encoded_dictionary, 'ca--'), bitarray('10100'))
+        self.assertEqual(search(encoded_dictionary, '-at-'), bitarray('10000'))
+        self.assertEqual(search(encoded_dictionary, 'can-'), bitarray('00100'))
 
         # Even though we know intuitively that '-o-o' can only match 'coto', we have only
         # encoded our dictionary to know about duplicate letters.
-        self.assertEqual(search(len(words), encoded_dictionary, '-o--'), bitarray('01000'))
-        self.assertEqual(search(len(words), encoded_dictionary, '-o-o'), bitarray('00011'))
+        self.assertEqual(search(encoded_dictionary, '-o--'), bitarray('01000'))
+        self.assertEqual(search(encoded_dictionary, '-o-o'), bitarray('00011'))
 
