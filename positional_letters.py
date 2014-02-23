@@ -2,47 +2,43 @@ from collections import Counter
 import unittest
 from bitarray import bitarray
 
+import dictionary
+
 def get_key(letter, i):
     key = "{}{}".format(letter, i)
     return key
 
+def positional_letters(word):
+    for i, letter in enumerate(word):
+        yield letter, i
+
 def encode_dictionary(words):
-    encoded_dictionary = {}
-    dictionary_length = len(words)
+    encoded_dictionary = dictionary.EncodedDictionary(words)
     for word_index, word in enumerate(words):
-        word_length = len(word)
-        for i, letter in enumerate(word):
-            key = get_key(letter, i)
-            barray  = encoded_dictionary.get(key, None)
-            if barray is None:
-                barray = bitarray(dictionary_length)
-                barray[0:] = False
-                encoded_dictionary[key] = barray
-            barray[word_index] = True
+        for letter, position in positional_letters(word):
+            key = get_key(letter, position)
+            bits = dictionary.set_default_bits(encoded_dictionary, key)
+            bits[word_index] = True
     return encoded_dictionary
 
 ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
 
-def search(dictionary_length, graph, mystery_string, possible_letters=ALPHABET):
-    union = bitarray(dictionary_length)
-    union[0:] = True # initialize all bits to 1
-    word_length = len(mystery_string)
-    for i, mystery_letter in enumerate(mystery_string):
+def search(dictionary_length, encoded_dictionary, mystery_string, possible_letters=ALPHABET):
+    bits = dictionary.initialize_bits(encoded_dictionary.length, True)
+    for mystery_letter, position in positional_letters(mystery_string):
+        key = get_key(mystery_letter, position)
         if mystery_letter == '-':
-            array = bitarray(dictionary_length)
-            array[0:] = False # initalize all bits to 0
+            key_bits = dictionary.initialize_bits(encoded_dictionary.length, False)
             for letter in possible_letters:
-                key = get_key(letter, i)
-                barray = graph.get(key, None)
-                if barray is not None:
-                    array |= barray
-            barray = array
+                key = get_key(letter, position)
+                letter_bits = encoded_dictionary.get(key, None)
+                if letter_bits is not None:
+                    key_bits |= letter_bits
         else:
-            key = get_key(mystery_letter, i)
-            barray = graph[key]
-        union &= barray
+            key_bits = encoded_dictionary[key]
+        bits &= key_bits
 
-    return union
+    return bits
 
 class PositionalLetterTests(unittest.TestCase):
 

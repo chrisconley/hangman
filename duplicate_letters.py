@@ -1,23 +1,6 @@
-from bitarray import bitarray
 import unittest
 
-class EncodedDictionary(dict):
-    def __init__(self, words, *args, **kwargs):
-        self.words = words
-        self.length = len(words)
-        super(dict, self).__init__()
-
-def initialize_bits(length, initializer=False):
-    array = bitarray(length)
-    array[0:] = initializer
-    return array
-
-def set_default_bits(encoded_dictionary, key):
-    bits = encoded_dictionary.get(key)
-    if bits is None:
-        bits = initialize_bits(encoded_dictionary.length)
-        encoded_dictionary[key] = bits
-    return encoded_dictionary[key]
+import dictionary
 
 def duplicate_letters(word):
     for letter in set(word):
@@ -26,23 +9,22 @@ def duplicate_letters(word):
         yield ''.join([l for l in word if l == letter])
 
 def encode_dictionary(words):
-    encoded_dictionary = EncodedDictionary(words)
+    encoded_dictionary = dictionary.EncodedDictionary(words)
     for word_index, word in enumerate(words):
-        word_length = len(word)
         for key in duplicate_letters(word):
-            bits = set_default_bits(encoded_dictionary, key)
+            bits = dictionary.set_default_bits(encoded_dictionary, key)
             bits[word_index] = True
     return encoded_dictionary
 
 def search(encoded_dictionary, mystery_string):
-    union = initialize_bits(encoded_dictionary.length, True)
-    word_length = len(mystery_string)
+    union = dictionary.initialize_bits(encoded_dictionary.length, True)
     for key in duplicate_letters(mystery_string):
         barray = encoded_dictionary[key]
         union &= barray
 
     return union
 
+from bitarray import bitarray
 class DuplicateLetterTests(unittest.TestCase):
 
     def test_encode_dictionary(self):
