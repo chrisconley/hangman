@@ -1,3 +1,7 @@
+"""
+To run doctests:
+nosetests --with-doctest dictionary
+"""
 from collections import defaultdict
 
 from bitarray import bitarray
@@ -108,7 +112,3 @@ def initialize_bits(length, initializer=False):
     array = bitarray(length)
     array[0:] = initializer
     return array
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
