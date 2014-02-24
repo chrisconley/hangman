@@ -3,18 +3,48 @@ from collections import defaultdict
 from bitarray import bitarray
 
 def distinct_letters(word):
+    """
+    >>> [key for key in distinct_letters('coto')]
+    ['c', 't', 'o']
+
+    >>> [key for key in distinct_letters('-o-o')]
+    ['o']
+
+    >>> [key for key in distinct_letters('-oto')]
+    ['t', 'o']
+    """
     for letter in set(word):
         if letter == '-':
             continue
         yield letter
 
 def duplicate_letters(word):
+    """
+    >>> [key for key in duplicate_letters('coto')]
+    ['c', 't', 'oo']
+
+    >>> [key for key in duplicate_letters('-o-o')]
+    ['oo']
+
+    >>> [key for key in duplicate_letters('-oto')]
+    ['t', 'oo']
+    """
     for letter in set(word):
         if letter == '-':
             continue
         yield ''.join([l for l in word if l == letter])
 
 def positional_letters(word):
+    """
+    >>> [key for key in positional_letters('coto')]
+    ['c---', '--t-', '-o-o']
+
+    >>> [key for key in positional_letters('-o-o')]
+    ['-o-o']
+
+    >>> [key for key in positional_letters('-oto')]
+    ['--t-', '-o-o']
+    """
     for letter in set(word):
         if letter == '-':
             continue
@@ -78,3 +108,7 @@ def initialize_bits(length, initializer=False):
     array = bitarray(length)
     array[0:] = initializer
     return array
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
