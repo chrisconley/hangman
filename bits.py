@@ -1,37 +1,21 @@
 from collections import Counter
 import unittest
 from bitarray import bitarray
+import counters
+import dictionary
 from hangman import game
 import entropy
 
 
-# Baseline
-random
-
 # Initial Knowledge
-naive
+#naive
 
 # Knowledge at each step
-distinct, duplicate, positional
-use missed letters or not
+#distinct, duplicate, positional
+#use missed letters or not
 
 # Knowledge you'll gain / strategy
-most common, distinct letter entropy, duplicate letter entropy, positional letter entropy
-
-def get_remaining_words(encoded_words, words):
-    return [words[index] for (index, bit) in enumerate(encoded_words) if bit]
-
-class BitCounter(unittest.TestCase):
-
-    def test_get_remaining_words(self):
-        words = ['cat', 'cot', 'can']
-        encoded_words = bitarray('001')
-        remaining_words = get_remaining_words(encoded_words, words)
-        self.assertEqual(remaining_words, ['can'])
-
-        encoded_words = bitarray('101')
-        remaining_words = get_remaining_words(encoded_words, words)
-        self.assertEqual(remaining_words, ['cat', 'can'])
+#random, most common, distinct letter entropy, duplicate letter entropy, positional letter entropy
 
 def most_common(counter):
     counter = Counter(counter)
@@ -72,11 +56,14 @@ if __name__ == '__main__':
 
     parser = ArgumentParser()
     parser.add_argument('file', help='input words')
+    # --keys ['distinct', 'duplicate', 'positional']
+    # --track-rejected True/False
+    # --strategy ['random', 'most-common', 'entropy-distinct', 'entropy-duplicate', 'entropy-positional']
     args = parser.parse_args()
 
     words = [word.strip() for word in fileinput.input(args.file)]
     print len(words)
-    encoded_dictionary = encode_dictionary(words)
+    encoded_dictionary = dictionary.encode_dictionary(words, 'distinct')
 
     #for key, a in encoded_dictionary.items():
         #print key, a
@@ -86,17 +73,15 @@ if __name__ == '__main__':
     cached_guesses = {}
     scores = []
     other_scores = []
-    for word in words:
+    for word in words[8000:8250]:
         g = game.play(word.strip(), strategy=strategy)
         result = ''
         for mystery_string in g:
             key = "{}:{}".format(mystery_string, sorted("".join(mystery_string.missed_letters)))
             guesses = cached_guesses.get(key, None)
             if not guesses:
-                possible_letters = set(ALPHABET) - set(mystery_string.guesses)
-                encoded_remaining_words = search(len(words), encoded_dictionary, mystery_string, possible_letters=possible_letters)
-                remaining_words = get_remaining_words(encoded_remaining_words, words)
-                counts = count_duplicate_letters(remaining_words)
+                remaining_words = dictionary.filter_words(encoded_dictionary, mystery_string, mystery_string.missed_letters)
+                counts = counters.count_positional_letters(remaining_words)
                 guesses = entropy_strategy(mystery_string, counts, len(remaining_words))
                 cached_guesses[key] = guesses
             try:
@@ -104,6 +89,7 @@ if __name__ == '__main__':
             except StopIteration:
                 result = mystery_string
 
+        print word, mystery_string.known_letters, mystery_string.missed_letters
         scores.append(game.default_scorer(result))
         other_scores.append(other_scorer(result))
 

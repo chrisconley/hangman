@@ -92,21 +92,35 @@ def encode_dictionary(words, key_generator):
             bits[word_index] = True
     return encoded_dictionary
 
+cached_bits = {}
 def search(encoded_dictionary, mystery_string, rejected_letters=''):
     bits = initialize_bits(encoded_dictionary.length, True)
     for key in encoded_dictionary.key_generator(mystery_string):
         key_bits = encoded_dictionary[key]
         bits &= key_bits
 
-    key_bits = initialize_bits(encoded_dictionary.length, False)
-    for letter in rejected_letters:
-        for key in encoded_dictionary.get_keys_for_letter(letter):
-            letter_bits = encoded_dictionary[key]
-            key_bits |= letter_bits
-    key_bits.invert()
+    #key_bits = cached_bits.get("".join(sorted(rejected_letters)), None)
+    key_bits = None
+    if key_bits is None:
+        key_bits = initialize_bits(encoded_dictionary.length, False)
+        for letter in rejected_letters:
+            for key in encoded_dictionary.get_keys_for_letter(letter):
+                letter_bits = encoded_dictionary[key]
+                key_bits |= letter_bits
+        key_bits.invert()
+        #cached_bits["".join(sorted(rejected_letters))] = key_bits
+
     bits &= key_bits
 
     return bits
+
+def get_remaining_words(encoded_words, words):
+    return [words[index] for (index, bit) in enumerate(encoded_words) if bit]
+
+def filter_words(encoded_dictionary, mystery_string, rejected_letters=''):
+    bits = search(encoded_dictionary, mystery_string, rejected_letters)
+    words = get_remaining_words(bits, encoded_dictionary.words)
+    return words
 
 def initialize_bits(length, initializer=False):
     array = bitarray(length)

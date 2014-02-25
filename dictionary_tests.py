@@ -4,6 +4,30 @@ import dictionary
 
 from bitarray import bitarray
 
+class DictionaryTests(unittest.TestCase):
+
+    def test_get_remaining_words(self):
+        words = ['cat', 'cot', 'can']
+        encoded_words = bitarray('001')
+        remaining_words = dictionary.get_remaining_words(encoded_words, words)
+        self.assertEqual(remaining_words, ['can'])
+
+        encoded_words = bitarray('101')
+        remaining_words = dictionary.get_remaining_words(encoded_words, words)
+        self.assertEqual(remaining_words, ['cat', 'can'])
+
+    def test_filter_words(self):
+        words = ['cate', 'coth', 'cane', 'coto', 'coot']
+        encoded_dictionary = dictionary.encode_dictionary(words, 'distinct')
+
+        expected_words = ['cate', 'cane']
+        actual_words = dictionary.filter_words(encoded_dictionary, 'ca--')
+        self.assertEqual(actual_words, expected_words)
+
+        expected_words = ['cate']
+        actual_words = dictionary.filter_words(encoded_dictionary, 'ca--', 'n')
+        self.assertEqual(actual_words, expected_words)
+
 class DistinctLetterTests(unittest.TestCase):
 
     def test_encode_dictionary(self):
