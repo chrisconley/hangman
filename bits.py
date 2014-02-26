@@ -42,7 +42,7 @@ def entropy_strategy(mystery_string, counters, total):
 
     for letter, count in entropy.most_entropy(pmfs, total):
         if letter not in mystery_string.guesses and letter != '*':
-            return mystery_string.guesses | set(letter)
+            return letter
 
 def other_scorer(result):
     if len(result.missed_words) >= 5:
@@ -95,8 +95,8 @@ if __name__ == '__main__':
 
     if os.path.isfile(args.memory_file):
         for line in fileinput.input(args.memory_file):
-            key, guesses = line.strip().split(',')
-            cached_guesses[key] = set(guesses)
+            key, next_guess = line.strip().split(',')
+            cached_guesses[key] = next_guess
 
     scores = []
     other_scores = []
@@ -105,15 +105,17 @@ if __name__ == '__main__':
         result = ''
         for mystery_string in g:
             key = get_cache_key(mystery_string, args.encoder, mystery_string.missed_letters)
-            guesses = cached_guesses.get(key, None)
-            if not guesses:
+            next_guess = cached_guesses.get(key, None)
+            if not next_guess:
+                # TODO: Caching is broken if args.track_rejected is False
                 rejected_letters = mystery_string.missed_letters if args.track_rejected else ''
                 remaining_words = dictionary.filter_words(encoded_dictionary, mystery_string, rejected_letters)
+                # TODO: Have this determined by args.strategy
                 counts = counters.count_duplicate_letters(remaining_words)
-                guesses = entropy_strategy(mystery_string, counts, len(remaining_words))
-                cached_guesses[key] = guesses
+                next_guess = entropy_strategy(mystery_string, counts, len(remaining_words))
+                cached_guesses[key] = next_guess
             try:
-                g.send(guesses)
+                g.send(next_guess)
             except StopIteration:
                 result = mystery_string
 
@@ -128,6 +130,6 @@ if __name__ == '__main__':
 
     with open(args.memory_file, 'w') as memory_file:
         writer = csv.writer(memory_file)
-        for key, guesses in cached_guesses.items():
-            writer.writerow([key, "".join(sorted(guesses))])
+        for key, next_guess in cached_guesses.items():
+            writer.writerow([key, next_guess])
 
