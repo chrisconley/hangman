@@ -50,20 +50,41 @@ def other_scorer(result):
     else:
         return (len(result.guesses) * 1) + (len(result.missed_words) * 1)
 
+
+def get_cache_key(mystery_string, encoder, rejected_letters):
+
+    encoder_keys = {
+        'positional': lambda s: list(s),
+        'duplicate': lambda s: sorted([key for key in dictionary.duplicate_letters(s)]),
+        'distinct': lambda s: sorted([key for key in dictionary.distinct_letters(s)])
+    }
+
+    current = encoder_keys[encoder](mystery_string)
+
+    key = "{}:{}".format("".join(current), "".join(sorted(rejected_letters)))
+
+    return key
+
 if __name__ == '__main__':
     from argparse import ArgumentParser, ArgumentTypeError
+    import csv
     import fileinput
+    import os.path
 
     parser = ArgumentParser()
     parser.add_argument('file', help='input words')
-    # --keys ['distinct', 'duplicate', 'positional']
-    # --track-rejected True/False
-    # --strategy ['random', 'most-common', 'entropy-distinct', 'entropy-duplicate', 'entropy-positional']
+    parser.add_argument('--encoder', default='positional')
+    parser.add_argument('--track-rejected', dest='track_rejected', action='store_true')
+    parser.add_argument('--ignore-rejected', dest='track_rejected', action='store_false')
+    parser.add_argument('--strategy', default='entropy-positional')
+    parser.add_argument('--memory-file')
+
+    parser.set_defaults(track_rejected=True)
     args = parser.parse_args()
 
     words = [word.strip() for word in fileinput.input(args.file)]
     print len(words)
-    encoded_dictionary = dictionary.encode_dictionary(words, 'distinct')
+    encoded_dictionary = dictionary.encode_dictionary(words, args.encoder)
 
     #for key, a in encoded_dictionary.items():
         #print key, a
@@ -71,17 +92,24 @@ if __name__ == '__main__':
 
     print 'playing'
     cached_guesses = {}
+
+    if os.path.isfile(args.memory_file):
+        for line in fileinput.input(args.memory_file):
+            key, guesses = line.strip().split(',')
+            cached_guesses[key] = set(guesses)
+
     scores = []
     other_scores = []
-    for word in words[8000:8250]:
+    for word in words[8000:9000]:
         g = game.play(word.strip(), strategy=strategy)
         result = ''
         for mystery_string in g:
-            key = "{}:{}".format(mystery_string, sorted("".join(mystery_string.missed_letters)))
+            key = get_cache_key(mystery_string, args.encoder, mystery_string.missed_letters)
             guesses = cached_guesses.get(key, None)
             if not guesses:
-                remaining_words = dictionary.filter_words(encoded_dictionary, mystery_string, mystery_string.missed_letters)
-                counts = counters.count_positional_letters(remaining_words)
+                rejected_letters = mystery_string.missed_letters if args.track_rejected else ''
+                remaining_words = dictionary.filter_words(encoded_dictionary, mystery_string, rejected_letters)
+                counts = counters.count_duplicate_letters(remaining_words)
                 guesses = entropy_strategy(mystery_string, counts, len(remaining_words))
                 cached_guesses[key] = guesses
             try:
@@ -97,3 +125,9 @@ if __name__ == '__main__':
     other_avg = sum(other_scores) / float(len(other_scores))
     print 'Average Score: ', avg
     print 'Average Other Score: ', other_avg
+
+    with open(args.memory_file, 'w') as memory_file:
+        writer = csv.writer(memory_file)
+        for key, guesses in cached_guesses.items():
+            writer.writerow([key, "".join(sorted(guesses))])
+
