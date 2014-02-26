@@ -1,6 +1,9 @@
 from collections import Counter
+import random
 import unittest
+
 from bitarray import bitarray
+
 import counters
 import dictionary
 from hangman import game
@@ -24,7 +27,7 @@ def most_common(counter):
             continue
         yield letter, count
 
-def strategy(mystery_string, counter):
+def most_common_strategy(mystery_string, counter, total):
     for letter, count in most_common(counter):
         if letter not in mystery_string.guesses and letter != '*':
             return mystery_string.guesses | set(letter)
@@ -59,6 +62,17 @@ def get_cache_key(mystery_string, encoder, rejected_letters):
 
     return key
 
+def get_next_guess(myster_string, remaining_words, strategy):
+    methods = {
+        'entropy-positional': {'counter': counters.count_positional_letters, 'strategy': entropy_strategy},
+        'entropy-duplicate': {'counter': counters.count_duplicate_letters, 'strategy': entropy_strategy},
+        #'entropy-distinct': {'counter': counters.count_distinct_letters, 'strategy': entropy_strategy},
+        'most-common': {'counter': counters.count_distinct_letters, 'strategy': most_common_strategy},
+    }
+    counts = methods[strategy]['counter'](remaining_words)
+    next_guess = methods[strategy]['strategy'](mystery_string, counts, len(remaining_words))
+    return next_guess
+
 if __name__ == '__main__':
     from argparse import ArgumentParser, ArgumentTypeError
     import csv
@@ -67,12 +81,18 @@ if __name__ == '__main__':
 
     parser = ArgumentParser()
     parser.add_argument('file', help='input words')
-    parser.add_argument('--encoder', default='positional')
+    parser.add_argument('--encoder', default='positional',
+            help='Can be positional, duplicate, distinct or naive')
     parser.add_argument('--track-rejected', dest='track_rejected', action='store_true')
     parser.add_argument('--ignore-rejected', dest='track_rejected', action='store_false')
-    parser.add_argument('--strategy', default='entropy-positional')
+    parser.add_argument('--strategy', default='entropy-positional',
+            help='Can be entropy-positional, entropy-duplicate, entropy-distinct, most-common or random')
     parser.add_argument('--memory-file')
     parser.add_argument('--reset-memory', dest='use_memory', action='store_false')
+    parser.add_argument('--limit', default=1000, type=int,
+            help='1000 will randomly select 1000 words to play with range')
+    parser.add_argument('--range',
+            help='1000:2000 will select all words within the range')
 
     parser.set_defaults(track_rejected=True, use_memory=True)
     args = parser.parse_args()
@@ -86,13 +106,23 @@ if __name__ == '__main__':
     print 'playing'
     cached_guesses = {}
 
-    if os.path.isfile(args.memory_file) and args.use_memory:
+    if args.memory_file and os.path.isfile(args.memory_file) and args.use_memory:
         for line in fileinput.input(args.memory_file):
             key, next_guess = line.strip().split(',')
             cached_guesses[key] = next_guess
 
+    words_to_play = words
+    if args.range:
+        start, stop = args.range.split(':')
+        words_to_play = words[int(start):int(stop)]
+
+    if args.limit:
+        # Seed random so we can do multiple runs with same set of random words
+        random.seed(15243)
+        words_to_play = random.sample(words_to_play, args.limit)
+
     scores = []
-    for word in words[8000:9000]:
+    for word in words_to_play:
         g = game.play(word.strip())
         for mystery_string in g:
             key = get_cache_key(mystery_string, args.encoder, mystery_string.missed_letters)
@@ -101,9 +131,7 @@ if __name__ == '__main__':
                 # TODO: Caching is broken if args.track_rejected is False
                 rejected_letters = mystery_string.missed_letters if args.track_rejected else ''
                 remaining_words = dictionary.filter_words(encoded_dictionary, mystery_string, rejected_letters)
-                # TODO: Have this determined by args.strategy
-                counts = counters.count_duplicate_letters(remaining_words)
-                next_guess = entropy_strategy(mystery_string, counts, len(remaining_words))
+                next_guess = get_next_guess(mystery_string, remaining_words, args.strategy)
                 cached_guesses[key] = next_guess
             try:
                 g.send(next_guess)
@@ -116,8 +144,9 @@ if __name__ == '__main__':
     avg = sum(scores) / float(len(scores))
     print 'Average Score: ', avg
 
-    with open(args.memory_file, 'w') as memory_file:
-        writer = csv.writer(memory_file)
-        for key, next_guess in cached_guesses.items():
-            writer.writerow([key, next_guess])
+    if args.memory_file:
+        with open(args.memory_file, 'w') as memory_file:
+            writer = csv.writer(memory_file)
+            for key, next_guess in cached_guesses.items():
+                writer.writerow([key, next_guess])
 
