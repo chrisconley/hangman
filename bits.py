@@ -44,12 +44,6 @@ def entropy_strategy(mystery_string, counters, total):
         if letter not in mystery_string.guesses and letter != '*':
             return letter
 
-def other_scorer(result):
-    if len(result.missed_words) >= 5:
-        return 25
-    else:
-        return (len(result.guesses) * 1) + (len(result.missed_words) * 1)
-
 
 def get_cache_key(mystery_string, encoder, rejected_letters):
 
@@ -78,31 +72,28 @@ if __name__ == '__main__':
     parser.add_argument('--ignore-rejected', dest='track_rejected', action='store_false')
     parser.add_argument('--strategy', default='entropy-positional')
     parser.add_argument('--memory-file')
+    parser.add_argument('--reset-memory', dest='use_memory', action='store_false')
 
-    parser.set_defaults(track_rejected=True)
+    parser.set_defaults(track_rejected=True, use_memory=True)
     args = parser.parse_args()
 
     words = [word.strip() for word in fileinput.input(args.file)]
     print len(words)
     encoded_dictionary = dictionary.encode_dictionary(words, args.encoder)
 
-    #for key, a in encoded_dictionary.items():
-        #print key, a
     print len(encoded_dictionary.keys())
 
     print 'playing'
     cached_guesses = {}
 
-    if os.path.isfile(args.memory_file):
+    if os.path.isfile(args.memory_file) and args.use_memory:
         for line in fileinput.input(args.memory_file):
             key, next_guess = line.strip().split(',')
             cached_guesses[key] = next_guess
 
     scores = []
-    other_scores = []
     for word in words[8000:9000]:
-        g = game.play(word.strip(), strategy=strategy)
-        result = ''
+        g = game.play(word.strip())
         for mystery_string in g:
             key = get_cache_key(mystery_string, args.encoder, mystery_string.missed_letters)
             next_guess = cached_guesses.get(key, None)
@@ -117,16 +108,13 @@ if __name__ == '__main__':
             try:
                 g.send(next_guess)
             except StopIteration:
-                result = mystery_string
+                pass
 
         print word, mystery_string.known_letters, mystery_string.missed_letters
-        scores.append(game.default_scorer(result))
-        other_scores.append(other_scorer(result))
+        scores.append(game.default_scorer(mystery_string))
 
     avg = sum(scores) / float(len(scores))
-    other_avg = sum(other_scores) / float(len(other_scores))
     print 'Average Score: ', avg
-    print 'Average Other Score: ', other_avg
 
     with open(args.memory_file, 'w') as memory_file:
         writer = csv.writer(memory_file)

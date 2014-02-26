@@ -42,8 +42,8 @@ def naive_strategy(previous_result):
         if letter not in previous_result.guesses:
             return previous_result.guesses | set(letter)
 
-def play(word, strategy=naive_strategy, scorer=default_scorer, guesses=set()):
-    result = MysteryString(word, guesses)
+def play(word):
+    result = MysteryString(word, set())
     while result != word:
         next_guess = (yield result)
         if next_guess:
