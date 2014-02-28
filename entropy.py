@@ -42,7 +42,7 @@ def get_entropy(probabilities):
     entropy = sum([log_entropy(p) for p in probabilities])
     return entropy
 
-def most_entropy(pmfs, word_count):
+def get_entropies(pmfs, word_count):
     entropies = Counter()
     for letter, pmf in pmfs.items():
         if letter == '*':
@@ -61,8 +61,6 @@ def most_entropy(pmfs, word_count):
             #entropies[letter] += 1000000000
     #print '~~~entropies', entropies
 
-    for letter, count in entropies.most_common():
-        print letter, count, pmfs[letter]['*']
-
-    for letter, count in entropies.most_common():
-        yield letter, count
+    #for letter, count in entropies.most_common():
+        #yield letter, count
+    return entropies

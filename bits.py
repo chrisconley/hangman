@@ -42,8 +42,17 @@ def entropy_strategy(mystery_string, counters, total):
     #}
     #total = 185
     pmfs = entropy.get_pmfs(counters, total)
+    entropies = entropy.get_entropies(pmfs, total)
 
-    for letter, count in entropy.most_entropy(pmfs, total):
+    def loss_function(pmf):
+        return (float(pmf['!']) / float(total)) or 0.0000001
+
+    gains = {} # entropies with applied gain function
+    for letter, letter_entropy in entropies.items():
+        pmf = pmfs[letter]
+        gains[letter] = letter_entropy / loss_function(pmf)
+
+    for letter, count in most_common(gains):
         if letter not in mystery_string.guesses and letter != '*':
             return letter
 
@@ -160,7 +169,7 @@ if __name__ == '__main__':
         assert word == str(result)
 
         print word, result.known_letters, result.missed_letters, result.guessed_words
-        scores.append(len(result.guesses))
+        scores.append(len(result.missed_letters))
 
     avg = sum(scores) / float(len(scores))
     print 'Average Score: ', avg
