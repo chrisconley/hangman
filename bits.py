@@ -44,13 +44,15 @@ def entropy_strategy(mystery_string, counters, total):
     pmfs = entropy.get_pmfs(counters, total)
     entropies = entropy.get_entropies(pmfs, total)
 
-    def loss_function(pmf):
-        return (float(pmf['!']) / float(total)) or 0.0000001
+    # Use "gain" instead of "loss" so that we increase the entropy value by the amount
+    # of gain we have.
+    def gain_function(pmf):
+        return float(pmf['*']) / float(total)
 
     gains = {} # entropies with applied gain function
     for letter, letter_entropy in entropies.items():
         pmf = pmfs[letter]
-        gains[letter] = letter_entropy / loss_function(pmf)
+        gains[letter] = letter_entropy * gain_function(pmf)
 
     for letter, count in most_common(gains):
         if letter not in mystery_string.guesses and letter != '*':
