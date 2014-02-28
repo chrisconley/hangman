@@ -27,6 +27,7 @@ def get_pmfs(counters, total):
         for subset, count in counter.items():
             pmf[subset] = count / float(total)
 
+    #print pmfs
     return pmfs
 
 def log_entropy(probability):
@@ -43,19 +44,25 @@ def get_entropy(probabilities):
 
 def most_entropy(pmfs, word_count):
     entropies = Counter()
-    for letter, counter in pmfs.items():
+    for letter, pmf in pmfs.items():
         if letter == '*':
             raise Exception('* not allowed')
 
-        pmf = pmfs[letter]
-
         probabilities = [p for (subset, p) in pmf.items() if subset != '*']
+        if letter == 'i' or letter == 'r':
+            print 'probabilities for letter {}'.format(letter), sorted(probabilities)
+        s = "{:0.8f}".format(sum(probabilities))
+        assert s == '1.00000000', "Probability sum {} does not equal 1.00".format(s)
         entropies[letter] = get_entropy(probabilities)
 
         # If their is no chance of a miss, we want to make sure we pick it
         # even though in some cases, entropy will be zero
-        if pmf['!'] == 0.0:
-            entropies[letter] += 1000000000
+        #if pmf['!'] == 0.0:
+            #entropies[letter] += 1000000000
+    #print '~~~entropies', entropies
+
+    for letter, count in entropies.most_common():
+        print letter, count, pmfs[letter]['*']
 
     for letter, count in entropies.most_common():
         yield letter, count

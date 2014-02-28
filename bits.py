@@ -30,7 +30,7 @@ def most_common(counter):
 def most_common_strategy(mystery_string, counter, total):
     for letter, count in most_common(counter):
         if letter not in mystery_string.guesses and letter != '*':
-            return mystery_string.guesses | set(letter)
+            return letter
 
 def entropy_strategy(mystery_string, counters, total):
 
@@ -62,15 +62,22 @@ def get_cache_key(mystery_string, encoder, rejected_letters):
 
     return key
 
-def get_next_guess(myster_string, remaining_words, strategy):
+def get_next_guess(mystery_string, remaining_words, strategy):
+    print '@@@@@@@@@@@@@@@@@'
     methods = {
         'entropy-positional': {'counter': counters.count_positional_letters, 'strategy': entropy_strategy},
         'entropy-duplicate': {'counter': counters.count_duplicate_letters, 'strategy': entropy_strategy},
         #'entropy-distinct': {'counter': counters.count_distinct_letters, 'strategy': entropy_strategy},
+        # TODO: most-common is best performing right now ?!
         'most-common': {'counter': counters.count_distinct_letters, 'strategy': most_common_strategy},
     }
     counts = methods[strategy]['counter'](remaining_words)
+    #print 'counts', counts
     next_guess = methods[strategy]['strategy'](mystery_string, counts, len(remaining_words))
+    if len(remaining_words) < 13:
+        print remaining_words
+    print mystery_string, '|', next_guess, '|', len(remaining_words)#counts
+    print '///////////////////'
     return next_guess
 
 if __name__ == '__main__':
@@ -122,7 +129,14 @@ if __name__ == '__main__':
         words_to_play = random.sample(words_to_play, args.limit)
 
     scores = []
+    # TODO: introduce word guesses and make scorer count mystery_string.guesses
+    # (Basically, we want to normalize the loss function for any kind of guess)
     for word in words_to_play:
+        print '###############################'
+        print '###############################'
+        print '^^^^ {} ^^^^'.format(word)
+        print '###############################'
+        print '###############################'
         g = game.play(word.strip())
         for mystery_string in g:
             key = get_cache_key(mystery_string, args.encoder, mystery_string.missed_letters)
@@ -131,15 +145,22 @@ if __name__ == '__main__':
                 # TODO: Caching is broken if args.track_rejected is False
                 rejected_letters = mystery_string.missed_letters if args.track_rejected else ''
                 remaining_words = dictionary.filter_words(encoded_dictionary, mystery_string, rejected_letters)
-                next_guess = get_next_guess(mystery_string, remaining_words, args.strategy)
+                if len(remaining_words) == 1:
+                    print 'we found it!!!!!!'
+                    next_guess = remaining_words[0]
+                else:
+                    next_guess = get_next_guess(mystery_string, remaining_words, args.strategy)
                 cached_guesses[key] = next_guess
             try:
                 g.send(next_guess)
             except StopIteration:
                 pass
+        result = game.MysteryString(word, (set(mystery_string.guesses) | set([next_guess])))
+        print word, result, next_guess
+        assert word == str(result)
 
-        print word, mystery_string.known_letters, mystery_string.missed_letters
-        scores.append(game.default_scorer(mystery_string))
+        print word, result.known_letters, result.missed_letters, result.guessed_words
+        scores.append(len(result.guesses))
 
     avg = sum(scores) / float(len(scores))
     print 'Average Score: ', avg

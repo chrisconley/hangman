@@ -99,16 +99,12 @@ def search(encoded_dictionary, mystery_string, rejected_letters=''):
         key_bits = encoded_dictionary[key]
         bits &= key_bits
 
-    #key_bits = cached_bits.get("".join(sorted(rejected_letters)), None)
-    key_bits = None
-    if key_bits is None:
-        key_bits = initialize_bits(encoded_dictionary.length, False)
-        for letter in rejected_letters:
-            for key in encoded_dictionary.get_keys_for_letter(letter):
-                letter_bits = encoded_dictionary[key]
-                key_bits |= letter_bits
-        key_bits.invert()
-        #cached_bits["".join(sorted(rejected_letters))] = key_bits
+    key_bits = initialize_bits(encoded_dictionary.length, False)
+    for letter in rejected_letters:
+        for key in encoded_dictionary.get_keys_for_letter(letter):
+            letter_bits = encoded_dictionary[key]
+            key_bits |= letter_bits
+    key_bits.invert()
 
     bits &= key_bits
 

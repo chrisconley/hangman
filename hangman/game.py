@@ -1,7 +1,7 @@
 class MysteryString(str):
     def __new__(cls, word, guesses, delimiter='-'):
         result = [
-            (letter if letter in guesses else delimiter)
+            (letter if (letter in guesses or word in guesses) else delimiter)
             for index, letter
             in enumerate(word)]
         match = ''.join(result)
@@ -44,7 +44,9 @@ def naive_strategy(previous_result):
 
 def play(word):
     result = MysteryString(word, set())
-    while result != word:
+    while True:
+        if result == word:
+            break
         next_guess = (yield result)
         if next_guess:
             new_guesses = result.guesses | set(next_guess)
