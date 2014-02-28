@@ -9,6 +9,12 @@ import dictionary
 from hangman import game
 import entropy
 
+"""
+Usage:
+
+time cat build/splits/9 | python2.7 bits.py - --track-rejected --reset-memory --strategy entropy-positional --limit 500
+"""
+
 
 # Initial Knowledge
 #naive
