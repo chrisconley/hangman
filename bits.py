@@ -53,7 +53,7 @@ def entropy_strategy(mystery_string, counters, total):
     # Use "gain" instead of "loss" so that we increase the entropy value by the amount
     # of gain we have.
     def gain_function(pmf):
-        return float(pmf['*']) / float(total)
+        return float(pmf['*'])**6 / float(total)
 
     gains = {} # entropies with applied gain function
     for letter, letter_entropy in entropies.items():
