@@ -29,7 +29,7 @@ def get_pmfs(counters, total):
 
     return pmfs
 
-def log_entropy(probability):
+def log_probability(probability):
     """
     -xlog(x) (base 2)
     """
@@ -38,7 +38,7 @@ def log_entropy(probability):
     return -probability * math.log(probability, 2)
 
 def get_entropy(probabilities):
-    entropy = sum([log_entropy(p) for p in probabilities])
+    entropy = sum([log_probability(p) for p in probabilities])
     return entropy
 
 def get_entropies(pmfs, word_count):

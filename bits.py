@@ -1,13 +1,13 @@
 from collections import Counter
 import random
-import unittest
 
 from bitarray import bitarray
 
 import counters
 import dictionary
-from hangman import game
 import entropy
+import hangman
+from scorers import build_multiplier_scorer
 
 """
 Usage:
@@ -38,23 +38,6 @@ def most_common_strategy(mystery_string, counter, total, scorer):
         if letter not in mystery_string.guesses and letter != '*':
             return letter
 
-def build_power_scorer(known_power=1.0, missed_power=1.0):
-    """
-    known_letters and missed_letters can either be the number or probability of each
-    """
-    def power_scorer(known_letters, missed_letters):
-        return float(known_letters**known_power) + float(missed_letters**missed_power)
-
-    return power_scorer
-
-def build_multiplier_scorer(known_multiplier=1.0, missed_multiplier=1.0):
-    """
-    known_letters and missed_letters can either be the number or probability of each
-    """
-    def multiplier_scorer(known_letters, missed_letters):
-        return float(known_letters*known_multiplier) + float(missed_letters*missed_multiplier)
-
-    return multiplier_scorer
 
 def entropy_strategy(mystery_string, counters, total, scorer):
     """
@@ -141,12 +124,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     words = [word.strip() for word in fileinput.input(args.file)]
-    print len(words)
     encoded_dictionary = dictionary.encode_dictionary(words, args.encoder)
 
-    print len(encoded_dictionary.keys())
-
-    print 'playing'
     cached_guesses = {}
 
     if args.memory_file and os.path.isfile(args.memory_file) and args.use_memory:
@@ -164,13 +143,12 @@ if __name__ == '__main__':
         random.seed(15243)
         words_to_play = random.sample(words_to_play, args.limit)
 
-    scorer = build_multiplier_scorer(known_multiplier=1.0, missed_multiplier=1.0)
-    #scorer = build_power_scorer(known_power=1.0, missed_power=5.0)
+    scorer = build_multiplier_scorer(known_multiplier=2.0, missed_multiplier=7.0)
     scores = []
     for word in words_to_play:
 
-        g = game.play(word.strip())
-        for mystery_string in g:
+        game = hangman.play(word.strip())
+        for mystery_string in game:
             key = get_cache_key(mystery_string, args.encoder, mystery_string.missed_letters)
             next_guess = cached_guesses.get(key, None)
             if not next_guess:
@@ -180,10 +158,10 @@ if __name__ == '__main__':
                 next_guess = get_next_guess(mystery_string, remaining_words, args.strategy, scorer)
                 cached_guesses[key] = next_guess
             try:
-                g.send(next_guess)
+                game.send(next_guess)
             except StopIteration:
                 pass
-        result = game.MysteryString(word, (set(mystery_string.guesses) | set([next_guess])))
+        result = hangman.MysteryString(word, (set(mystery_string.guesses) | set([next_guess])))
         assert word == str(result)
 
         print word, result.known_letters, result.missed_letters, result.guessed_words
