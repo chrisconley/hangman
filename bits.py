@@ -26,6 +26,22 @@ time cat build/splits/9 | python2.7 bits.py - --track-rejected --reset-memory --
 # Knowledge you'll gain / strategy
 #random, most common, distinct letter entropy, duplicate letter entropy, positional letter entropy
 
+ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
+
+def random_strategy(mystery_string, counter, total, scorer):
+    letters = list(ALPHABET)
+    random.shuffle(letters)
+    for letter in letters:
+        if letter not in mystery_string.guesses and letter != '*':
+            return letter
+
+def naive_strategy(mystery_string, counter, total, scorer):
+    # TODO: get rid of hard coding this
+    letters = 'esirantolcdugmphbyfvkwzxqj'
+    for letter in letters:
+        if letter not in mystery_string.guesses and letter != '*':
+            return letter
+
 def most_common(counter):
     counter = Counter(counter)
     for letter, count in counter.most_common():
@@ -56,7 +72,7 @@ def entropy_strategy(mystery_string, counters, total, scorer):
 
     def utility_function(pmf):
         loss = scorer(known_letters=pmf['*'], missed_letters=pmf['!'])
-        loss = loss or 0.000001 # Utitily should actually be infinity but close enough
+        loss = loss or 0.000001 # Utility should actually be infinity but close enough
         return 1 / loss
 
     gains = {} # entropies with applied gain function
@@ -92,6 +108,8 @@ def get_next_guess(mystery_string, remaining_words, strategy, scorer):
             'entropy-duplicate': {'counter': counters.count_duplicate_letters, 'strategy': entropy_strategy},
             #'entropy-distinct': {'counter': counters.count_distinct_letters, 'strategy': entropy_strategy},
             'most-common': {'counter': counters.count_distinct_letters, 'strategy': most_common_strategy},
+            'random': {'counter': counters.count_distinct_letters, 'strategy': random_strategy},
+            'naive': {'counter': counters.count_distinct_letters, 'strategy': naive_strategy},
         }
         counts = methods[strategy]['counter'](remaining_words)
         strategy_method = methods[strategy]['strategy']
@@ -119,6 +137,8 @@ if __name__ == '__main__':
             help='1000 will randomly select 1000 words to play with range')
     parser.add_argument('--range',
             help='1000:2000 will select all words within the range')
+    parser.add_argument('--scorer',
+            help='multipler:2:7 - multiplier is the only available score atm')
 
     parser.set_defaults(track_rejected=True, use_memory=True)
     args = parser.parse_args()
@@ -143,7 +163,12 @@ if __name__ == '__main__':
         random.seed(15243)
         words_to_play = random.sample(words_to_play, args.limit)
 
-    scorer = build_multiplier_scorer(known_multiplier=2.0, missed_multiplier=7.0)
+    if args.scorer:
+        scorer_type, known_multiplier, missed_multiplier = args.scorer.split(':')
+        assert scorer_type == 'multiplier'
+        scorer = build_multiplier_scorer(float(known_multiplier), float(missed_multiplier))
+    else:
+        scorer = build_multiplier_scorer(known_multiplier=1.0, missed_multiplier=1.0)
     scores = []
     for word in words_to_play:
 
@@ -176,3 +201,12 @@ if __name__ == '__main__':
             for key, next_guess in cached_guesses.items():
                 writer.writerow([key, next_guess])
 
+    # For determining most common letters
+    #totals = counters.count_distinct_letters(words)
+    #most_common = []
+    #for letter, count in Counter(totals).most_common():
+        #print letter, count
+        #most_common.append(letter)
+
+    #print ''.join(most_common)
+    
