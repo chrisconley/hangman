@@ -36,8 +36,8 @@ def random_strategy(mystery_string, counter, total, scorer):
             return letter
 
 def naive_strategy(mystery_string, counter, total, scorer):
-    # TODO: get rid of hard coding this
-    letters = 'esirantolcdugmphbyfvkwzxqj'
+    # Generated with `cat words.txt | python2.7 load_common_letters.py -`
+    letters = 'esiarntolcdupmghbyfvkwzxqj'
     for letter in letters:
         if letter not in mystery_string.guesses and letter != '*':
             return letter
@@ -200,13 +200,3 @@ if __name__ == '__main__':
             writer = csv.writer(memory_file)
             for key, next_guess in cached_guesses.items():
                 writer.writerow([key, next_guess])
-
-    # For determining most common letters
-    #totals = counters.count_distinct_letters(words)
-    #most_common = []
-    #for letter, count in Counter(totals).most_common():
-        #print letter, count
-        #most_common.append(letter)
-
-    #print ''.join(most_common)
-    
