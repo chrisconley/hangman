@@ -4,15 +4,15 @@ import entropy
 
 class EntropyTests(unittest.TestCase):
     def test_log_entropy(self):
-        self.assertAlmostEqual(entropy.log_entropy(1.0), 0, places=4)
-        self.assertAlmostEqual(entropy.log_entropy(0.0), 0, places=4)
-        self.assertAlmostEqual(entropy.log_entropy(0.5), 0.5000, places=4)
+        self.assertAlmostEqual(entropy.log_probability(1.0), 0, places=4)
+        self.assertAlmostEqual(entropy.log_probability(0.0), 0, places=4)
+        self.assertAlmostEqual(entropy.log_probability(0.5), 0.5000, places=4)
 
-        self.assertAlmostEqual(entropy.log_entropy(0.01), 0.0664, places=4)
-        self.assertAlmostEqual(entropy.log_entropy(0.02), 0.1129, places=4)
+        self.assertAlmostEqual(entropy.log_probability(0.01), 0.0664, places=4)
+        self.assertAlmostEqual(entropy.log_probability(0.02), 0.1129, places=4)
 
-        self.assertAlmostEqual(entropy.log_entropy(0.98), 0.0286, places=4)
-        self.assertAlmostEqual(entropy.log_entropy(0.99), 0.0144, places=4)
+        self.assertAlmostEqual(entropy.log_probability(0.98), 0.0286, places=4)
+        self.assertAlmostEqual(entropy.log_probability(0.99), 0.0144, places=4)
 
     def test_get_pmf(self):
         counters = {
@@ -37,10 +37,11 @@ class EntropyTests(unittest.TestCase):
         }
         total = 185
         pmfs = entropy.get_pmfs(counters, total)
-        g = entropy.most_entropy(pmfs, total)
-        self.assertEqual(g.next(), ('a', 1000000000))
-        self.assertEqual(g.next(), ('e', 1.4348619619430347))
-        self.assertEqual(g.next(), ('x', 0.04848740692447222))
+        entropies = entropy.get_entropies(pmfs, total)
+        most_common = entropies.most_common()
+        self.assertEqual(most_common[0], ('e', 1.4348619619430347))
+        self.assertEqual(most_common[1], ('x', 0.04848740692447222))
+        self.assertEqual(most_common[2], ('a', 0.0))
 
     def test_most_entropy_positional(self):
         counters = {
@@ -51,8 +52,9 @@ class EntropyTests(unittest.TestCase):
         }
         total = 185
         pmfs = entropy.get_pmfs(counters, total)
-        g = entropy.most_entropy(pmfs, total)
-        self.assertEqual(g.next(), ('a', 1000000000.179256066928))
-        self.assertEqual(g.next(), ('b', 1000000000))
-        self.assertEqual(g.next(), ('e', 1.551051838789653))
-        self.assertEqual(g.next(), ('x', 0.04848740692447222))
+        entropies = entropy.get_entropies(pmfs, total)
+        most_common = entropies.most_common()
+        self.assertEqual(most_common[0], ('e', 1.551051838789653))
+        self.assertEqual(most_common[1], ('a', 0.1792560669283215))
+        self.assertEqual(most_common[2], ('x', 0.04848740692447222))
+        self.assertEqual(most_common[3], ('b', 0.0))
