@@ -33,32 +33,53 @@ def most_common(counter):
             continue
         yield letter, count
 
-def most_common_strategy(mystery_string, counter, total):
+def most_common_strategy(mystery_string, counter, total, scorer):
     for letter, count in most_common(counter):
         if letter not in mystery_string.guesses and letter != '*':
             return letter
 
-def entropy_strategy(mystery_string, counters, total):
+def build_power_scorer(known_power=1.0, missed_power=1.0):
+    """
+    known_letters and missed_letters can either be the number or probability of each
+    """
+    def power_scorer(known_letters, missed_letters):
+        return float(known_letters**known_power) + float(missed_letters**missed_power)
 
-    #counters = {
+    return power_scorer
+
+def build_multiplier_scorer(known_multiplier=1.0, missed_multiplier=1.0):
+    """
+    known_letters and missed_letters can either be the number or probability of each
+    """
+    def multiplier_scorer(known_letters, missed_letters):
+        return float(known_letters*known_multiplier) + float(missed_letters*missed_multiplier)
+
+    return multiplier_scorer
+
+def entropy_strategy(mystery_string, counters, total, scorer):
+    """
+    Ex:
+
+    counters = {
         #'e': {'e-e': 6, '-ee': 11, 'ee-': 1, 'eee': 2, '*': 107, 'e': 87},
         #'x': {'x': 1, '*': 1},
         #'a': {'--a': 180, 'a--': 5, '*': 185},
         #'b': {'b--': 185, '*': 185}
-    #}
-    #total = 185
+    }
+    total = 185
+    """
     pmfs = entropy.get_pmfs(counters, total)
     entropies = entropy.get_entropies(pmfs, total)
 
-    # Use "gain" instead of "loss" so that we increase the entropy value by the amount
-    # of gain we have.
-    def gain_function(pmf):
-        return float(pmf['*'])**6 / float(total)
+    def utility_function(pmf):
+        loss = scorer(known_letters=pmf['*'], missed_letters=pmf['!'])
+        loss = loss or 0.000001 # Utitily should actually be infinity but close enough
+        return 1 / loss
 
     gains = {} # entropies with applied gain function
     for letter, letter_entropy in entropies.items():
         pmf = pmfs[letter]
-        gains[letter] = letter_entropy * gain_function(pmf)
+        gains[letter] = letter_entropy * utility_function(pmf)
 
     for letter, count in most_common(gains):
         if letter not in mystery_string.guesses and letter != '*':
@@ -79,22 +100,20 @@ def get_cache_key(mystery_string, encoder, rejected_letters):
 
     return key
 
-def get_next_guess(mystery_string, remaining_words, strategy):
-    print '@@@@@@@@@@@@@@@@@'
-    methods = {
-        'entropy-positional': {'counter': counters.count_positional_letters, 'strategy': entropy_strategy},
-        'entropy-duplicate': {'counter': counters.count_duplicate_letters, 'strategy': entropy_strategy},
-        #'entropy-distinct': {'counter': counters.count_distinct_letters, 'strategy': entropy_strategy},
-        # TODO: most-common is best performing right now ?!
-        'most-common': {'counter': counters.count_distinct_letters, 'strategy': most_common_strategy},
-    }
-    counts = methods[strategy]['counter'](remaining_words)
-    #print 'counts', counts
-    next_guess = methods[strategy]['strategy'](mystery_string, counts, len(remaining_words))
-    if len(remaining_words) < 13:
-        print remaining_words
-    print mystery_string, '|', next_guess, '|', len(remaining_words)#counts
-    print '///////////////////'
+def get_next_guess(mystery_string, remaining_words, strategy, scorer):
+    if len(remaining_words) == 1:
+        next_guess = remaining_words[0]
+    else:
+        methods = {
+            'entropy-positional': {'counter': counters.count_positional_letters, 'strategy': entropy_strategy},
+            'entropy-duplicate': {'counter': counters.count_duplicate_letters, 'strategy': entropy_strategy},
+            #'entropy-distinct': {'counter': counters.count_distinct_letters, 'strategy': entropy_strategy},
+            'most-common': {'counter': counters.count_distinct_letters, 'strategy': most_common_strategy},
+        }
+        counts = methods[strategy]['counter'](remaining_words)
+        strategy_method = methods[strategy]['strategy']
+        next_guess = strategy_method(mystery_string, counts, len(remaining_words), scorer)
+
     return next_guess
 
 if __name__ == '__main__':
@@ -145,15 +164,11 @@ if __name__ == '__main__':
         random.seed(15243)
         words_to_play = random.sample(words_to_play, args.limit)
 
+    scorer = build_multiplier_scorer(known_multiplier=1.0, missed_multiplier=1.0)
+    #scorer = build_power_scorer(known_power=1.0, missed_power=5.0)
     scores = []
-    # TODO: introduce word guesses and make scorer count mystery_string.guesses
-    # (Basically, we want to normalize the loss function for any kind of guess)
     for word in words_to_play:
-        print '###############################'
-        print '###############################'
-        print '^^^^ {} ^^^^'.format(word)
-        print '###############################'
-        print '###############################'
+
         g = game.play(word.strip())
         for mystery_string in g:
             key = get_cache_key(mystery_string, args.encoder, mystery_string.missed_letters)
@@ -162,22 +177,17 @@ if __name__ == '__main__':
                 # TODO: Caching is broken if args.track_rejected is False
                 rejected_letters = mystery_string.missed_letters if args.track_rejected else ''
                 remaining_words = dictionary.filter_words(encoded_dictionary, mystery_string, rejected_letters)
-                if len(remaining_words) == 1:
-                    print 'we found it!!!!!!'
-                    next_guess = remaining_words[0]
-                else:
-                    next_guess = get_next_guess(mystery_string, remaining_words, args.strategy)
+                next_guess = get_next_guess(mystery_string, remaining_words, args.strategy, scorer)
                 cached_guesses[key] = next_guess
             try:
                 g.send(next_guess)
             except StopIteration:
                 pass
         result = game.MysteryString(word, (set(mystery_string.guesses) | set([next_guess])))
-        print word, result, next_guess
         assert word == str(result)
 
         print word, result.known_letters, result.missed_letters, result.guessed_words
-        scores.append(len(result.missed_letters))
+        scores.append(scorer(known_letters=len(result.known_letters), missed_letters=len(result.missed_letters)))
 
     avg = sum(scores) / float(len(scores))
     print 'Average Score: ', avg
