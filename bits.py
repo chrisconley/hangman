@@ -128,6 +128,8 @@ if __name__ == '__main__':
             help='Can be entropy-positional, entropy-duplicate, entropy-distinct, most-common or random')
     parser.add_argument('--scorer',
             help='multipler:2:7 - multiplier is the only available score atm')
+    parser.add_argument('--entropy-scorer',
+            help='multipler:2:7 - multiplier is the only available score atm')
     parser.add_argument('--reset-memory', dest='use_memory', action='store_false')
     parser.add_argument('--limit', default=1000, type=int,
             help='1000 will randomly select 1000 words to play with range')
@@ -174,6 +176,13 @@ if __name__ == '__main__':
         scorer = build_multiplier_scorer(float(known_multiplier), float(missed_multiplier))
     else:
         scorer = build_multiplier_scorer(known_multiplier=1.0, missed_multiplier=1.0)
+
+    if args.entropy_scorer:
+        entropy_scorer_type, known_multiplier, missed_multiplier = args.entropy_scorer.split(':')
+        assert entropy_scorer_type == 'multiplier'
+        entropy_scorer = build_multiplier_scorer(float(known_multiplier), float(missed_multiplier))
+    else:
+        entropy_scorer = scorer
     scores = []
 
     print args.limit, args.strategy
@@ -186,7 +195,7 @@ if __name__ == '__main__':
             if not next_guess:
                 rejected_letters = mystery_string.missed_letters
                 remaining_words = dictionary.filter_words(encoded_dictionary, mystery_string, rejected_letters)
-                next_guess = get_next_guess(mystery_string, remaining_words, args.strategy, scorer)
+                next_guess = get_next_guess(mystery_string, remaining_words, args.strategy, entropy_scorer)
                 cached_guesses[key] = next_guess
             try:
                 game.send(next_guess)
