@@ -12,7 +12,7 @@ from scorers import build_multiplier_scorer
 """
 Usage:
 
-time cat build/splits/9 | python2.7 bits.py - --track-rejected --reset-memory --strategy entropy-positional --limit 500
+time cat build/splits/9 | python2.7 bits.py - --reset-memory --strategy entropy-positional --limit 500
 """
 
 
@@ -85,18 +85,9 @@ def entropy_strategy(mystery_string, counters, total, scorer):
             return letter
 
 
-def get_cache_key(mystery_string, encoder, rejected_letters):
-
-    encoder_keys = {
-        'positional': lambda s: list(s),
-        'duplicate': lambda s: sorted([key for key in dictionary.duplicate_letters(s)]),
-        'distinct': lambda s: sorted([key for key in dictionary.distinct_letters(s)])
-    }
-
-    current = encoder_keys[encoder](mystery_string)
-
+def get_cache_key(mystery_string, rejected_letters):
+    current = list(mystery_string)
     key = "{}:{}".format("".join(current), "".join(sorted(rejected_letters)))
-
     return key
 
 def get_next_guess(mystery_string, remaining_words, strategy, scorer):
@@ -119,29 +110,43 @@ def get_next_guess(mystery_string, remaining_words, strategy, scorer):
 
 if __name__ == '__main__':
     from argparse import ArgumentParser, ArgumentTypeError
+    import ConfigParser
     import csv
     import fileinput
     import os.path
 
     parser = ArgumentParser()
+    parser.add_argument('--config', metavar='CONFIG_FILE')
+
+    args, remaining_argv = parser.parse_known_args()
+
     parser.add_argument('file', help='input words')
+    parser.add_argument('--memory-file')
     parser.add_argument('--encoder', default='positional',
             help='Can be positional, duplicate, distinct or naive')
-    parser.add_argument('--track-rejected', dest='track_rejected', action='store_true')
-    parser.add_argument('--ignore-rejected', dest='track_rejected', action='store_false')
     parser.add_argument('--strategy', default='entropy-positional',
             help='Can be entropy-positional, entropy-duplicate, entropy-distinct, most-common or random')
-    parser.add_argument('--memory-file')
+    parser.add_argument('--scorer',
+            help='multipler:2:7 - multiplier is the only available score atm')
     parser.add_argument('--reset-memory', dest='use_memory', action='store_false')
     parser.add_argument('--limit', default=1000, type=int,
             help='1000 will randomly select 1000 words to play with range')
     parser.add_argument('--range',
             help='1000:2000 will select all words within the range')
-    parser.add_argument('--scorer',
-            help='multipler:2:7 - multiplier is the only available score atm')
 
-    parser.set_defaults(track_rejected=True, use_memory=True)
-    args = parser.parse_args()
+    defaults = {
+        'use_memory': True
+    }
+
+    if args.config:
+        config = ConfigParser.SafeConfigParser()
+        config.read([args.config])
+
+        config_defaults = dict(config.items("hangman"))
+
+        parser.set_defaults(**dict(defaults.items() + config_defaults.items()))
+
+    args = parser.parse_args(remaining_argv)
 
     words = [word.strip() for word in fileinput.input(args.file)]
     encoded_dictionary = dictionary.encode_dictionary(words, args.encoder)
@@ -170,15 +175,16 @@ if __name__ == '__main__':
     else:
         scorer = build_multiplier_scorer(known_multiplier=1.0, missed_multiplier=1.0)
     scores = []
+
+    print args.limit, args.strategy
     for word in words_to_play:
 
         game = hangman.play(word.strip())
         for mystery_string in game:
-            key = get_cache_key(mystery_string, args.encoder, mystery_string.missed_letters)
+            key = get_cache_key(mystery_string, mystery_string.missed_letters)
             next_guess = cached_guesses.get(key, None)
             if not next_guess:
-                # TODO: Caching is broken if args.track_rejected is False
-                rejected_letters = mystery_string.missed_letters if args.track_rejected else ''
+                rejected_letters = mystery_string.missed_letters
                 remaining_words = dictionary.filter_words(encoded_dictionary, mystery_string, rejected_letters)
                 next_guess = get_next_guess(mystery_string, remaining_words, args.strategy, scorer)
                 cached_guesses[key] = next_guess
