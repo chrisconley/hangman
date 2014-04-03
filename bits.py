@@ -115,6 +115,9 @@ if __name__ == '__main__':
     import fileinput
     import os.path
 
+    # Using argparse and ConfigParser together;
+    # http://blog.vwelch.com/2011/04/combining-configparser-and-argparse.html
+
     parser = ArgumentParser()
     parser.add_argument('--config', metavar='CONFIG_FILE')
 
@@ -184,6 +187,7 @@ if __name__ == '__main__':
     else:
         entropy_scorer = scorer
     scores = []
+    guess_counts = []
 
     print args.limit, args.strategy
     for word in words_to_play:
@@ -204,11 +208,15 @@ if __name__ == '__main__':
         result = hangman.MysteryString(word, (set(mystery_string.guesses) | set([next_guess])))
         assert word == str(result)
 
-        print word, result.known_letters, result.missed_letters, result.guessed_words
-        scores.append(scorer(known_letters=len(result.known_letters), missed_letters=len(result.missed_letters)))
+        score = scorer(known_letters=len(result.known_letters), missed_letters=len(result.missed_letters))
+        print '{}: {}'.format(word, int(score))#, result.known_letters, result.missed_letters, result.guessed_words
+        scores.append(score)
+        guess_counts.append(len(result.guessed_letters))
 
     avg = sum(scores) / float(len(scores))
-    print 'Average Score: ', avg
+    avg_guesses = sum(guess_counts) / float(len(guess_counts))
+
+    print 'Average Score: ', avg, avg_guesses
 
     if args.memory_file:
         with open(args.memory_file, 'w') as memory_file:
