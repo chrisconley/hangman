@@ -1,7 +1,7 @@
 #### Random
 
 ```
-time cat build/splits/9 | python2.7 bits.py - --config games/01-random.cfg --reset-memory --limit 25011
+time cat build/splits/9 | python2.7 play.py - --config games/01-random.cfg --reset-memory --limit 25011
 ```
 
 ```
@@ -15,7 +15,7 @@ sys	0m0.870s
 #### Naive
 
 ```
-time cat build/splits/9 | python2.7 bits.py - --config games/02-naive.cfg --reset-memory --limit 25011
+time cat build/splits/9 | python2.7 play.py - --config games/02-naive.cfg --reset-memory --limit 25011
 ```
 
 
@@ -30,16 +30,21 @@ sys	0m1.049s
 #### Feedback Distinct
 
 ```
-time cat build/splits/9 | python2.7 bits.py - --config games/03-feedback-distinct.cfg --reset-memory --limit 25011
+time cat build/splits/9 | python2.7 play.py - --config games/03-feedback-distinct.cfg --reset-memory --limit 25011
 ```
 
 ```
+Average Score:  7.02450921594 14.1903562433
+
+real	13m47.919s
+user	13m47.074s
+sys	0m0.877s
 ```
 
 #### Feedback Positional
 
 ```
-time cat build/splits/9 | python2.7 bits.py - --config games/05-feedback-positional.cfg --reset-memory --limit 25011
+time cat build/splits/9 | python2.7 play.py - --config games/05-feedback-positional.cfg --reset-memory --limit 25011
 ```
 
 ```
@@ -53,7 +58,7 @@ sys	0m0.201s
 #### Maximize Information
 
 ```
-time cat build/splits/9 | python2.7 bits.py - --config games/06-entropy-mismatched-scorers.cfg --reset-memory --limit 25011
+time cat build/splits/9 | python2.7 play.py - --config games/06-entropy-mismatched-scorers.cfg --reset-memory --limit 25011
 ```
 
 ```
@@ -67,7 +72,7 @@ sys	0m0.227s
 #### Optimize
 
 ```
-time cat build/splits/9 | python2.7 bits.py - --config games/07-entropy-same-scorer.cfg --reset-memory --limit 25011
+time cat build/splits/9 | python2.7 play.py - --config games/07-entropy-same-scorer.cfg --reset-memory --limit 25011
 ```
 
 ```

@@ -12,19 +12,8 @@ from scorers import build_multiplier_scorer
 """
 Usage:
 
-time cat build/splits/9 | python2.7 bits.py - --reset-memory --strategy entropy-positional --limit 500
+time cat build/splits/9 | python2.7 play.py - --reset-memory --strategy entropy-positional --limit 500
 """
-
-
-# Initial Knowledge
-#naive
-
-# Knowledge at each step
-#distinct, duplicate, positional
-#use missed letters or not
-
-# Knowledge you'll gain / strategy
-#random, most common, distinct letter entropy, duplicate letter entropy, positional letter entropy
 
 ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
 
