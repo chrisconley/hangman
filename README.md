@@ -1,4 +1,4 @@
-## Hangman strategies in python.
+## Hangman strategies in python
 
 Until I get a proper README up, check out the following the lightning talk for a quick overview:
 
