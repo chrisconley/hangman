@@ -1,3 +1,14 @@
+Hangman strategies in python.
+
+Check out the following the lightning talk for a quick overview:
+
+<a href="https://www.youtube.com/watch?v=dSSNLyaZBUU">
+<img src="https://cloud.githubusercontent.com/assets/4130/2675446/19b8c5ee-c119-11e3-9dac-7a2f40ce0453.png"/>
+</a>
+
+## Running Different Strategies
+
+
 #### Random
 
 ```
