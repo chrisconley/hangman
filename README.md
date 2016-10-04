@@ -6,13 +6,34 @@ Until I get a proper README up, check out the following the lightning talk for a
 <img src="https://cloud.githubusercontent.com/assets/4130/2675446/19b8c5ee-c119-11e3-9dac-7a2f40ce0453.png"/>
 </a>
 
+## Setup
+
+Set up a virtual environment and activate it
+
+```
+python3.5 -mvenv ~/venv/hangman
+source ~/venv/hangman/bin/activate
+```
+
+Install dependencies
+
+```
+pip install -r requirements.txt
+```
+
+Prepare `./build/` with processed dictionary files
+
+```
+make split
+```
+
 ## Running Different Strategies
 
 
 #### Random
 
 ```
-time cat build/splits/9 | python2.7 play.py - --config games/01-random.cfg --reset-memory --limit 25011
+time cat build/splits/9 | python play.py - --config games/01-random.cfg --reset-memory --limit 25011
 ```
 
 ```
@@ -26,7 +47,7 @@ sys	0m0.870s
 #### Naive
 
 ```
-time cat build/splits/9 | python2.7 play.py - --config games/02-naive.cfg --reset-memory --limit 25011
+time cat build/splits/9 | python play.py - --config games/02-naive.cfg --reset-memory --limit 25011
 ```
 
 
@@ -41,7 +62,7 @@ sys	0m1.049s
 #### Feedback Distinct
 
 ```
-time cat build/splits/9 | python2.7 play.py - --config games/03-feedback-distinct.cfg --reset-memory --limit 25011
+time cat build/splits/9 | python play.py - --config games/03-feedback-distinct.cfg --reset-memory --limit 25011
 ```
 
 ```
@@ -55,7 +76,7 @@ sys	0m0.877s
 #### Feedback Positional
 
 ```
-time cat build/splits/9 | python2.7 play.py - --config games/05-feedback-positional.cfg --reset-memory --limit 25011
+time cat build/splits/9 | python play.py - --config games/05-feedback-positional.cfg --reset-memory --limit 25011
 ```
 
 ```
@@ -69,7 +90,7 @@ sys	0m0.201s
 #### Maximize Information
 
 ```
-time cat build/splits/9 | python2.7 play.py - --config games/06-entropy-mismatched-scorers.cfg --reset-memory --limit 25011
+time cat build/splits/9 | python play.py - --config games/06-entropy-mismatched-scorers.cfg --reset-memory --limit 25011
 ```
 
 ```
@@ -83,7 +104,7 @@ sys	0m0.227s
 #### Optimize
 
 ```
-time cat build/splits/9 | python2.7 play.py - --config games/07-entropy-same-scorer.cfg --reset-memory --limit 25011
+time cat build/splits/9 | python play.py - --config games/07-entropy-same-scorer.cfg --reset-memory --limit 25011
 ```
 
 ```

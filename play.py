@@ -12,7 +12,7 @@ from scorers import build_multiplier_scorer
 """
 Usage:
 
-time cat build/splits/9 | python2.7 play.py - --reset-memory --strategy entropy-positional --limit 500
+time cat build/splits/9 | python play.py - --reset-memory --strategy entropy-positional --limit 500
 """
 
 ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
@@ -25,7 +25,7 @@ def random_strategy(mystery_string, counter, total, scorer):
             return letter
 
 def naive_strategy(mystery_string, counter, total, scorer):
-    # Generated with `cat words.txt | python2.7 load_common_letters.py -`
+    # Generated with `cat words.txt | python load_common_letters.py -`
     letters = 'esiarntolcdupmghbyfvkwzxqj'
     for letter in letters:
         if letter not in mystery_string.guesses and letter != '*':
@@ -99,7 +99,7 @@ def get_next_guess(mystery_string, remaining_words, strategy, scorer):
 
 if __name__ == '__main__':
     from argparse import ArgumentParser, ArgumentTypeError
-    import ConfigParser
+    from configparser import ConfigParser
     import csv
     import fileinput
     import os.path
@@ -133,12 +133,13 @@ if __name__ == '__main__':
     }
 
     if args.config:
-        config = ConfigParser.SafeConfigParser()
+        config = ConfigParser()
         config.read([args.config])
 
         config_defaults = dict(config.items("hangman"))
 
-        parser.set_defaults(**dict(defaults.items() + config_defaults.items()))
+        merged_defaults = dict(defaults, **config_defaults)
+        parser.set_defaults(**merged_defaults)
 
     args = parser.parse_args(remaining_argv)
 
@@ -178,7 +179,7 @@ if __name__ == '__main__':
     scores = []
     guess_counts = []
 
-    print args.limit, args.strategy
+    print(args.limit, args.strategy)
     for word in words_to_play:
 
         game = hangman.play(word.strip())
@@ -198,14 +199,14 @@ if __name__ == '__main__':
         assert word == str(result)
 
         score = scorer(known_letters=len(result.known_letters), missed_letters=len(result.missed_letters))
-        print '{}: {}'.format(word, int(score))#, result.known_letters, result.missed_letters, result.guessed_words
+        print('{}: {}'.format(word, int(score)))#, result.known_letters, result.missed_letters, result.guessed_words
         scores.append(score)
         guess_counts.append(len(result.guessed_letters))
 
     avg = sum(scores) / float(len(scores))
     avg_guesses = sum(guess_counts) / float(len(guess_counts))
 
-    print 'Average Score: ', avg, avg_guesses
+    print('Average Score: ', avg, avg_guesses)
 
     if args.memory_file:
         with open(args.memory_file, 'w') as memory_file:

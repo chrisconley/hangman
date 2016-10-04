@@ -1,6 +1,7 @@
 from collections import Counter
 import math
 
+
 def get_pmfs(counters, total):
     """
     Takes a counter and returns a probability mass function in the form of

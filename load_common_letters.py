@@ -2,7 +2,7 @@
 Takes a input file of words and prints a list of most common letters.
 
 Usage:
-$ cat words.txt | python2.7 load_common_letters.py -
+$ cat words.txt | python load_common_letters.py -
 esiarntolcdupmghbyfvkwzxqj
 """
 import counters
@@ -23,7 +23,7 @@ if __name__ == '__main__':
     most_common = []
     for letter, count in counts.most_common():
         if args.verbose:
-            print letter, count
+            print(letter, count)
         most_common.append(letter)
 
-    print ''.join(most_common)
+    print(''.join(most_common))

@@ -14,7 +14,7 @@ def count_duplicate_letters(words):
         for letter in set(word):
             counter = counts.setdefault(letter, Counter())
             key = "".join([l for l in word if l == letter])
-            #print word, letter, key
+            #print(word, letter, key)
             counter[key] += 1
             counter['*'] += 1
     return counts
@@ -25,7 +25,7 @@ def count_positional_letters(words):
         for letter in set(word):
             counter = counts.setdefault(letter, Counter())
             key = "".join([l if l == letter else '-' for l in word])
-            #print word, letter, key
+            #print(word, letter, key)
             counter[key] += 1
             counter['*'] += 1
     return counts

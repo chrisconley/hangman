@@ -1,8 +1,8 @@
 """
 Usage"
 
-head words.txt | python2.7 ./splitter.py - ./build/splits
-python2.7 ./splitter.py ./words.txt ./build/splits
+head words.txt | python ./splitter.py - ./build/splits
+python ./splitter.py ./words.txt ./build/splits
 """
 
 if __name__ == '__main__':
