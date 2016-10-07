@@ -30,6 +30,7 @@ def get_pmfs(counters, total):
 
     return pmfs
 
+
 def log_probability(probability):
     """
     -xlog(x) (base 2)
@@ -38,9 +39,23 @@ def log_probability(probability):
         return 0
     return -probability * math.log(probability, 2)
 
+
 def get_entropy(probabilities):
     entropy = sum([log_probability(p) for p in probabilities])
     return entropy
+
+
+def get_square_loss(probabilities):
+    return sum([(1 - p*p)**2 for p in probabilities])
+
+
+def get_hinge_loss(probabilities):
+    maximum = max([(1 - p*p)**2 for p in probabilities])
+    if maximum < 0.0:
+        return 0.0
+    else:
+        return maximum
+
 
 def get_entropies(pmfs, word_count):
     entropies = Counter()
