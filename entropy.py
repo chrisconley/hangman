@@ -1,5 +1,10 @@
-from collections import Counter
+from collections import Counter, OrderedDict
+import fractions
 import math
+
+
+class OrderedCounter(Counter, OrderedDict):
+    pass
 
 
 def get_pmfs(counters, total):
@@ -18,15 +23,15 @@ def get_pmfs(counters, total):
 
     NB: Not sure if we want to keep * around
     """
-    pmfs = {}
+    pmfs = OrderedDict()
     for letter, counter in counters.items():
         if letter == '*':
-            raise Exception('* not allowed')
+            continue
         pmf = pmfs.setdefault(letter, {})
         letter_total = counter['*']
-        pmf['!'] = (total - letter_total) / float(total)
+        pmf['!'] = fractions.Fraction(total - letter_total, total)
         for subset, count in counter.items():
-            pmf[subset] = count / float(total)
+            pmf[subset] = fractions.Fraction(count, total)
 
     return pmfs
 
@@ -58,14 +63,13 @@ def get_hinge_loss(probabilities):
 
 
 def get_entropies(pmfs, word_count):
-    entropies = Counter()
+    entropies = OrderedCounter()
     for letter, pmf in pmfs.items():
         if letter == '*':
             raise Exception('* not allowed')
 
         probabilities = [p for (subset, p) in pmf.items() if subset != '*']
-        s = "{:0.8f}".format(sum(probabilities))
+        s = "{:0.8f}".format(float(sum(probabilities)))
         assert s == '1.00000000', "Probability sum {} does not equal 1.00".format(s)
         entropies[letter] = get_entropy(probabilities)
-
     return entropies

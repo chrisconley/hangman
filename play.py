@@ -1,5 +1,7 @@
-from collections import Counter
+from collections import Counter, OrderedDict
+import fractions
 import random
+import unittest
 
 from bitarray import bitarray
 
@@ -17,34 +19,55 @@ time cat build/splits/9 | python play.py - --reset-memory --strategy entropy-pos
 
 ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
 
-def random_strategy(mystery_string, counter, total, scorer):
+def random_strategy(mystery_string, positional_counters, total, scorer):
     letters = list(ALPHABET)
     random.shuffle(letters)
     for letter in letters:
         if letter not in mystery_string.guesses and letter != '*':
             return letter
 
-def naive_strategy(mystery_string, counter, total, scorer):
+def naive_strategy(mystery_string, positional_counters, total, scorer):
     # Generated with `cat words.txt | python load_common_letters.py -`
     letters = 'esiarntolcdupmghbyfvkwzxqj'
     for letter in letters:
         if letter not in mystery_string.guesses and letter != '*':
             return letter
 
+class OrderedCounter(Counter, OrderedDict):
+    pass
+
 def most_common(counter):
-    counter = Counter(counter)
+    counter = OrderedCounter(counter)
     for letter, count in counter.most_common():
         if letter == '*':
             continue
         yield letter, count
 
-def most_common_strategy(mystery_string, counter, total, scorer):
-    for letter, count in most_common(counter):
+
+def most_common_strategy(mystery_string, positional_counters, total, scorer):
+    counts = OrderedCounter()
+    for letter, counter in positional_counters.items():
+        if letter == '*':
+            continue
+        counts[letter] = counter['*']
+    print('-----')
+    most_common_letters = []
+    most_common_count = None
+    for letter, count in most_common(counts):
         if letter not in mystery_string.guesses and letter != '*':
-            return letter
+            if most_common_count is None:
+                most_common_count = count
+                most_common_letters.append(letter)
+            elif most_common_count == count:
+                most_common_letters.append(letter)
+            else:
+                break
+    print(most_common_letters)
+    return random.choice(sorted(most_common_letters))
 
 
-def entropy_strategy(mystery_string, counters, total, scorer):
+
+def entropy_strategy(mystery_string, positional_counters, total, scorer):
     """
     Ex:
 
@@ -56,7 +79,7 @@ def entropy_strategy(mystery_string, counters, total, scorer):
     }
     total = 185
     """
-    pmfs = entropy.get_pmfs(counters, total)
+    pmfs = entropy.get_pmfs(positional_counters, total)
     entropies = entropy.get_entropies(pmfs, total)
 
     def utility_function(pmf):
@@ -64,14 +87,33 @@ def entropy_strategy(mystery_string, counters, total, scorer):
         loss = loss or 0.000001 # Utility should actually be infinity but close enough
         return 1 / loss
 
-    gains = {} # entropies with applied gain function
+    # distinct_pmf = {}
+    # letter_total = positional_counters['*']
+    # distinct_pmf['!'] = fractions.Fraction(total - letter_total, total)
+    # for letter, counter in positional_counters.items():
+    #     if letter == '*':
+    #         continue
+    #     distinct_pmf[letter] = fractions.Fraction(counter['*'], total)
+
+    gains = OrderedDict() # entropies with applied gain function
     for letter, letter_entropy in entropies.items():
         pmf = pmfs[letter]
-        gains[letter] = letter_entropy * utility_function(pmf)
+        #print(letter_entropy * utility_function(pmf), float(distinct_counter[letter]))
+        gains[letter] = letter_entropy * utility_function(pmf)# * distinct_counter[letter]# * distinct_pmf[letter]
 
+    most_common_letters = []
+    most_common_count = None
     for letter, count in most_common(gains):
         if letter not in mystery_string.guesses and letter != '*':
-            return letter
+            if most_common_count is None:
+                most_common_count = count
+                most_common_letters.append(letter)
+            elif most_common_count == count:
+                most_common_letters.append(letter)
+            else:
+                break
+    print(most_common_letters)
+    return random.choice(sorted(most_common_letters))
 
 
 def get_cache_key(mystery_string, rejected_letters):
@@ -79,23 +121,46 @@ def get_cache_key(mystery_string, rejected_letters):
     key = "{}:{}".format("".join(current), "".join(sorted(rejected_letters)))
     return key
 
+
 def get_next_guess(mystery_string, remaining_words, strategy, scorer):
     if len(remaining_words) == 1:
         next_guess = remaining_words[0]
     else:
         methods = {
-            'entropy-positional': {'counter': counters.count_positional_letters, 'strategy': entropy_strategy},
-            'entropy-duplicate': {'counter': counters.count_duplicate_letters, 'strategy': entropy_strategy},
-            #'entropy-distinct': {'counter': counters.count_distinct_letters, 'strategy': entropy_strategy},
-            'most-common': {'counter': counters.count_distinct_letters, 'strategy': most_common_strategy},
-            'random': {'counter': counters.count_distinct_letters, 'strategy': random_strategy},
-            'naive': {'counter': counters.count_distinct_letters, 'strategy': naive_strategy},
+            'entropy-positional': {'strategy': entropy_strategy},
+            'most-common': {'strategy': most_common_strategy},
+            'random': {'strategy': random_strategy},
+            'naive': {'strategy': naive_strategy},
         }
-        counts = methods[strategy]['counter'](remaining_words)
+
+        positional_counters = counters.count_positional_letters(remaining_words)
         strategy_method = methods[strategy]['strategy']
-        next_guess = strategy_method(mystery_string, counts, len(remaining_words), scorer)
+        next_guess = strategy_method(mystery_string, positional_counters, len(remaining_words), scorer)
 
     return next_guess
+
+
+class NextGuessTests(unittest.TestCase):
+
+    def test_max_info_gain(self):
+        random.seed(15243)
+        words = ['scrabbler', 'scrambler', 'scratcher', 'scrounger',
+                 'straddler', 'straggler', 'strangler', 'struggler'
+                 ]
+        counts = counters.count_positional_letters(words)
+        scorer = build_multiplier_scorer(1, 1)
+        mystery_string = hangman.MysteryString('scrabbler', 'srei')
+        next_guess = entropy_strategy(mystery_string, counts, len(words), scorer)
+
+        self.assertEqual(next_guess, 'g')
+
+        scorer = build_multiplier_scorer(0, 1)
+        next_guess = entropy_strategy(mystery_string, counts, len(words), scorer)
+
+        self.assertEqual(next_guess, 't')
+
+        next_guess = most_common_strategy(mystery_string, counts, len(words), scorer)
+        self.assertEqual(next_guess, 'a')
 
 if __name__ == '__main__':
     from argparse import ArgumentParser, ArgumentTypeError
@@ -103,6 +168,9 @@ if __name__ == '__main__':
     import csv
     import fileinput
     import os.path
+
+    # Seed random so we can do multiple runs with same set of random words
+    random.seed(15243, version=1)
 
     # Using argparse and ConfigParser together;
     # http://blog.vwelch.com/2011/04/combining-configparser-and-argparse.html
@@ -115,7 +183,7 @@ if __name__ == '__main__':
     parser.add_argument('file', help='input words')
     parser.add_argument('--memory-file')
     parser.add_argument('--encoder', default='positional',
-            help='Can be positional, duplicate, distinct or naive')
+            help='Can be positional, duplicate, distinct')
     parser.add_argument('--strategy', default='entropy-positional',
             help='Can be entropy-positional, entropy-duplicate, entropy-distinct, most-common or random')
     parser.add_argument('--scorer',
@@ -159,21 +227,25 @@ if __name__ == '__main__':
         words_to_play = words[int(start):int(stop)]
 
     if args.limit:
-        # Seed random so we can do multiple runs with same set of random words
-        random.seed(15243)
         words_to_play = random.sample(words_to_play, args.limit)
 
     if args.scorer:
         scorer_type, known_multiplier, missed_multiplier = args.scorer.split(':')
         assert scorer_type == 'multiplier'
-        scorer = build_multiplier_scorer(float(known_multiplier), float(missed_multiplier))
+        scorer = build_multiplier_scorer(
+            fractions.Fraction(known_multiplier),
+            fractions.Fraction(missed_multiplier)
+        )
     else:
-        scorer = build_multiplier_scorer(known_multiplier=1.0, missed_multiplier=1.0)
+        scorer = build_multiplier_scorer(known_multiplier=1, missed_multiplier=1)
 
     if args.entropy_scorer:
         entropy_scorer_type, known_multiplier, missed_multiplier = args.entropy_scorer.split(':')
         assert entropy_scorer_type == 'multiplier'
-        entropy_scorer = build_multiplier_scorer(float(known_multiplier), float(missed_multiplier))
+        entropy_scorer = build_multiplier_scorer(
+            fractions.Fraction(known_multiplier),
+            fractions.Fraction(missed_multiplier)
+        )
     else:
         entropy_scorer = scorer
     scores = []
@@ -199,7 +271,7 @@ if __name__ == '__main__':
         assert word == str(result)
 
         score = scorer(known_letters=len(result.known_letters), missed_letters=len(result.missed_letters))
-        print('{}: {}'.format(word, int(score)))#, result.known_letters, result.missed_letters, result.guessed_words
+        #print('{}: {}'.format(word, int(score)))#, result.known_letters, result.missed_letters, result.guessed_words
         scores.append(score)
         guess_counts.append(len(result.guessed_letters))
 
