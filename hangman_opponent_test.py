@@ -23,3 +23,13 @@ class HangmanGameStateTests(unittest.TestCase):
 
         state = HangmanGameState('banana', set('bnce'))
         self.assertEqual(state.missed_letters, set('ce'))
+
+    def test_known_letters(self):
+        state = HangmanGameState('banana', set())
+        self.assertEqual(state.known_letters, set())
+
+        state = HangmanGameState('banana', set('bn'))
+        self.assertEqual(state.known_letters, set('bn'))
+
+        state = HangmanGameState('banana', set('bnce'))
+        self.assertEqual(state.known_letters, set('bn'))
