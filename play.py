@@ -236,8 +236,6 @@ if __name__ == '__main__':
 
     parser.add_argument('file', help='input words')
     parser.add_argument('--memory-file')
-    parser.add_argument('--encoder', default='positional',
-            help='Can be positional, duplicate, distinct')
     parser.add_argument('--strategy', default='entropy-positional',
             help='Can be entropy-positional, entropy-duplicate, entropy-distinct, most-common or random')
     parser.add_argument('--scorer',
@@ -266,7 +264,7 @@ if __name__ == '__main__':
     args = parser.parse_args(remaining_argv)
 
     words = [word.strip() for word in fileinput.input(args.file)]
-    encoded_dictionary = dictionary.encode_dictionary(words, args.encoder)
+    encoded_dictionary = dictionary.encode_dictionary(words)
 
     cached_guesses = {}
 
