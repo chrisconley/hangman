@@ -1,10 +1,10 @@
-from collections import Counter, OrderedDict
 import fractions
 import math
 import random
 import unittest
+from collections import Counter, OrderedDict
 
-import counters
+from hangman_utils import counters
 
 
 class OrderedCounter(Counter, OrderedDict):

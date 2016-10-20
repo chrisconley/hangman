@@ -1,17 +1,14 @@
 """
 Usage"
 
-head words.txt | python ./splitter.py - ./build/splits
-python ./splitter.py ./words.txt ./build/splits
+head words.txt | python ./hangman_utils/splitter.py - ./build/splits
+python ./hangman_utils/splitter.py ./hangman_utils/words.txt ./build/splits
 """
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
-    import json
     import fileinput
     import os
-    import sys
-    import csv
     parser = ArgumentParser()
     parser.add_argument('dictionary', help='input dictionary')
     parser.add_argument('destination', help='destination directory to dump the dictionary splits to')

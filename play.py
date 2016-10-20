@@ -1,14 +1,12 @@
-from collections import Counter, OrderedDict
 import fractions
 import random
 import unittest
+from collections import Counter, OrderedDict
 
-from bitarray import bitarray
-
-import counters
 import dictionary
 import entropy
 import hangman
+from hangman_utils import counters
 from scorers import build_multiplier_scorer
 
 """
@@ -219,7 +217,7 @@ class NextGuessTests(unittest.TestCase):
         self.assertEqual(next_guess, 'n')
 
 if __name__ == '__main__':
-    from argparse import ArgumentParser, ArgumentTypeError
+    from argparse import ArgumentParser
     from configparser import ConfigParser
     import csv
     import fileinput

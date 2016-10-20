@@ -2,13 +2,13 @@
 Takes a input file of words and prints a list of most common letters.
 
 Usage:
-$ cat words.txt | python load_common_letters.py -
+$ cat ./hangman_utils/words.txt | python -m hangman_utils.load_common_letters -
 esiarntolcdupmghbyfvkwzxqj
 """
-import counters
+from hangman_utils import counters
 
 if __name__ == '__main__':
-    from argparse import ArgumentParser, ArgumentTypeError
+    from argparse import ArgumentParser
     import fileinput
 
     parser = ArgumentParser()
