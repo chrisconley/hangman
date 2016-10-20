@@ -1,8 +1,24 @@
+import random
 import unittest
 
 import entropy
+from hangman_utils import counters
+
 
 class EntropyTests(unittest.TestCase):
+    def test_max_info_gain(self):
+        random.seed(15243)
+        words = ['scrabbler', 'scrambler', 'scratcher', 'scrounger',
+                 'straddler', 'straggler', 'strangler', 'struggler'
+                 ]
+        counts = counters.count_positional_letters(words)
+        entropies = entropy.get_new_entropies(counts)
+
+        self.assertAlmostEqual(entropies['g'], 1.750, places=3)
+        self.assertAlmostEqual(entropies['t'], 1.406, places=3)
+        self.assertAlmostEqual(entropies['a'], 0.811, places=3)
+        self.assertAlmostEqual(entropies['h'], 0.544, places=3)
+
     def test_log_entropy(self):
         self.assertAlmostEqual(entropy.log_probability(1.0), 0, places=4)
         self.assertAlmostEqual(entropy.log_probability(0.0), 0, places=4)
