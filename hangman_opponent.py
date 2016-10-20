@@ -1,4 +1,12 @@
 class HangmanGameState(str):
+    """
+    Accepts a word and guesses (either letter or word guesses)
+
+    This class inherits from str, so the initializer
+    returns a string in the form of:
+
+    `ba-a-a` where the word is `banana` and guesses include `b` and `a`
+    """
     def __new__(cls, word, guesses, delimiter='-'):
         result = [
             (letter if (letter in guesses or word in guesses) else delimiter)
