@@ -19,18 +19,18 @@ time cat build/splits/9 | python play.py - --reset-memory --strategy entropy-pos
 
 ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
 
-def random_strategy(mystery_string, positional_counters, total, scorer):
+def random_strategy(game_state, positional_counters, total, scorer):
     letters = list(ALPHABET)
     random.shuffle(letters)
     for letter in letters:
-        if letter not in mystery_string.guesses and letter != '*':
+        if letter not in game_state.guesses and letter != '*':
             return letter
 
-def naive_strategy(mystery_string, positional_counters, total, scorer):
+def naive_strategy(game_state, positional_counters, total, scorer):
     # Generated with `cat words.txt | python load_common_letters.py -`
     letters = 'esiarntolcdupmghbyfvkwzxqj'
     for letter in letters:
-        if letter not in mystery_string.guesses and letter != '*':
+        if letter not in game_state.guesses and letter != '*':
             return letter
 
 class OrderedCounter(Counter, OrderedDict):
@@ -44,17 +44,16 @@ def most_common(counter):
         yield letter, count
 
 
-def most_common_strategy(mystery_string, positional_counters, total, scorer):
+def most_common_strategy(game_state, positional_counters, total, scorer):
     counts = OrderedCounter()
     for letter, counter in positional_counters.items():
         if letter == '*':
             continue
         counts[letter] = counter['*']
-    print('-----')
     most_common_letters = []
     most_common_count = None
     for letter, count in most_common(counts):
-        if letter not in mystery_string.guesses and letter != '*':
+        if letter not in game_state.guesses and letter != '*':
             if most_common_count is None:
                 most_common_count = count
                 most_common_letters.append(letter)
@@ -62,12 +61,26 @@ def most_common_strategy(mystery_string, positional_counters, total, scorer):
                 most_common_letters.append(letter)
             else:
                 break
-    print(most_common_letters)
     return random.choice(sorted(most_common_letters))
 
 
+def get_actual_next_guess(game_state, choices):
+    assert choices.get('*') is None
+    most_common_letters = []
+    most_common_count = None
+    for letter, count in most_common(choices):
+        if letter not in game_state.guesses:
+            if most_common_count is None:
+                most_common_count = count
+                most_common_letters.append(letter)
+            elif most_common_count == count:
+                most_common_letters.append(letter)
+            else:
+                break
+    return random.choice(sorted(most_common_letters))
 
-def entropy_strategy(mystery_string, positional_counters, total, scorer):
+
+def entropy_strategy(game_state, positional_counters, total, scorer):
     """
     Ex:
 
@@ -87,24 +100,24 @@ def entropy_strategy(mystery_string, positional_counters, total, scorer):
         loss = loss or 0.000001 # Utility should actually be infinity but close enough
         return 1 / loss
 
-    # distinct_pmf = {}
-    # letter_total = positional_counters['*']
-    # distinct_pmf['!'] = fractions.Fraction(total - letter_total, total)
-    # for letter, counter in positional_counters.items():
-    #     if letter == '*':
-    #         continue
-    #     distinct_pmf[letter] = fractions.Fraction(counter['*'], total)
+    distinct_pmf = {}
+    letter_total = positional_counters['*']
+    distinct_pmf['!'] = fractions.Fraction(total - letter_total, total)
+    for letter, counter in positional_counters.items():
+        if letter == '*':
+            continue
+        distinct_pmf[letter] = fractions.Fraction(counter['*'], total)
 
     gains = OrderedDict() # entropies with applied gain function
     for letter, letter_entropy in entropies.items():
         pmf = pmfs[letter]
         #print(letter_entropy * utility_function(pmf), float(distinct_counter[letter]))
-        gains[letter] = letter_entropy * utility_function(pmf)# * distinct_counter[letter]# * distinct_pmf[letter]
+        gains[letter] = letter_entropy * utility_function(pmf)# * distinct_pmf[letter]
 
     most_common_letters = []
     most_common_count = None
     for letter, count in most_common(gains):
-        if letter not in mystery_string.guesses and letter != '*':
+        if letter not in game_state.guesses and letter != '*':
             if most_common_count is None:
                 most_common_count = count
                 most_common_letters.append(letter)
@@ -112,17 +125,16 @@ def entropy_strategy(mystery_string, positional_counters, total, scorer):
                 most_common_letters.append(letter)
             else:
                 break
-    print(most_common_letters)
     return random.choice(sorted(most_common_letters))
 
 
-def get_cache_key(mystery_string, rejected_letters):
-    current = list(mystery_string)
+def get_cache_key(game_state, rejected_letters):
+    current = list(game_state)
     key = "{}:{}".format("".join(current), "".join(sorted(rejected_letters)))
     return key
 
 
-def get_next_guess(mystery_string, remaining_words, strategy, scorer):
+def get_next_guess(game_state, remaining_words, strategy, scorer):
     if len(remaining_words) == 1:
         next_guess = remaining_words[0]
     else:
@@ -135,7 +147,7 @@ def get_next_guess(mystery_string, remaining_words, strategy, scorer):
 
         positional_counters = counters.count_positional_letters(remaining_words)
         strategy_method = methods[strategy]['strategy']
-        next_guess = strategy_method(mystery_string, positional_counters, len(remaining_words), scorer)
+        next_guess = strategy_method(game_state, positional_counters, len(remaining_words), scorer)
 
     return next_guess
 
@@ -149,18 +161,62 @@ class NextGuessTests(unittest.TestCase):
                  ]
         counts = counters.count_positional_letters(words)
         scorer = build_multiplier_scorer(1, 1)
-        mystery_string = hangman.MysteryString('scrabbler', 'srei')
-        next_guess = entropy_strategy(mystery_string, counts, len(words), scorer)
+        game_state = hangman.HangmanGameState('scrabbler', 'srei')
+        next_guess = entropy_strategy(game_state, counts, len(words), scorer)
 
         self.assertEqual(next_guess, 'g')
 
         scorer = build_multiplier_scorer(0, 1)
-        next_guess = entropy_strategy(mystery_string, counts, len(words), scorer)
+        next_guess = entropy_strategy(game_state, counts, len(words), scorer)
 
         self.assertEqual(next_guess, 't')
 
-        next_guess = most_common_strategy(mystery_string, counts, len(words), scorer)
+        next_guess = most_common_strategy(game_state, counts, len(words), scorer)
         self.assertEqual(next_guess, 'a')
+
+    def test_next_guess(self):
+        random.seed(15243)
+        choices = {
+            'g': 1.75,
+            't': 1.4056390622295662,
+            'c': 1.4056390622295662,
+            'n': 1.061278124459133,
+            'u': 1.061278124459133,
+            'b': 1.061278124459133,
+            'l': 0.8112781244591328,
+            'a': 0.8112781244591328,
+            'm': 0.5435644431995964,
+            'd': 0.5435644431995964,
+            'o': 0.5435644431995964,
+            'h': 0.5435644431995964,
+            'e': 0.0,
+            'r': 0.0,
+            's': 0.0
+        }
+        game_state = hangman.HangmanGameState('scrabbler', '')
+        next_guess = get_actual_next_guess(game_state, choices)
+        self.assertEqual(next_guess, 'g')
+
+    def test_tied_next_guess(self):
+        random.seed(15243)
+        choices = {
+            't': 1.4056390622295662,
+            'c': 1.4056390622295662,
+            'n': 1.061278124459133,
+        }
+        game_state = hangman.HangmanGameState('scrabbler', '')
+        next_guess = get_actual_next_guess(game_state, choices)
+        self.assertEqual(next_guess, 'c')
+
+    def test_already_guessed_next_guess(self):
+        random.seed(15243)
+        choices = {
+            'b': 1.4056390622295662,
+            'n': 1.061278124459133,
+        }
+        game_state = hangman.HangmanGameState('scrabbler', 'b')
+        next_guess = get_actual_next_guess(game_state, choices)
+        self.assertEqual(next_guess, 'n')
 
 if __name__ == '__main__':
     from argparse import ArgumentParser, ArgumentTypeError
@@ -255,19 +311,19 @@ if __name__ == '__main__':
     for word in words_to_play:
 
         game = hangman.play(word.strip())
-        for mystery_string in game:
-            key = get_cache_key(mystery_string, mystery_string.missed_letters)
+        for game_state in game:
+            key = get_cache_key(game_state, game_state.missed_letters)
             next_guess = cached_guesses.get(key, None)
             if not next_guess:
-                rejected_letters = mystery_string.missed_letters
-                remaining_words = dictionary.filter_words(encoded_dictionary, mystery_string, rejected_letters)
-                next_guess = get_next_guess(mystery_string, remaining_words, args.strategy, entropy_scorer)
+                rejected_letters = game_state.missed_letters
+                remaining_words = dictionary.filter_words(encoded_dictionary, game_state, rejected_letters)
+                next_guess = get_next_guess(game_state, remaining_words, args.strategy, entropy_scorer)
                 cached_guesses[key] = next_guess
             try:
                 game.send(next_guess)
             except StopIteration:
                 pass
-        result = hangman.MysteryString(word, (set(mystery_string.guesses) | set([next_guess])))
+        result = hangman.HangmanGameState(word, (set(game_state.guesses) | set([next_guess])))
         assert word == str(result)
 
         score = scorer(known_letters=len(result.known_letters), missed_letters=len(result.missed_letters))

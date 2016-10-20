@@ -93,9 +93,9 @@ def encode_dictionary(words, key_generator):
     return encoded_dictionary
 
 cached_bits = {}
-def search(encoded_dictionary, mystery_string, rejected_letters=''):
+def search(encoded_dictionary, game_state, rejected_letters=''):
     bits = initialize_bits(encoded_dictionary.length, True)
-    for key in encoded_dictionary.key_generator(mystery_string):
+    for key in encoded_dictionary.key_generator(game_state):
         key_bits = encoded_dictionary[key]
         bits &= key_bits
 
@@ -113,8 +113,8 @@ def search(encoded_dictionary, mystery_string, rejected_letters=''):
 def get_remaining_words(encoded_words, words):
     return [words[index] for (index, bit) in enumerate(encoded_words) if bit]
 
-def filter_words(encoded_dictionary, mystery_string, rejected_letters=''):
-    bits = search(encoded_dictionary, mystery_string, rejected_letters)
+def filter_words(encoded_dictionary, game_state, rejected_letters=''):
+    bits = search(encoded_dictionary, game_state, rejected_letters)
     words = get_remaining_words(bits, encoded_dictionary.words)
     return words
 

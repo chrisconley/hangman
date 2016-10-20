@@ -54,7 +54,13 @@ class EntropyTests(unittest.TestCase):
         pmfs = entropy.get_pmfs(counters, total)
         entropies = entropy.get_entropies(pmfs, total)
         most_common = entropies.most_common()
-        self.assertEqual(most_common[0], ('e', 1.551051838789653))
-        self.assertEqual(most_common[1], ('a', 0.1792560669283215))
-        self.assertEqual(most_common[2], ('x', 0.04848740692447222))
+        self.assertEqual(most_common[0][0], 'e')
+        self.assertAlmostEqual(most_common[0][1], 1.551051838789653, places=5)
+
+        self.assertEqual(most_common[1][0], 'a')
+        self.assertAlmostEqual(most_common[1][1], 0.1792560669283215, places=5)
+
+        self.assertEqual(most_common[2][0], 'x')
+        self.assertAlmostEqual(most_common[2][1], 0.04848740692447222, places=5)
+
         self.assertEqual(most_common[3], ('b', 0.0))

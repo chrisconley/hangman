@@ -1,4 +1,4 @@
-class MysteryString(str):
+class HangmanGameState(str):
     def __new__(cls, word, guesses, delimiter='-'):
         result = [
             (letter if (letter in guesses or word in guesses) else delimiter)

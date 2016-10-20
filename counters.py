@@ -33,7 +33,7 @@ def count_positional_letters(words):
             key = "".join([l if l == letter else '-' for l in word])
             counter[key] += 1
             counter['*'] += 1
-            counts['*'] += 1
+        counts['*'] += 1
     return counts
 
 
@@ -65,7 +65,7 @@ class WordCounterTests(unittest.TestCase):
         self.assertEqual(counter['n'], {'*': 1, '--n': 1})
         self.assertEqual(counter['o'], {'*': 3, '-o-': 1, '-o-o': 1, '-oo-': 1})
         self.assertEqual(counter['t'], {'*': 4, '--t': 2, '--t-': 1, '---t': 1})
-        self.assertEqual(counter['*'], 15)
+        self.assertEqual(counter['*'], 5)
         self.assertListEqual(sorted(list(counter.keys())), sorted(['*', 'o', 'a', 'c', 'n', 't']))
 
     def test_count_positional_letters_again(self):
@@ -77,4 +77,4 @@ class WordCounterTests(unittest.TestCase):
         self.assertEqual(counter['t'], {'*': 5, '-t-------': 4, '----t----': 1})
         self.assertEqual(counter['g'], {'*': 4, '------g--': 1, '-----g---': 1, '----gg---': 2})
 
-        self.assertEqual(counter['*'], 59)
+        self.assertEqual(counter['*'], 8)

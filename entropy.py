@@ -1,6 +1,10 @@
 from collections import Counter, OrderedDict
 import fractions
 import math
+import random
+import unittest
+
+import counters
 
 
 class OrderedCounter(Counter, OrderedDict):
@@ -73,3 +77,24 @@ def get_entropies(pmfs, word_count):
         assert s == '1.00000000', "Probability sum {} does not equal 1.00".format(s)
         entropies[letter] = get_entropy(probabilities)
     return entropies
+
+
+def get_new_entropies(counts):
+    pmfs = get_pmfs(counts, counts['*'])
+    return get_entropies(pmfs, counts['*'])
+
+
+class EntropyTests(unittest.TestCase):
+
+    def test_max_info_gain(self):
+        random.seed(15243)
+        words = ['scrabbler', 'scrambler', 'scratcher', 'scrounger',
+                 'straddler', 'straggler', 'strangler', 'struggler'
+                 ]
+        counts = counters.count_positional_letters(words)
+        entropies = get_new_entropies(counts)
+
+        self.assertAlmostEqual(entropies['g'], 1.750, places=3)
+        self.assertAlmostEqual(entropies['t'], 1.406, places=3)
+        self.assertAlmostEqual(entropies['a'], 0.811, places=3)
+        self.assertAlmostEqual(entropies['h'], 0.544, places=3)
