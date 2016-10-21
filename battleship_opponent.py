@@ -33,5 +33,4 @@ def play(word):
         next_guess = (yield result)
         if next_guess is not None:
             new_guesses = result.guesses | set([next_guess])
-            print(new_guesses)
             result = BattleShipGameState(word, new_guesses)

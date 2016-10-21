@@ -43,3 +43,27 @@ class WordCounterTests(unittest.TestCase):
         self.assertEqual(counter['g'], {'*': 4, '------g--': 1, '-----g---': 1, '----gg---': 2})
 
         self.assertEqual(counter['*'], 8)
+
+    def test_count_positional_letters_for_battleship(self):
+        words = ['1100', '1010', '1001', '0110', '0101', '0011']
+        counter = counters.count_positional_letters(words)
+        self.assertEqual(counter['*'], 6)
+        self.assertListEqual(sorted(list(counter.keys())), sorted(['*', '0', '1']))
+        self.assertEqual(counter['1'], {
+            '*': 6,
+            '11--': 1,
+            '1-1-': 1,
+            '1--1': 1,
+            '-11-': 1,
+            '-1-1': 1,
+            '--11': 1,
+        })
+        self.assertEqual(counter['0'], {
+            '*': 6,
+            '--00': 1,
+            '-0-0': 1,
+            '-00-': 1,
+            '0--0': 1,
+            '0-0-': 1,
+            '00--': 1,
+        })
