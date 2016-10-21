@@ -2,12 +2,13 @@ import random
 
 from play import get_actual_next_guess
 import battleship_opponent as battleship
-#import counters
+from hangman_utils import counters
+import dictionary
 import entropy
 
 
-def get_next_entropy_guess(game_state):
-    #counts = counters.count_positional_letters(words)
+def get_next_entropy_guess(game_state, words):
+    counts = counters.count_index_letters(words)
     entropies = entropy.get_new_entropies(counts)
     return get_actual_next_guess(game_state, entropies)
 
@@ -53,12 +54,16 @@ if __name__ == '__main__':
     random.seed(15243)
 
     words = [word.strip() for word in fileinput.input(args.file)]
+    encoded_dictionary = dictionary.encode_dictionary(words)
+    for key, value in encoded_dictionary.items():
+        print(key, value)
 
     scores = []
 
     for word in words:
         game = battleship.play(word.strip())
         for game_state in game:
+            # remaining_words = dictionary.filter_words(encoded_dictionary, game_state, set())
             next_guess = get_next_neighbor_guess(game_state)
             try:
                 game.send(next_guess)

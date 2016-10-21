@@ -36,3 +36,15 @@ def count_positional_letters(words):
             counter['*'] += 1
         counts['*'] += 1
     return counts
+
+
+def count_index_letters(words):
+    counts = defaultdict(OrderedCounter)
+    counts['*'] = 0
+    for word in words:
+        for index, letter in enumerate(word):
+            counter = counts[str(index)]
+            counter[letter] += 1
+            counter['*'] += 1
+        counts['*'] += 1
+    return counts

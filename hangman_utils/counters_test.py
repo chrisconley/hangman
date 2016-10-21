@@ -44,26 +44,23 @@ class WordCounterTests(unittest.TestCase):
 
         self.assertEqual(counter['*'], 8)
 
-    def test_count_positional_letters_for_battleship(self):
+    def test_count_index_letters_for_battleship(self):
         words = ['1100', '1010', '1001', '0110', '0101', '0011']
-        counter = counters.count_positional_letters(words)
+        counter = counters.count_index_letters(words)
         self.assertEqual(counter['*'], 6)
-        self.assertListEqual(sorted(list(counter.keys())), sorted(['*', '0', '1']))
-        self.assertEqual(counter['1'], {
-            '*': 6,
-            '11--': 1,
-            '1-1-': 1,
-            '1--1': 1,
-            '-11-': 1,
-            '-1-1': 1,
-            '--11': 1,
-        })
-        self.assertEqual(counter['0'], {
-            '*': 6,
-            '--00': 1,
-            '-0-0': 1,
-            '-00-': 1,
-            '0--0': 1,
-            '0-0-': 1,
-            '00--': 1,
-        })
+        self.assertListEqual(sorted(list(counter.keys())), sorted(['*', '0', '1', '2', '3']))
+        self.assertEqual(counter['0'], {'*': 6, '0': 3, '1': 3})
+        self.assertEqual(counter['1'], {'*': 6, '0': 3, '1': 3})
+        self.assertEqual(counter['2'], {'*': 6, '0': 3, '1': 3})
+        self.assertEqual(counter['3'], {'*': 6, '0': 3, '1': 3})
+
+    def test_count_positional_letters_for_battleship_again(self):
+        words = ['00111', '01110']
+        counter = counters.count_index_letters(words)
+        self.assertEqual(counter['*'], 2)
+        self.assertListEqual(sorted(list(counter.keys())), sorted(['*', '0', '1', '2', '3', '4']))
+        self.assertEqual(counter['0'], {'*': 2, '0': 2})
+        self.assertEqual(counter['1'], {'*': 2, '0': 1, '1': 1})
+        self.assertEqual(counter['2'], {'*': 2, '1': 2})
+        self.assertEqual(counter['3'], {'*': 2, '1': 2})
+        self.assertEqual(counter['4'], {'*': 2, '0': 1, '1': 1})
