@@ -3,11 +3,19 @@ from collections import defaultdict
 from bitarray import bitarray
 
 
-def get_keys(word):
+# TODO: This method does not seem to be accurate, but converges on result faster in play.py
+def get_old_keys(word):
     for letter in set(word):
         if letter == '-':
             continue
         yield ''.join([l if l == letter else '-' for l in word])
+
+
+def get_keys(word):
+    for index, letter in enumerate(word):
+        if letter == '-':
+            continue
+        yield ''.join([letter, str(index)])
 
 
 class EncodedDictionary(dict):

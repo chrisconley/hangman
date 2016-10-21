@@ -63,7 +63,7 @@ if __name__ == '__main__':
     for word in words:
         game = battleship.play(word.strip())
         for game_state in game:
-            # remaining_words = dictionary.filter_words(encoded_dictionary, game_state, set())
+            remaining_words = dictionary.filter_words(encoded_dictionary, game_state, set())
             next_guess = get_next_neighbor_guess(game_state)
             try:
                 game.send(next_guess)
