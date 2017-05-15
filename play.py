@@ -23,7 +23,11 @@ if __name__ == '__main__':
     if args.limit:
         words = random.sample(words, args.limit)
 
+    games = []
     for word in words:
-        game_state, game_log = hangman.play(word, hangman_players.naive, encoded_dictionary)
+        game_state, game_log = hangman.play(word, hangman_players.entropy_next_guess, encoded_dictionary)
         print(word, game_state)
         print(len(game_log))
+        games.append(game_log)
+
+    print(sum([len(l) for l in games])/len(games))

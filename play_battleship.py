@@ -1,6 +1,6 @@
 import random
 
-from play import get_actual_next_guess
+from hangman_players import get_actual_next_guess
 import battleship_opponent as battleship
 from hangman_utils import counters
 import dictionary

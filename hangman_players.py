@@ -51,10 +51,71 @@ def most_common(game_state, encoded_dictionary):
         if letter == '*':
             continue
         counts[letter] = counter['*']
+    return get_actual_next_guess(game_state, counts)
+
+
+def build_strategy(info_focus, success_focus, final_word_guess=True):
+
+    def strategy(game_state, encoded_dictionary):
+        rejected_letters = game_state.missed_letters  # Why do we need to pass this in explicitly?
+        remaining_words = dictionary.filter_words(encoded_dictionary, game_state, rejected_letters)
+
+        if len(remaining_words) == 1:
+            return remaining_words[0]
+
+        positional_counters = counters.count_positional_letters(remaining_words)
+        total = len(remaining_words)
+
+        pmfs = entropy.get_pmfs(positional_counters, total)
+        common = {letter: pmf['*'] for letter, pmf in pmfs.items()}
+        entropies = entropy.get_entropies(pmfs, total)
+
+        choices = {}
+        for letter, pmf in pmfs.items():
+            common_weight = common[letter]**success_focus
+            entropy_weight = entropies[letter]**info_focus
+            choices[letter] = entropy_weight * common_weight
+
+        return get_actual_next_guess(game_state, choices)
+
+    return strategy
+
+
+ENTROPY_ONLY = build_strategy(info_focus=1.0, success_focus=0.0, final_word_guess=True)
+
+SUCCESS_ONLY = build_strategy(info_focus=0.0, success_focus=1.0, final_word_guess=True)
+
+# def entropy_next_guess(game_state, encoded_dictionary):
+#     """
+#     Ex:
+#
+#     counters = {
+#         #'e': {'e-e': 6, '-ee': 11, 'ee-': 1, 'eee': 2, '*': 107, 'e': 87},
+#         #'x': {'x': 1, '*': 1},
+#         #'a': {'--a': 180, 'a--': 5, '*': 185},
+#         #'b': {'b--': 185, '*': 185}
+#     }
+#     total = 185
+#     """
+#     rejected_letters = game_state.missed_letters  # Why do we need to pass this in explicitly?
+#     remaining_words = dictionary.filter_words(encoded_dictionary, game_state, rejected_letters)
+#     if len(remaining_words) == 1:
+#         return remaining_words[0]
+#     positional_counters = counters.count_positional_letters(remaining_words)
+#     total = len(remaining_words)
+#     pmfs = entropy.get_pmfs(positional_counters, total)
+#     common = {letter: pmf['*'] for letter, pmf in pmfs.items()}
+#     entropies = entropy.get_entropies(pmfs, total)
+#
+#     return get_actual_next_guess(game_state, common)
+
+
+def get_actual_next_guess(game_state, choices):
+    assert choices.get('*') is None
     most_common_letters = []
     most_common_count = None
-    for letter, count in _most_common(counts):
-        if letter not in game_state.guesses and letter != '*':
+    for letter, count in _most_common(choices):
+        if letter not in game_state.guesses:
             if most_common_count is None:
                 most_common_count = count
                 most_common_letters.append(letter)
@@ -62,58 +123,7 @@ def most_common(game_state, encoded_dictionary):
                 most_common_letters.append(letter)
             else:
                 break
-    return random.choice(sorted(most_common_letters))
-
-
-def entropy_next_guess(game_state, encoded_dictionary):
-    """
-    Ex:
-
-    counters = {
-        #'e': {'e-e': 6, '-ee': 11, 'ee-': 1, 'eee': 2, '*': 107, 'e': 87},
-        #'x': {'x': 1, '*': 1},
-        #'a': {'--a': 180, 'a--': 5, '*': 185},
-        #'b': {'b--': 185, '*': 185}
-    }
-    total = 185
-    """
-    rejected_letters = game_state.missed_letters  # Why do we need to pass this in explicitly?
-    remaining_words = dictionary.filter_words(encoded_dictionary, game_state, rejected_letters)
-    positional_counters = counters.count_positional_letters(remaining_words)
-    total = len(remaining_words)
-    pmfs = entropy.get_pmfs(positional_counters, total)
-    entropies = entropy.get_entropies(pmfs, total)
-    scorer = scorers.build_multiplier_scorer(known_multiplier=1.0, missed_multiplier=1.0)
-
-    def utility_function(pmf):
-        print(pmf['!'])
-        loss = scorer(known_letters=pmf['*'], missed_letters=pmf['!'])
-        loss = loss or 0.000001 # Utility should actually be infinity but close enough
-        return 1 / loss
-
-    distinct_pmf = {}
-    letter_total = positional_counters['*']
-    distinct_pmf['!'] = fractions.Fraction(total - letter_total, total)
-    for letter, counter in positional_counters.items():
-        if letter == '*':
-            continue
-        distinct_pmf[letter] = fractions.Fraction(counter['*'], total)
-
-    gains = OrderedDict() # entropies with applied gain function
-    for letter, letter_entropy in entropies.items():
-        pmf = pmfs[letter]
-        #print(letter_entropy * utility_function(pmf), float(distinct_counter[letter]))
-        gains[letter] = letter_entropy * utility_function(pmf)# * distinct_pmf[letter]
-
-    most_common_letters = []
-    most_common_count = None
-    for letter, count in _most_common(gains):
-        if letter not in game_state.guesses and letter != '*':
-            if most_common_count is None:
-                most_common_count = count
-                most_common_letters.append(letter)
-            elif most_common_count == count:
-                most_common_letters.append(letter)
-            else:
-                break
-    return random.choice(sorted(most_common_letters))
+    if len(most_common_letters) == 0:
+        return None
+    else:
+        return random.choice(sorted(most_common_letters))
