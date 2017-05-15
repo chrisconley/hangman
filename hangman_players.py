@@ -60,6 +60,8 @@ def build_strategy(info_focus, success_focus, final_word_guess=True):
         rejected_letters = game_state.missed_letters  # Why do we need to pass this in explicitly?
         remaining_words = dictionary.filter_words(encoded_dictionary, game_state, rejected_letters)
 
+        # TODO: move this check to look at pmfs or counts, so that we can
+        # cache at that point
         if len(remaining_words) == 1:
             return remaining_words[0]
 
