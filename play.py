@@ -23,11 +23,15 @@ if __name__ == '__main__':
     if args.limit:
         words = random.sample(words, args.limit)
 
+    # TODO: Add Minimax
+    # TODO: Change counts/pmfs to objects, so we don't have '!' and '*' bugs
+    # TODO: In game log turn entry, capture expected info gain, minimax, success expectation
+    # TODO: In aggregrated game logs, state avg number of turns, max number of turns, (maybe distribution too?)
     games = []
     for word in words:
-        game_state, game_log = hangman.play(word, hangman_players.entropy_next_guess, encoded_dictionary)
-        print(word, game_state)
-        print(len(game_log))
+        game_state, game_log = hangman.play(word, hangman_players.ENTROPY_ONLY, encoded_dictionary)
+        # print(word, game_state)
+        # print(len(game_log))
         games.append(game_log)
 
     print(sum([len(l) for l in games])/len(games))

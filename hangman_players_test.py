@@ -1,5 +1,6 @@
 import random
 import unittest
+from unittest.mock import patch
 
 import dictionary
 import hangman
@@ -7,7 +8,7 @@ import hangman_players
 
 
 class HangmanPlayersTests(unittest.TestCase):
-    def test_max_info_gain(self):
+    def test_build_strategy(self):
         random.seed(15243)
         words = ['scrabbler', 'scrambler', 'scratcher', 'scrounger',
                  'straddler', 'straggler', 'strangler', 'struggler'
@@ -27,6 +28,33 @@ class HangmanPlayersTests(unittest.TestCase):
         strategy = hangman_players.SUCCESS_ONLY
         next_guess = strategy(game_state, encoded_dictionary)
         self.assertEqual(next_guess, 'a')
+
+    def test_build_strategy_final_word_guess(self):
+        random.seed(15243)
+        words = ['scrabbler']
+        encoded_dictionary = dictionary.encode_dictionary(words)
+
+        game_state = hangman.GameState('scrabbler', set('srei'))
+        strategy = strategy = hangman_players.build_strategy(0.5, 0.5, final_word_guess=True)
+        next_guess = strategy(game_state, encoded_dictionary)
+
+        self.assertEqual(next_guess, 'scrabbler')
+
+    @patch('hangman_players.dictionary.filter_words')
+    def test_build_strategy_does_not_cache_counts(self, filter_words):
+        filter_words.return_value = ['scrabbler', 'scrambler']
+        random.seed(15243)
+        words = ['scrabbler', 'scrambler', 'scratcher', 'scrounger',
+                 'straddler', 'straggler', 'strangler', 'struggler'
+                 ]
+        encoded_dictionary = dictionary.encode_dictionary(words)
+
+        game_state = hangman.GameState('scrabbler', set('srei'))
+        strategy = hangman_players.ENTROPY_ONLY
+        strategy(game_state, encoded_dictionary)
+        strategy(game_state, encoded_dictionary)
+
+        self.assertEqual(filter_words.call_count, 2)
 
     def test_actual_next_guess(self):
         random.seed(15243)

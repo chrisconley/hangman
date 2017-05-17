@@ -54,26 +54,33 @@ def most_common(game_state, encoded_dictionary):
     return get_actual_next_guess(game_state, counts)
 
 
+def _get_counts(game_state, encoded_dictionary):
+    rejected_letters = game_state.missed_letters  # Why do we need to pass this in explicitly?
+    remaining_words = dictionary.filter_words(encoded_dictionary, game_state, rejected_letters)
+    counts = counters.count_positional_letters(remaining_words)
+    pmfs = entropy.get_pmfs(counts, len(remaining_words))
+    common = {letter: pmf['*'] for letter, pmf in pmfs.items()}
+    entropies = entropy.get_entropies(pmfs, len(remaining_words))
+    results = {}
+    if len(remaining_words) <= 26:
+        results['remaining_words'] = remaining_words
+    results['common'] = common
+    results['entropies'] = entropies
+    return results
+
+
 def build_strategy(info_focus, success_focus, final_word_guess=True):
-
     def strategy(game_state, encoded_dictionary):
-        rejected_letters = game_state.missed_letters  # Why do we need to pass this in explicitly?
-        remaining_words = dictionary.filter_words(encoded_dictionary, game_state, rejected_letters)
+        data = _get_counts(game_state, encoded_dictionary)
 
-        # TODO: move this check to look at pmfs or counts, so that we can
-        # cache at that point
-        if len(remaining_words) == 1:
-            return remaining_words[0]
+        if len(data.get('remaining_words', [])) == 1:
+            return data['remaining_words'][0]
 
-        positional_counters = counters.count_positional_letters(remaining_words)
-        total = len(remaining_words)
-
-        pmfs = entropy.get_pmfs(positional_counters, total)
-        common = {letter: pmf['*'] for letter, pmf in pmfs.items()}
-        entropies = entropy.get_entropies(pmfs, total)
+        common = data.get('common')
+        entropies = data.get('entropies')
 
         choices = {}
-        for letter, pmf in pmfs.items():
+        for letter, pmf in common.items():
             common_weight = common[letter]**success_focus
             entropy_weight = entropies[letter]**info_focus
             choices[letter] = entropy_weight * common_weight
@@ -86,30 +93,6 @@ def build_strategy(info_focus, success_focus, final_word_guess=True):
 ENTROPY_ONLY = build_strategy(info_focus=1.0, success_focus=0.0, final_word_guess=True)
 
 SUCCESS_ONLY = build_strategy(info_focus=0.0, success_focus=1.0, final_word_guess=True)
-
-# def entropy_next_guess(game_state, encoded_dictionary):
-#     """
-#     Ex:
-#
-#     counters = {
-#         #'e': {'e-e': 6, '-ee': 11, 'ee-': 1, 'eee': 2, '*': 107, 'e': 87},
-#         #'x': {'x': 1, '*': 1},
-#         #'a': {'--a': 180, 'a--': 5, '*': 185},
-#         #'b': {'b--': 185, '*': 185}
-#     }
-#     total = 185
-#     """
-#     rejected_letters = game_state.missed_letters  # Why do we need to pass this in explicitly?
-#     remaining_words = dictionary.filter_words(encoded_dictionary, game_state, rejected_letters)
-#     if len(remaining_words) == 1:
-#         return remaining_words[0]
-#     positional_counters = counters.count_positional_letters(remaining_words)
-#     total = len(remaining_words)
-#     pmfs = entropy.get_pmfs(positional_counters, total)
-#     common = {letter: pmf['*'] for letter, pmf in pmfs.items()}
-#     entropies = entropy.get_entropies(pmfs, total)
-#
-#     return get_actual_next_guess(game_state, common)
 
 
 def get_actual_next_guess(game_state, choices):

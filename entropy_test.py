@@ -46,6 +46,7 @@ class EntropyTests(unittest.TestCase):
         self.assertEqual(pmf['x'], {'!': 0.0, '*': 1.0, 'x': 1.0})
 
     def test_most_entropy_duplicates(self):
+        # TODO: Add '!'
         counters = {
             'e': {'ee': 18, 'eee': 2, '*': 107, 'e': 87},
             'x': {'x': 1, '*': 1},
@@ -62,7 +63,7 @@ class EntropyTests(unittest.TestCase):
     def test_most_entropy_positional(self):
         counters = {
             'e': {'e-e': 6, '-ee': 11, 'ee-': 1, 'eee': 2, '*': 107, 'e': 87},
-            'x': {'x': 1, '*': 1},
+            'x': {'x--': 1, '*': 1},
             'a': {'--a': 180, 'a--': 5, '*': 185},
             'b': {'b--': 185, '*': 185}
         }
@@ -80,3 +81,16 @@ class EntropyTests(unittest.TestCase):
         self.assertAlmostEqual(most_common[2][1], 0.04848740692447222, places=5)
 
         self.assertEqual(most_common[3], ('b', 0.0))
+
+    def test_minimax(self):
+        counters = {
+            'e': {'e-e': 6, '-ee': 11, 'ee-': 1, 'eee': 2, '*': 107, 'e': 87},
+            'a': {'--a': 180, 'a--': 5, '*': 185},
+            'b': {'b--': 185, '*': 185}
+        }
+        minimax = entropy.get_minimax(counters)
+        self.assertEqual(minimax, {
+            'e': 87,
+            'a': 180,
+            'b': 185,
+        })

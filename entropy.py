@@ -37,6 +37,19 @@ def get_pmfs(counters, total):
     return pmfs
 
 
+def get_minimax(counters):
+    """
+
+    """
+    minimax = OrderedCounter()
+    for letter, counts in counters.items():
+        if letter == '*':
+            continue
+
+        minimax[letter] = max([count for subset, count in counts.items() if subset != '*'])
+    return minimax
+
+
 def log_probability(probability):
     """
     -xlog(x) (base 2)
