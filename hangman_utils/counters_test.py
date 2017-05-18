@@ -2,6 +2,7 @@ import itertools
 import unittest
 
 from hangman_utils import counters
+import mastermind
 
 
 class WordCounterTests(unittest.TestCase):
@@ -92,7 +93,7 @@ class WordCounterTests(unittest.TestCase):
 
     def test_count_mastermind_brute_responses_three_letter_two_colors(self):
         words = ['YYY', 'YYR', 'YRY', 'RYY', 'YRR', 'RYR', 'RRY', 'RRR']
-        assert sorted(words) == _generate_words('YR', 3)
+        assert sorted(words) == mastermind.generate_words('YR', 3)
         counter = counters.count_mastermind_letters_brute(words)
         self.assertEqual(counter['*'], 8)
         self.assertEqual(counter['YYY'], {'*': 8, 'BBB': 1, 'BB': 3, 'B': 3, '': 1})
@@ -105,7 +106,7 @@ class WordCounterTests(unittest.TestCase):
         self.assertEqual(counter['RRR'], {'*': 8, 'BBB': 1, 'BB': 3, 'B': 3, '': 1})
 
     def test_count_mastermind_brute_real_mastermind(self):
-        words = _generate_words('ABCDEF', 4)
+        words = mastermind.generate_words('ABCDEF', 4)
         self.assertEqual(len(words), 1296)
 
         counter = counters.count_mastermind_letters_brute(words)
@@ -124,7 +125,7 @@ class WordCounterTests(unittest.TestCase):
         self.assertEqual(dict(counter['ABCD']), dict(counter['ABCE']))
 
     def test_count_mastermind_fast_real_mastermind(self):
-        words = _generate_words('ABCDEF', 4)
+        words = mastermind.generate_words('ABCDEF', 4)
         self.assertEqual(len(words), 1296)
 
         brute_counter = counters.count_mastermind_letters_brute(words)
@@ -145,7 +146,7 @@ class WordCounterTests(unittest.TestCase):
         self.assertEqual(dict(brute_counter['ABCD']), dict(fast_counter['ABCD']))
 
     def test_get_unique_guesses_full_mastermind(self):
-        words = _generate_words('ABCDEF', 4)
+        words = mastermind.generate_words('ABCDEF', 4)
         self.assertEqual(counters.get_unique_guesses(words), [
             'AAAA',
             'AAAB',
@@ -155,7 +156,7 @@ class WordCounterTests(unittest.TestCase):
         ])
 
     def test_get_unique_guesses_short_symbols(self):
-        words = _generate_words('ABC', 4)
+        words = mastermind.generate_words('ABC', 4)
         self.assertEqual(counters.get_unique_guesses(words), [
             'AAAA',
             'AAAB',
@@ -209,7 +210,14 @@ class WordCounterTests(unittest.TestCase):
         partition = counters.partition_word('ABCD')
         self.assertEqual(partition, (1, 1, 1, 1))
 
-
-def _generate_words(symbols, length):
-    tuples = itertools.product(symbols, repeat=length)
-    return sorted(map(lambda t: ''.join(t), tuples))
+    def test_get_potential_next_guesses(self):
+        words = ['YYY', 'YYR', 'YRY', 'RYY', 'YRR', 'RYR', 'RRY', 'RRR']
+        potentials = counters.get_potential_next_guesses(words)
+        self.assertEqual(potentials, {
+            'RRR': {
+                'BBB': {'RRR'}, 'BB': {'RRY', 'YRR', 'RYR'}, 'B': {'RYY', 'YYR', 'YRY'}, '': {'YYY'}
+            },
+            'RRY': {
+                'BB': {'RRR', 'RYY', 'YRY'}, 'BWW': {'YRR', 'RYR'}, 'BBB': {'RRY'}, 'WWW': {'YYR'}, 'B': {'YYY'}
+            }
+        })

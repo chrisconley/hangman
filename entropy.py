@@ -29,8 +29,9 @@ def get_pmfs(counters, total):
         if letter == '*':
             continue
         pmf = pmfs.setdefault(letter, {})
-        letter_total = counter['*']
-        pmf['!'] = fractions.Fraction(total - letter_total, total)
+        if counter.get('*'):
+            letter_total = counter['*']
+            pmf['!'] = fractions.Fraction(total - letter_total, total)
         for subset, count in counter.items():
             pmf[subset] = fractions.Fraction(count, total)
 

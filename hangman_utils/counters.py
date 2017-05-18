@@ -52,7 +52,7 @@ def count_index_letters(words):
 
 def get_unique_guesses(words):
     uniques = {}
-    for word in list(reversed(words)):
+    for word in list(reversed(sorted(words))):
         partition = partition_word(word)
         uniques[partition] = word
     return sorted(uniques.values())
@@ -88,31 +88,38 @@ def count_mastermind_letters_brute(words, word_guesses=None):
         word_guesses = words
     for word_guess in word_guesses:
         for actual_word in words:
-            actual_letters = list(actual_word)
-            guess_letters = list(word_guess)
-            response = []
-            for index, letter in enumerate(guess_letters):
-                if letter == actual_word[index]:
-                    response.append('B')
-                    actual_letters[index] = '-'
-                    guess_letters[index] = '-'
-                    pass
-                else:
-                    1 + 1
-                    pass
-            for index, letter in enumerate(guess_letters):
-                if letter == '-':
-                    1 + 1
-                    continue
-                if letter in actual_letters:
-                    response.append('W')
-                    pass
-                else:
-                    1 + 1
-                    pass
-            response_key = ''.join(sorted(response))
+            response_key = get_response(actual_word, word_guess)
             counter = counts[word_guess]
             counter['*'] += 1
             counter[response_key] += 1
         counts['*'] += 1
     return counts
+
+
+def get_potential_next_guesses(remaining_words):
+    potentials = {}
+    word_guesses = get_unique_guesses(remaining_words)
+    for word_guess in word_guesses:
+        potentials[word_guess] = defaultdict(set)
+        for actual_word in remaining_words:
+            response_key = get_response(actual_word, word_guess)
+            potentials[word_guess][response_key].add(actual_word)
+    return potentials
+
+
+def get_response(actual_word, word_guess):
+    actual_letters = list(actual_word)
+    guess_letters = list(word_guess)
+    response = []
+    for index, letter in enumerate(guess_letters):
+        if letter == actual_word[index]:
+            response.append('B')
+            actual_letters[index] = '-'
+            guess_letters[index] = '-'
+    for index, letter in enumerate(guess_letters):
+        if letter == '-':
+            continue
+        if letter in actual_letters:
+            response.append('W')
+    response_key = ''.join(sorted(response))
+    return response_key
