@@ -1,7 +1,7 @@
 import itertools
 
 import hangman_players
-from hangman_utils import counters
+from mastermind import opponent, player
 import entropy
 
 
@@ -21,7 +21,7 @@ def play(word, get_next_guess, possible_words):
     possible_words = list(possible_words)
     while True:
         next_guess, remaining_word_lists = get_next_guess(possible_words)
-        response = counters.get_response(word, next_guess)
+        response = opponent.get_response(word, next_guess)
         game_log.append({
             'guess': next_guess,
             'result': response
@@ -34,7 +34,7 @@ def play(word, get_next_guess, possible_words):
 
 
 def get_next_guess(possible_words):
-    next_words = counters.get_potential_next_guesses(possible_words)
+    next_words = player.get_potential_next_guesses(possible_words, opponent.get_response)
     next_guess = _get_next_guess(next_words, len(possible_words))
     return next_guess, next_words.get(next_guess)
 
@@ -64,7 +64,8 @@ if __name__ == '__main__':
     parser.add_argument('--limit', default=1000, type=int)
     args = parser.parse_args()
 
-    words = generate_words('ABCDEF', 4)
+    words = generate_words('ABCDEFGH', 5)
+    print(len(words))
 
     if args.limit:
         words = random.sample(words, args.limit)
