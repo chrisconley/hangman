@@ -1,12 +1,12 @@
 import unittest
 
-from mastermind import player, play
+from mastermind import opponent, player, play
 
 
 class MastermindPlayerTests(unittest.TestCase):
     def test_count_mastermind_brute_responses_two_letter_two_colors(self):
         words = ['YY', 'YR', 'RY', 'RR']
-        counter = player.count_mastermind_letters_brute(words)
+        counter = player.count_mastermind_letters_brute(words, opponent.get_response)
         self.assertEqual(counter['*'], 4)
         self.assertListEqual(sorted(list(counter.keys())), sorted(['*', 'YY', 'YR', 'RY', 'RR']))
         self.assertEqual(counter['YY'], {'*': 4, '': 1, 'B': 2, 'BB': 1})
@@ -16,7 +16,7 @@ class MastermindPlayerTests(unittest.TestCase):
 
     def test_count_mastermind_brute_responses_two_letter_three_colors(self):
         words = ['YY', 'RR', 'CC', 'YR', 'RY', 'YC', 'CY', 'CR', 'RC']
-        counter = player.count_mastermind_letters_brute(words)
+        counter = player.count_mastermind_letters_brute(words, opponent.get_response)
         self.assertEqual(counter['*'], 9)
         self.assertEqual(counter['YY'], {'*': 9, '': 4, 'B': 4, 'BB': 1})
         self.assertEqual(counter['RR'], {'*': 9, '': 4, 'B': 4, 'BB': 1})
@@ -31,7 +31,7 @@ class MastermindPlayerTests(unittest.TestCase):
     def test_count_mastermind_brute_responses_three_letter_two_colors(self):
         words = ['YYY', 'YYR', 'YRY', 'RYY', 'YRR', 'RYR', 'RRY', 'RRR']
         assert sorted(words) == play.generate_words('YR', 3)
-        counter = player.count_mastermind_letters_brute(words)
+        counter = player.count_mastermind_letters_brute(words, opponent.get_response)
         self.assertEqual(counter['*'], 8)
         self.assertEqual(counter['YYY'], {'*': 8, 'BBB': 1, 'BB': 3, 'B': 3, '': 1})
         self.assertEqual(counter['YYR'], {'*': 8, 'BB': 3, 'BWW': 2, 'BBB': 1, 'WWW': 1, 'B': 1})
@@ -46,7 +46,7 @@ class MastermindPlayerTests(unittest.TestCase):
         words = play.generate_words('ABCDEF', 4)
         self.assertEqual(len(words), 1296)
 
-        counter = player.count_mastermind_letters_brute(words)
+        counter = player.count_mastermind_letters_brute(words, opponent.get_response)
 
         self.assertEqual(counter['AAAA'], {'*': 1296, '': 625, 'B': 500, 'BB': 150, 'BBB': 20, 'BBBB': 1})
         self.assertEqual(counter['AAAB'], {'*': 1296, 'B': 317, '': 256, 'W': 244, 'BB': 123, 'BW': 108, 'WWW': 64, 'WWWW': 61, 'BWW': 48, 'BWWW': 27, 'BBW': 24, 'BBB': 20, 'BBWW': 3, 'BBBB': 1})
@@ -65,8 +65,8 @@ class MastermindPlayerTests(unittest.TestCase):
         words = play.generate_words('ABCDEF', 4)
         self.assertEqual(len(words), 1296)
 
-        brute_counter = player.count_mastermind_letters_brute(words)
-        fast_counter = player.count_mastermind_letters(words)
+        brute_counter = player.count_mastermind_letters_brute(words, opponent.get_response)
+        fast_counter = player.count_mastermind_letters(words, opponent.get_response)
         self.assertEqual(sorted(fast_counter.keys()), [
             '*',
             'AAAA',
@@ -149,7 +149,7 @@ class MastermindPlayerTests(unittest.TestCase):
 
     def test_get_potential_next_guesses(self):
         words = ['YYY', 'YYR', 'YRY', 'RYY', 'YRR', 'RYR', 'RRY', 'RRR']
-        potentials = player.get_potential_next_guesses(words)
+        potentials = player.get_potential_next_guesses(words, opponent.get_response)
         self.assertEqual(potentials, {
             'RRR': {
                 'BBB': {'RRR'}, 'BB': {'RRY', 'YRR', 'RYR'}, 'B': {'RYY', 'YYR', 'YRY'}, '': {'YYY'}

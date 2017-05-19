@@ -1,7 +1,5 @@
 from collections import Counter, defaultdict
 
-from mastermind import opponent
-
 
 def get_unique_guesses(words):
     uniques = {}
@@ -30,18 +28,22 @@ def partition_word(word):
     return tuple(reversed(sorted(seen_letters.values())))
 
 
-def count_mastermind_letters(words):
-    return count_mastermind_letters_brute(words, get_unique_guesses(words))
+def count_mastermind_letters(words, get_response):
+    return count_mastermind_letters_brute(
+        words,
+        get_response,
+        get_unique_guesses(words)
+    )
 
 
-def count_mastermind_letters_brute(words, word_guesses=None):
+def count_mastermind_letters_brute(words, get_response, word_guesses=None):
     counts = defaultdict(Counter)
     counts['*'] = 0
     if word_guesses is None:
         word_guesses = words
     for word_guess in word_guesses:
         for actual_word in words:
-            response_key = opponent.get_response(actual_word, word_guess)
+            response_key = get_response(actual_word, word_guess)
             counter = counts[word_guess]
             counter['*'] += 1
             counter[response_key] += 1
