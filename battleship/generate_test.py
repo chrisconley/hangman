@@ -165,10 +165,45 @@ class BoardTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             board.get_next_position([0, 3])
 
+    def test_get_next_available_position_horizontal(self):
+        # No previous ships placed
+        board = generate.Board(size=[3, 2])
+        result = board.get_next_available_position([0, 0])
+        self.assertEqual(result, [1, 0])
+
+        # Same Row
+        board = generate.Board(size=[3, 3])
+        board.place_ship((0, 0), 2, 'H')
+        result = board.get_next_available_position([0, 0])
+        self.assertEqual(result, [2, 0])
+
+        # Crosses Row
+        # [
+        #     [0, 1, 1],
+        #     [1, 1, 0],
+        #     [0, 0, 0]
+        # ]
+        board = generate.Board(size=[3, 3])
+        board.place_ship((1, 0), 2, 'H')
+        board.place_ship((0, 1), 2, 'H')
+        result = board.get_next_available_position([2, 0])
+        self.assertEqual(result, [2, 1])
+
+        # No available positions
+        # [
+        #     [0, 0, 0],
+        #     [0, 0, 0],
+        #     [0, 1, 1]
+        # ]
+        board = generate.Board(size=[3, 3])
+        board.place_ship((1, 2), 2, 'H')
+        print(board.layout)
+        result = board.get_next_available_position([1, 2])
+        self.assertEqual(result, None)
+
 
 class GenerateTests(unittest.TestCase):
     def test_run(self):
-        board = generate.Board(size=[3, 3])
-        results = generate.run(ships=[2, 2], board=board)
+        results = generate.run(ship_lengths=[2, 2], size=[3, 3])
         layouts = [b.layout for b in results]
         self.assertEqual(layouts, [1])
