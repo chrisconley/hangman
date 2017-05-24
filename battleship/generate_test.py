@@ -197,13 +197,92 @@ class BoardTests(unittest.TestCase):
         # ]
         board = generate.Board(size=[3, 3])
         board.place_ship((1, 2), 2, 'H')
-        print(board.layout)
+
         result = board.get_next_available_position([1, 2])
         self.assertEqual(result, None)
 
 
 class GenerateTests(unittest.TestCase):
-    def test_run(self):
+    def test_run_2_2_on_2x2(self):
+        results = generate.run(ship_lengths=[2, 2], size=[2, 2])
+        layouts = [b.layout for b in results]
+
+        self.assertEqual(len(layouts), 2)
+
+        # both ships horizontal
+        self.assertEqual(layouts[0], [
+            [1, 1],
+            [1, 1]])
+
+        # both ships vertical
+        self.assertEqual(layouts[1], [
+            [1, 1],
+            [1, 1]])
+
+    def test_run_2_2_on_3x3(self):
         results = generate.run(ship_lengths=[2, 2], size=[3, 3])
         layouts = [b.layout for b in results]
-        self.assertEqual(layouts, [1])
+
+        self.assertEqual(len(layouts), 10)
+
+        self.assertEqual(layouts[0], [
+            [1, 1, 1],
+            [0, 0, 1],
+            [0, 0, 0]])
+
+        self.assertEqual(layouts[1], [
+            [1, 1, 1],
+            [1, 0, 0],
+            [0, 0, 0]])
+
+        self.assertEqual(layouts[2], [
+            [0, 1, 1],
+            [1, 1, 0],
+            [0, 0, 0]])
+
+        self.assertEqual(layouts[3], [
+            [0, 1, 1],
+            [0, 1, 1],
+            [0, 0, 0]])
+
+        self.assertEqual(layouts[4], [
+            [0, 0, 1],
+            [1, 1, 1],
+            [0, 0, 0]])
+
+        self.assertEqual(layouts[5], [
+            [0, 0, 0],
+            [1, 1, 1],
+            [0, 0, 1]])
+
+        self.assertEqual(layouts[6], [
+            [0, 0, 0],
+            [1, 1, 1],
+            [1, 0, 0]])
+
+        self.assertEqual(layouts[7], [
+            [0, 0, 0],
+            [0, 1, 1],
+            [1, 1, 0]])
+
+        self.assertEqual(layouts[8], [
+            [0, 0, 0],
+            [0, 1, 1],
+            [0, 1, 1]])
+
+        self.assertEqual(layouts[9], [
+            [0, 0, 0],
+            [0, 0, 1],
+            [1, 1, 1]])
+
+    @unittest.skip('it is not cloning boards and letting last ship "run away"')
+    def test_run_2_3_4_on_5x5(self):
+        results = generate.run(ship_lengths=[1, 2, 3, 4, 5], size=[10, 10])
+        layouts = [b.layout for b in results]
+
+        for layout in layouts:
+            print('---------')
+            for row in layout:
+                print(row)
+
+        self.assertEqual(len(layouts), 2)

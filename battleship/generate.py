@@ -91,7 +91,8 @@ def run(ship_lengths, size):
                 next_position = current_board.get_next_available_position(next_ship.position)
                 if next_position is None:
                     break
-                next_ship = Ship(next_position, placed_ship.length, 'H')
+                #raise 'we have not seen us get here yet'
+                next_ship = Ship(next_position, next_ship.length, 'H')
 
         # ship was placed and we have more to place
         elif current_board.num_ships < len(ship_lengths):
@@ -122,12 +123,17 @@ def run(ship_lengths, size):
 
             # Move the first ship to the next available position on the new board
             # based on where it was previously
-            next_position = current_board.get_next_available_position(first_ship.position)
-            if next_position is None:
-                raise 'Hi once again'
+            if first_ship.orientation == 'H':
+                next_orientation = 'V'
+                next_position = first_ship.position
+            else:
+                next_orientation = 'H'
+                next_position = current_board.get_next_available_position(first_ship.position)
+                if next_position is None:
+                    raise 'Hi once again'
 
             # Set the next ship to the next position
-            next_ship = Ship(next_position, ship_lengths[0], 'H')
+            next_ship = Ship(next_position, ship_lengths[0], next_orientation)
 
     return boards
 
