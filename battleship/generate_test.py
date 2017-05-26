@@ -135,6 +135,16 @@ class BoardTests(unittest.TestCase):
             [0, 0, 1, 0],
         ])
 
+    def test_get_next_position_next_row(self):
+        board = generate.Board(size=[3, 3])
+        board.place_ship((0, 0), 2, 'H')
+
+        result = board.get_next_position([2, 0])
+        self.assertEqual(result, [0, 1])
+
+        result = board.get_next_position([0, 2])
+        self.assertEqual(result, [1, 2])
+
     def test_get_next_position_wide_board(self):
         board = generate.Board(size=[3, 2])
         result = board.get_next_position([0, 0])
@@ -159,6 +169,12 @@ class BoardTests(unittest.TestCase):
 
     def test_get_next_position_invalid_inputs(self):
         board = generate.Board(size=[2, 3])
+
+        self.assertEqual(board.layout, [
+            [0, 0],
+            [0, 0],
+            [0, 0],
+        ])
         with self.assertRaises(RuntimeError):
             board.get_next_position([2, 0])
 
@@ -223,54 +239,14 @@ class GenerateTests(unittest.TestCase):
         results = generate.run(ship_lengths=[2, 2], size=[3, 3])
         layouts = [b.layout for b in results]
 
-        self.assertEqual(len(layouts), 10)
+        self.assertEqual(len(layouts), 44)
 
         self.assertEqual(layouts[0], [
             [1, 1, 1],
             [0, 0, 1],
             [0, 0, 0]])
 
-        self.assertEqual(layouts[1], [
-            [1, 1, 1],
-            [1, 0, 0],
-            [0, 0, 0]])
-
-        self.assertEqual(layouts[2], [
-            [0, 1, 1],
-            [1, 1, 0],
-            [0, 0, 0]])
-
-        self.assertEqual(layouts[3], [
-            [0, 1, 1],
-            [0, 1, 1],
-            [0, 0, 0]])
-
-        self.assertEqual(layouts[4], [
-            [0, 0, 1],
-            [1, 1, 1],
-            [0, 0, 0]])
-
-        self.assertEqual(layouts[5], [
-            [0, 0, 0],
-            [1, 1, 1],
-            [0, 0, 1]])
-
-        self.assertEqual(layouts[6], [
-            [0, 0, 0],
-            [1, 1, 1],
-            [1, 0, 0]])
-
-        self.assertEqual(layouts[7], [
-            [0, 0, 0],
-            [0, 1, 1],
-            [1, 1, 0]])
-
-        self.assertEqual(layouts[8], [
-            [0, 0, 0],
-            [0, 1, 1],
-            [0, 1, 1]])
-
-        self.assertEqual(layouts[9], [
+        self.assertEqual(layouts[-1], [
             [0, 0, 0],
             [0, 0, 1],
             [1, 1, 1]])
