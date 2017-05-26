@@ -1,3 +1,5 @@
+import random
+
 import numpy as np
 
 
@@ -10,6 +12,18 @@ class Board(object):
         self._layout = np.zeros(self.width * self.height, dtype='int8')
         self._ships = []
         pass
+
+    def __hash__(self):
+        h = hash((
+            'w{}'.format(self.width),
+            'h{}'.format(self.height)
+        ))
+        for ship in self._ships:
+            h ^= hash('r{};c{};l{};o{}'.format(ship.position[0], ship.position[1], ship.length, ship.orientation))
+        return h
+
+    def __eq__(self, other):
+        return hash(self) == hash(other)
 
     @property
     def ships(self):
@@ -87,6 +101,23 @@ class Ship(object):
     @property
     def is_horizontal(self):
         return self.orientation == 'H'
+
+
+# https://oeis.org/search?q=2%2C44%2C224%2C686%2C1622&language=english&go=Search
+def run_random(ship_lengths, size, iterations=1000):
+    boards = set()
+    for iteration in range(iterations):
+        board = Board(size=size)
+        random.shuffle(ship_lengths)
+        for ship_length in ship_lengths:
+            placed_ship = None
+            while placed_ship is None:
+                row = random.randint(0, size[0]-1)
+                column = random.randint(0, size[1]-1)
+                orientation = random.choice(['H', 'V'])
+                placed_ship = board.place_ship([row, column], ship_length, orientation)
+        boards.add(board)
+    return boards
 
 
 def run(ship_lengths, size):
