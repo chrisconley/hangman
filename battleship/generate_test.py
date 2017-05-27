@@ -263,9 +263,9 @@ class GenerateTests(unittest.TestCase):
 
         self.assertEqual(len(layouts), 686)
 
-    @unittest.skip('pretty sure we need to iterate over unique sets of ship_lengths')
+    #@unittest.skip('pretty sure we need to iterate over unique sets of ship_lengths')
     def test_run_2_2_3_on_4x4(self):
-        boards = generate.run_random(ship_lengths=[2, 2, 3], size=[4, 4])
+        boards = generate.run(ship_lengths=[2, 3, 2], size=[4, 4])
         self.assertEqual(len(boards), 1600)
 
     @unittest.skip('it is not cloning boards and letting last ship "run away"')

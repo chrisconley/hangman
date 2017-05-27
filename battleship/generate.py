@@ -124,6 +124,11 @@ def run(ship_lengths, size):
     current_board = Board(size=size)
     boards = []
     next_ship = Ship([0, 0], ship_lengths[0], 'H')
+    orders = [
+        [2, 2, 3],
+        [2, 3, 2],
+        [3, 2, 2],
+    ]
     while True:
         placed_ship = current_board.place_ship(next_ship.position, next_ship.length, next_ship.orientation)
         if placed_ship is None:
@@ -157,8 +162,11 @@ def run(ship_lengths, size):
                 # position, then we're done
                 if current_board.num_ships == 1:
                     break
+                # Otherwise, we need to reset the board (which removes the last ship)
+                # and continue to next iteration
                 else:
-                    raise 'Hi again'
+                    current_board, next_ship = _reset_board(current_board)
+                    continue
 
             # Set the next ship
             next_ship = Ship(next_position, next_ship_length, 'H')
