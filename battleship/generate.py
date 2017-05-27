@@ -1,6 +1,17 @@
+import itertools
 import random
 
 import numpy as np
+
+
+def multiset_permutations(iterable):
+    """
+    Ineffecient, but simple implementation, which is okay for our use case.
+    Efficient implementation mentioned here: https://stackoverflow.com/a/21284776/67184
+    """
+    perms = itertools.permutations(iterable)
+    uniq_perms = set(perms)
+    return sorted([list(u) for u in uniq_perms])
 
 
 class Board(object):
@@ -121,66 +132,63 @@ def run_random(ship_lengths, size, iterations=1000):
 
 
 def run(ship_lengths, size):
-    current_board = Board(size=size)
     boards = []
-    next_ship = Ship([0, 0], ship_lengths[0], 'H')
-    orders = [
-        [2, 2, 3],
-        [2, 3, 2],
-        [3, 2, 2],
-    ]
-    while True:
-        placed_ship = current_board.place_ship(next_ship.position, next_ship.length, next_ship.orientation)
-        if placed_ship is None:
-            if next_ship.orientation == 'H':
-                next_ship = Ship(next_ship.position, next_ship.length, 'V')
-            else:
-                next_position = current_board.get_next_available_position(next_ship.position)
-                if next_position is None:
+    orders = multiset_permutations(ship_lengths)
+    for ordered_ship_lengths in orders:
+        current_board = Board(size=size)
+        next_ship = Ship([0, 0], ordered_ship_lengths[0], 'H')
+        while True:
+            placed_ship = current_board.place_ship(next_ship.position, next_ship.length, next_ship.orientation)
+            if placed_ship is None:
+                if next_ship.orientation == 'H':
+                    next_ship = Ship(next_ship.position, next_ship.length, 'V')
+                else:
+                    next_position = current_board.get_next_available_position(next_ship.position)
+                    if next_position is None:
 
-                    # If we haven't been able to place any ship, then exit
-                    # NB: Not entirely confident this is correct logic
-                    if current_board.num_ships == 0:
-                        # print('exiting')
+                        # If we haven't been able to place any ship, then exit
+                        # NB: Not entirely confident this is correct logic
+                        if current_board.num_ships == 0:
+                            # print('exiting')
+                            break
+                        else:
+                            current_board, next_ship = _reset_board(current_board)
+                    else:
+                        next_ship = Ship(next_position, next_ship.length, 'H')
+
+            # ship was placed and we have more to place
+            elif current_board.num_ships < len(ordered_ship_lengths):
+
+                # Get the next ship length based on how many ships we've placed
+                next_ship_index = current_board.num_ships
+                next_ship_length = ordered_ship_lengths[next_ship_index]
+
+                # Get the next available position based on the placed ship's position
+                next_position = current_board.get_next_available_position(placed_ship.position)
+                if next_position is None:
+                    # If our board has only one ship and we can't find an available
+                    # position, then we're done
+                    if current_board.num_ships == 1:
                         break
+                    # Otherwise, we need to reset the board (which removes the last ship)
+                    # and continue to next iteration
                     else:
                         current_board, next_ship = _reset_board(current_board)
-                else:
-                    next_ship = Ship(next_position, next_ship.length, 'H')
+                        continue
 
-        # ship was placed and we have more to place
-        elif current_board.num_ships < len(ship_lengths):
+                # Set the next ship
+                next_ship = Ship(next_position, next_ship_length, 'H')
 
-            # Get the next ship length based on how many ships we've placed
-            next_ship_index = current_board.num_ships
-            next_ship_length = ship_lengths[next_ship_index]
+            # ship was placed and it was the last ship to be placed
+            else:
+                # add completed board
+                boards.append(current_board)
 
-            # Get the next available position based on the placed ship's position
-            next_position = current_board.get_next_available_position(placed_ship.position)
-            if next_position is None:
-                # If our board has only one ship and we can't find an available
-                # position, then we're done
-                if current_board.num_ships == 1:
-                    break
-                # Otherwise, we need to reset the board (which removes the last ship)
-                # and continue to next iteration
-                else:
-                    current_board, next_ship = _reset_board(current_board)
-                    continue
+                # print('Appended board:')
+                # for row in current_board.layout:
+                #     print(row)
 
-            # Set the next ship
-            next_ship = Ship(next_position, next_ship_length, 'H')
-
-        # ship was placed and it was the last ship to be placed
-        else:
-            # add completed board
-            boards.append(current_board)
-
-            # print('Appended board:')
-            # for row in current_board.layout:
-            #     print(row)
-
-            current_board, next_ship = _reset_board(current_board)
+                current_board, next_ship = _reset_board(current_board)
 
     return boards
 
@@ -210,8 +218,10 @@ def _reset_board(current_board):
     else:
         next_orientation = 'H'
         next_position = current_board.get_next_available_position(last_ship.position)
+        # If we're not able to get a next location for the last ship,
+        # then reset the board again.
         if next_position is None:
-            raise 'Hi once again'
+            return _reset_board(current_board)
 
     # Set the next ship to the next position
     next_ship = Ship(next_position, last_ship.length, next_orientation)
@@ -271,7 +281,6 @@ def runx(ship_lengths, size):
             moving_ship_orientation = 'H'
             placed_attempts = 0
             continue
-
 
     return boards
 

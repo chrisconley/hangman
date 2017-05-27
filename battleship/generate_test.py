@@ -3,6 +3,43 @@ import unittest
 from battleship import generate
 
 
+class MultiSetPermutationTests(unittest.TestCase):
+    def test_multiset_permutations_length_2(self):
+        result = generate.multiset_permutations([1, 1])
+        self.assertEqual(result, [
+            [1, 1]
+        ])
+
+        result = generate.multiset_permutations([2, 1])
+        self.assertEqual(result, [
+            [1, 2],
+            [2, 1],
+        ])
+
+    def test_multiset_permutations_length_3(self):
+        result = generate.multiset_permutations([1, 1, 1])
+        self.assertEqual(result, [
+            [1, 1, 1]
+        ])
+
+        result = generate.multiset_permutations([1, 1, 2])
+        self.assertEqual(result, [
+            [1, 1, 2],
+            [1, 2, 1],
+            [2, 1, 1],
+        ])
+
+        result = generate.multiset_permutations([1, 2, 3])
+        self.assertEqual(result, [
+            [1, 2, 3],
+            [1, 3, 2],
+            [2, 1, 3],
+            [2, 3, 1],
+            [3, 1, 2],
+            [3, 2, 1],
+        ])
+
+
 class BoardTests(unittest.TestCase):
     def test_place_ship_horizontal(self):
         board = generate.Board(size=[3, 3])
@@ -263,10 +300,17 @@ class GenerateTests(unittest.TestCase):
 
         self.assertEqual(len(layouts), 686)
 
-    #@unittest.skip('pretty sure we need to iterate over unique sets of ship_lengths')
     def test_run_2_2_3_on_4x4(self):
         boards = generate.run(ship_lengths=[2, 3, 2], size=[4, 4])
         self.assertEqual(len(boards), 1600)
+
+    def test_run_random_3_2_1_on_4x4(self):
+        boards = generate.run(ship_lengths=[3, 2, 1], size=[4, 4])
+        self.assertEqual(len(boards), 5808)
+
+    def test_run_random_2_2_3_on_5x5(self):
+        boards = generate.run(ship_lengths=[2, 2, 3], size=[5, 5])
+        self.assertEqual(len(boards), 12798)
 
     @unittest.skip('it is not cloning boards and letting last ship "run away"')
     def test_run_2_3_4_on_5x5(self):
@@ -307,6 +351,11 @@ class GenerateTests(unittest.TestCase):
     def test_run_random_2_2_3_on_4x4(self):
         boards = generate.run_random(ship_lengths=[2, 2, 3], size=[4, 4], iterations=500000)
         self.assertEqual(len(boards), 1600)
+
+    @unittest.skip('No need to run these lengthy tests now that we have the number')
+    def test_run_random_2_2_3_on_4x4(self):
+        boards = generate.run_random(ship_lengths=[3, 2, 1], size=[4, 4], iterations=1000000)
+        self.assertEqual(len(boards), 5808)
 
     @unittest.skip('No need to run these lengthy tests now that we have the number')
     def test_run_random_2_2_3_on_5x5(self):
