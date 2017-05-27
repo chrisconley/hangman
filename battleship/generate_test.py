@@ -312,17 +312,10 @@ class GenerateTests(unittest.TestCase):
         boards = generate.run(ship_lengths=[2, 2, 3], size=[5, 5])
         self.assertEqual(len(boards), 12798)
 
-    @unittest.skip('it is not cloning boards and letting last ship "run away"')
-    def test_run_2_3_4_on_5x5(self):
-        results = generate.run(ship_lengths=[1, 2, 3, 4, 5], size=[10, 10])
-        layouts = [b.layout for b in results]
-
-        for layout in layouts:
-            print('---------')
-            for row in layout:
-                print(row)
-
-        self.assertEqual(len(layouts), 2)
+    @unittest.skip('Takes >5 minutes to run')
+    def test_run_large_board(self):
+        results = generate.run(ship_lengths=[1, 2, 3, 4], size=[6, 6])
+        self.assertEqual(len(results), 2895696)
 
     def test_run_random_2_2_on_2x2(self):
         boards = generate.run_random(ship_lengths=[2, 2], size=[2, 2])
