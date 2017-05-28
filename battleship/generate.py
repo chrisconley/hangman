@@ -146,8 +146,10 @@ def run(ship_lengths, size):
                     next_position = current_board.get_next_available_position(next_ship.position)
                     if next_position is None:
                         # If we haven't been able to place any ship
+                        # then we've exhausted all our options and we can exit
+                        # then we've exhausted all our options and we can exit
                         if current_board.num_ships == 0:
-                            raise 'We should never get here'
+                            break
                         else:
                             current_board, next_ship = _reset_board(current_board)
                     else:
