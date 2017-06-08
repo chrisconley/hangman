@@ -2,7 +2,7 @@ import itertools
 
 import hangman_players
 from mastermind import opponent, player
-import entropy
+from hang import entropy
 
 
 class GameState(str):
@@ -64,7 +64,7 @@ if __name__ == '__main__':
     parser.add_argument('--limit', default=1000, type=int)
     args = parser.parse_args()
 
-    words = generate_words('ABCDEFGH', 5)
+    words = generate_words('ABCDEFG', 4)
     print(len(words))
 
     if args.limit:

@@ -1,11 +1,17 @@
+from decimal import Decimal
+import fractions
 import random
 import unittest
 
-import entropy
+from hang import entropy
 from hangman_utils import counters
 
 
 class EntropyTests(unittest.TestCase):
+    def assertDecimalAlmostEqual(self, actual, expected, places):
+        self.assertEqual(type(actual), Decimal)
+        self.assertAlmostEqual(float(actual), expected, places=places)
+
     def test_max_info_gain(self):
         random.seed(15243)
         words = ['scrabbler', 'scrambler', 'scratcher', 'scrounger',
@@ -14,21 +20,21 @@ class EntropyTests(unittest.TestCase):
         counts = counters.count_positional_letters(words)
         entropies = entropy.get_new_entropies(counts)
 
-        self.assertAlmostEqual(entropies['g'], 1.750, places=3)
-        self.assertAlmostEqual(entropies['t'], 1.406, places=3)
-        self.assertAlmostEqual(entropies['a'], 0.811, places=3)
-        self.assertAlmostEqual(entropies['h'], 0.544, places=3)
+        self.assertDecimalAlmostEqual(entropies['g'], 1.750, places=3)
+        self.assertDecimalAlmostEqual(entropies['t'], 1.406, places=3)
+        self.assertDecimalAlmostEqual(entropies['a'], 0.811, places=3)
+        self.assertDecimalAlmostEqual(entropies['h'], 0.544, places=3)
 
     def test_log_entropy(self):
-        self.assertAlmostEqual(entropy.log_probability(1.0), 0, places=4)
-        self.assertAlmostEqual(entropy.log_probability(0.0), 0, places=4)
-        self.assertAlmostEqual(entropy.log_probability(0.5), 0.5000, places=4)
+        self.assertDecimalAlmostEqual(entropy.log_probability(Decimal(1.0)), 0, places=4)
+        self.assertDecimalAlmostEqual(entropy.log_probability(Decimal(0.0)), 0, places=4)
+        self.assertDecimalAlmostEqual(entropy.log_probability(Decimal(0.5)), 0.5000, places=4)
 
-        self.assertAlmostEqual(entropy.log_probability(0.01), 0.0664, places=4)
-        self.assertAlmostEqual(entropy.log_probability(0.02), 0.1129, places=4)
+        self.assertDecimalAlmostEqual(entropy.log_probability(Decimal(0.01)), 0.0664, places=4)
+        self.assertDecimalAlmostEqual(entropy.log_probability(Decimal(0.02)), 0.1129, places=4)
 
-        self.assertAlmostEqual(entropy.log_probability(0.98), 0.0286, places=4)
-        self.assertAlmostEqual(entropy.log_probability(0.99), 0.0144, places=4)
+        self.assertDecimalAlmostEqual(entropy.log_probability(Decimal(0.98)), 0.0286, places=4)
+        self.assertDecimalAlmostEqual(entropy.log_probability(Decimal(0.99)), 0.0144, places=4)
 
     def test_get_pmf(self):
         counters = {
@@ -37,12 +43,12 @@ class EntropyTests(unittest.TestCase):
         }
         total = 185
         pmf = entropy.get_pmfs(counters, total)
-        self.assertAlmostEqual(pmf['e']['!'], 0.4216, places=4)
-        self.assertAlmostEqual(pmf['e']['*'], 0.5784, places=4)
-        self.assertAlmostEqual(pmf['e']['e'], 0.4703, places=4)
-        self.assertAlmostEqual(pmf['e']['ee'], 0.0973, places=4)
-        self.assertAlmostEqual(pmf['e']['eee'], 0.0108, places=4)
-        self.assertAlmostEqual(sum(pmf['e'].values()), 1.5784, places=4)
+        self.assertAlmostEqual(float(pmf['e']['!']), 0.4216, places=4)
+        self.assertAlmostEqual(float(pmf['e']['*']), 0.5784, places=4)
+        self.assertAlmostEqual(float(pmf['e']['e']), 0.4703, places=4)
+        self.assertAlmostEqual(float(pmf['e']['ee']), 0.0973, places=4)
+        self.assertAlmostEqual(float(pmf['e']['eee']), 0.0108, places=4)
+        self.assertAlmostEqual(sum([float(p) for p in pmf['e'].values()]), 1.5784, places=4)
         self.assertEqual(pmf['x'], {'!': 0.0, '*': 1.0, 'x': 1.0})
 
     def test_most_entropy_duplicates(self):
@@ -56,9 +62,9 @@ class EntropyTests(unittest.TestCase):
         pmfs = entropy.get_pmfs(counters, total)
         entropies = entropy.get_entropies(pmfs, total)
         most_common = entropies.most_common()
-        self.assertEqual(most_common[0], ('e', 1.4348619619430347))
-        self.assertEqual(most_common[1], ('x', 0.04848740692447222))
-        self.assertEqual(most_common[2], ('a', 0.0))
+        self.assertEqual(most_common[0], ('e', Decimal('1.434861961943034532507727963')))
+        self.assertEqual(most_common[1], ('x', Decimal('0.04848740692447229998691670478')))
+        self.assertEqual(most_common[2], ('a', Decimal(0.0)))
 
     def test_most_entropy_positional(self):
         counters = {
@@ -72,13 +78,13 @@ class EntropyTests(unittest.TestCase):
         entropies = entropy.get_entropies(pmfs, total)
         most_common = entropies.most_common()
         self.assertEqual(most_common[0][0], 'e')
-        self.assertAlmostEqual(most_common[0][1], 1.551051838789653, places=5)
+        self.assertDecimalAlmostEqual(most_common[0][1], 1.551051838789653, places=5)
 
         self.assertEqual(most_common[1][0], 'a')
-        self.assertAlmostEqual(most_common[1][1], 0.1792560669283215, places=5)
+        self.assertDecimalAlmostEqual(most_common[1][1], 0.1792560669283215, places=5)
 
         self.assertEqual(most_common[2][0], 'x')
-        self.assertAlmostEqual(most_common[2][1], 0.04848740692447222, places=5)
+        self.assertDecimalAlmostEqual(most_common[2][1], 0.04848740692447222, places=5)
 
         self.assertEqual(most_common[3], ('b', 0.0))
 

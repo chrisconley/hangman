@@ -1,9 +1,10 @@
 from collections import Counter, OrderedDict
+from decimal import Decimal
 import fractions
 import random
 
 import dictionary
-import entropy
+from hang import entropy
 from hangman_utils import counters
 import scorers
 
@@ -54,9 +55,7 @@ def most_common(game_state, encoded_dictionary):
     return get_actual_next_guess(game_state, counts)
 
 
-def _get_counts(game_state, encoded_dictionary):
-    rejected_letters = game_state.missed_letters  # Why do we need to pass this in explicitly?
-    remaining_words = dictionary.filter_words(encoded_dictionary, game_state, rejected_letters)
+def _get_counts(remaining_words):
     counts = counters.count_positional_letters(remaining_words)
     pmfs = entropy.get_pmfs(counts, len(remaining_words))
     common = {letter: pmf['*'] for letter, pmf in pmfs.items()}
@@ -68,24 +67,45 @@ def _get_counts(game_state, encoded_dictionary):
     results['entropies'] = entropies
     return results
 
+CACHE = {}
+
+
+def get_cache_key(game_state):
+    current = list(game_state)
+    key = "{}:{}".format("".join(current), "".join(sorted(game_state.missed_letters)))
+    return key
+
 
 def build_strategy(info_focus, success_focus, final_word_guess=True):
     def strategy(game_state, encoded_dictionary):
-        data = _get_counts(game_state, encoded_dictionary)
+        key = get_cache_key(game_state)
+        cached_guess = CACHE.get(key, None)
 
-        if len(data.get('remaining_words', [])) == 1:
-            return data['remaining_words'][0]
+        if cached_guess:
+            return cached_guess
+        else:
+            rejected_letters = game_state.missed_letters  # Why do we need to pass this in explicitly?
+            remaining_words = dictionary.filter_words(encoded_dictionary, game_state, rejected_letters)
+            data = _get_counts(remaining_words)
 
-        common = data.get('common')
-        entropies = data.get('entropies')
+            if len(data.get('remaining_words', [])) == 1:
+                return data['remaining_words'][0]
 
-        choices = {}
-        for letter, pmf in common.items():
-            common_weight = common[letter]**success_focus
-            entropy_weight = entropies[letter]**info_focus
-            choices[letter] = entropy_weight * common_weight
+            common = data.get('common')
+            entropies = data.get('entropies')
 
-        return get_actual_next_guess(game_state, choices)
+            choices = {}
+            for letter, pmf in common.items():
+                common_weight = common[letter]**Decimal(success_focus)
+                entropy_weight = entropies[letter]**Decimal(info_focus)
+                choices[letter] = entropy_weight * common_weight
+
+            next_guess = get_actual_next_guess(game_state, choices)
+            if cached_guess and cached_guess != next_guess:
+                print(key)
+                print('cached: ', cached_guess, '|', 'next: ', next_guess)
+            CACHE[key] = next_guess
+            return next_guess
 
     return strategy
 
@@ -93,6 +113,8 @@ def build_strategy(info_focus, success_focus, final_word_guess=True):
 ENTROPY_ONLY = build_strategy(info_focus=1.0, success_focus=0.0, final_word_guess=True)
 
 SUCCESS_ONLY = build_strategy(info_focus=0.0, success_focus=1.0, final_word_guess=True)
+
+BOTH = build_strategy(info_focus=0.5, success_focus=0.5, final_word_guess=True)
 
 
 def get_actual_next_guess(game_state, choices):

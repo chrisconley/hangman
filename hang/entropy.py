@@ -1,5 +1,8 @@
+from decimal import Decimal, getcontext
 import fractions
 import math
+
+getcontext = 50
 
 from collections import Counter, OrderedDict
 
@@ -31,9 +34,9 @@ def get_pmfs(counters, total):
         pmf = pmfs.setdefault(letter, {})
         if counter.get('*'):
             letter_total = counter['*']
-            pmf['!'] = fractions.Fraction(total - letter_total, total)
+            pmf['!'] = Decimal(Decimal(total - letter_total) / Decimal(total))
         for subset, count in counter.items():
-            pmf[subset] = fractions.Fraction(count, total)
+            pmf[subset] = Decimal(Decimal(count) / Decimal(total))
 
     return pmfs
 
@@ -56,8 +59,8 @@ def log_probability(probability):
     -xlog(x) (base 2)
     """
     if probability == 0.0:
-        return 0
-    return -probability * math.log(probability, 2)
+        return Decimal(0)
+    return -probability * (probability.ln() / Decimal(2.0).ln())
 
 
 def get_entropy(probabilities):

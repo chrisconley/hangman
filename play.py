@@ -10,7 +10,7 @@ if __name__ == '__main__':
 
     # Seed random so we can do multiple runs with same set of random words
     # TODO: Move this to argument
-    random.seed(15243, version=1)
+    random.seed(1543, version=1)
 
     parser = ArgumentParser()
     parser.add_argument('file', help='input words')
@@ -21,17 +21,30 @@ if __name__ == '__main__':
     encoded_dictionary = dictionary.encode_dictionary(words)
 
     if args.limit:
-        words = random.sample(words, args.limit)
+        words_to_play = random.sample(words, args.limit)
 
-    # TODO: Add Minimax
-    # TODO: Change counts/pmfs to objects, so we don't have '!' and '*' bugs
-    # TODO: In game log turn entry, capture expected info gain, minimax, success expectation
-    # TODO: In aggregrated game logs, state avg number of turns, max number of turns, (maybe distribution too?)
-    games = []
-    for word in words:
-        game_state, game_log = hangman.play(word, hangman_players.ENTROPY_ONLY, encoded_dictionary)
-        # print(word, game_state)
-        # print(len(game_log))
-        games.append(game_log)
-
-    print(sum([len(l) for l in games])/len(games))
+    foci = [
+        (0.25, 0.0),
+        (1.0, 0.0),
+        (0.75, 0.25),
+        (0.5, 0.5),
+        (0.25, 0.75),
+        (0.0, 1.0),
+        (0.0, 0.25)
+    ]
+    for info_focus, success_focus in foci:
+        random.seed(15443, version=1)
+        # TODO: Add Minimax
+        # TODO: Change counts/pmfs to objects, so we don't have '!' and '*' bugs
+        # TODO: In game log turn entry, capture expected info gain, minimax, success expectation
+        # TODO: In aggregrated game logs, state avg number of turns, max number of turns, (maybe distribution too?)
+        games = []
+        hangman_players.CACHE = {}
+        strategy = hangman_players.build_strategy(info_focus, success_focus)
+        for word in words_to_play:
+            game_state, game_log = hangman.play(word, strategy, encoded_dictionary)
+            # print(word, game_state)
+            # print(len(game_log))
+            games.append(game_log)
+        print('info: ', info_focus, '|', 'success: ', success_focus)
+        print(sum([len(l) for l in games])/len(games))
