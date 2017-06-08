@@ -1,5 +1,4 @@
 from decimal import Decimal
-import fractions
 import random
 import unittest
 
@@ -62,7 +61,7 @@ class EntropyTests(unittest.TestCase):
         pmfs = entropy.get_pmfs(counters, total)
         entropies = entropy.get_entropies(pmfs, total)
         most_common = entropies.most_common()
-        self.assertEqual(most_common[0], ('e', Decimal('1.434861961943034532507727963')))
+        self.assertEqual(most_common[0], ('e', Decimal('1.434861961943034532507727964')))
         self.assertEqual(most_common[1], ('x', Decimal('0.04848740692447229998691670478')))
         self.assertEqual(most_common[2], ('a', Decimal(0.0)))
 

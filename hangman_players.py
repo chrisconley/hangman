@@ -67,8 +67,6 @@ def _get_counts(remaining_words):
     results['entropies'] = entropies
     return results
 
-CACHE = {}
-
 
 def get_cache_key(game_state):
     current = list(game_state)
@@ -76,12 +74,13 @@ def get_cache_key(game_state):
     return key
 
 
-def build_strategy(info_focus, success_focus, final_word_guess=True):
+def build_strategy(info_focus, success_focus, final_word_guess=True, use_cache=False):
+    cache = {}
     def strategy(game_state, encoded_dictionary):
         key = get_cache_key(game_state)
-        cached_guess = CACHE.get(key, None)
+        cached_guess = cache.get(key, None)
 
-        if cached_guess:
+        if cached_guess and use_cache:
             return cached_guess
         else:
             rejected_letters = game_state.missed_letters  # Why do we need to pass this in explicitly?
@@ -96,25 +95,26 @@ def build_strategy(info_focus, success_focus, final_word_guess=True):
 
             choices = {}
             for letter, pmf in common.items():
-                common_weight = common[letter]**Decimal(success_focus)
-                entropy_weight = entropies[letter]**Decimal(info_focus)
+                if common[letter] == 0.0 and success_focus == 0.0:
+                    common_weight = 1
+                else:
+                    common_weight = common[letter]**Decimal(success_focus)
+                if entropies[letter] == Decimal(0) and info_focus == 0.0:
+                    entropy_weight = 1
+                else:
+                    entropy_weight = entropies[letter]**Decimal(info_focus)
                 choices[letter] = entropy_weight * common_weight
 
             next_guess = get_actual_next_guess(game_state, choices)
             if cached_guess and cached_guess != next_guess:
+                raise
                 print(key)
                 print('cached: ', cached_guess, '|', 'next: ', next_guess)
-            CACHE[key] = next_guess
+                print(data)
+            cache[key] = next_guess
             return next_guess
 
     return strategy
-
-
-ENTROPY_ONLY = build_strategy(info_focus=1.0, success_focus=0.0, final_word_guess=True)
-
-SUCCESS_ONLY = build_strategy(info_focus=0.0, success_focus=1.0, final_word_guess=True)
-
-BOTH = build_strategy(info_focus=0.5, success_focus=0.5, final_word_guess=True)
 
 
 def get_actual_next_guess(game_state, choices):

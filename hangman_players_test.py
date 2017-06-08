@@ -16,7 +16,7 @@ class HangmanPlayersTests(unittest.TestCase):
         encoded_dictionary = dictionary.encode_dictionary(words)
 
         game_state = hangman.GameState('scrabbler', set('srei'))
-        strategy = hangman_players.ENTROPY_ONLY
+        strategy = hangman_players.build_strategy(info_focus=1.0, success_focus=0.0, final_word_guess=True)
         next_guess = strategy(game_state, encoded_dictionary)
 
         self.assertEqual(next_guess, 'g')
@@ -25,7 +25,7 @@ class HangmanPlayersTests(unittest.TestCase):
         next_guess = strategy(game_state, encoded_dictionary)
         self.assertEqual(next_guess, 't')
 
-        strategy = hangman_players.SUCCESS_ONLY
+        strategy = hangman_players.build_strategy(info_focus=0.0, success_focus=1.0, final_word_guess=True)
         next_guess = strategy(game_state, encoded_dictionary)
         self.assertEqual(next_guess, 'a')
 
@@ -35,7 +35,7 @@ class HangmanPlayersTests(unittest.TestCase):
         encoded_dictionary = dictionary.encode_dictionary(words)
 
         game_state = hangman.GameState('scrabbler', set('srei'))
-        strategy = strategy = hangman_players.build_strategy(0.5, 0.5, final_word_guess=True)
+        strategy = hangman_players.build_strategy(0.5, 0.5, final_word_guess=True)
         next_guess = strategy(game_state, encoded_dictionary)
 
         self.assertEqual(next_guess, 'scrabbler')
@@ -50,7 +50,7 @@ class HangmanPlayersTests(unittest.TestCase):
         encoded_dictionary = dictionary.encode_dictionary(words)
 
         game_state = hangman.GameState('scrabbler', set('srei'))
-        strategy = hangman_players.ENTROPY_ONLY
+        strategy = hangman_players.build_strategy(info_focus=1.0, success_focus=0.0, final_word_guess=True)
         strategy(game_state, encoded_dictionary)
         strategy(game_state, encoded_dictionary)
 
