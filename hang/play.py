@@ -44,15 +44,16 @@ if __name__ == '__main__':
     print(len(words))
 
     if args.limit:
-        words = random.sample(words, args.limit)
+        words_to_play = random.sample(words, args.limit)
 
     games = []
-    for word in words:
+    for word in words_to_play:
         game_state, game_log = play(
             word,
             words,
             player.get_potentials,
-            player.get_next_guess_naive, opponent.get_response
+            player.build_strategy(info_focus=0.0, success_focus=1.0, final_word_guess=True),
+            opponent.get_response
         )
         assert(game_state == word)
         # print(word, game_state)

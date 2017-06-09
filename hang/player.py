@@ -44,7 +44,7 @@ def build_strategy(info_focus, success_focus, final_word_guess=True, use_cache=F
             data = _get_counts(potentials)
 
             if len(data.get('remaining_words', [])) == 1:
-                return data['remaining_words'][0]
+                return list(data['remaining_words'])[0]
 
             common = data.get('common')
             entropies = data.get('entropies')
