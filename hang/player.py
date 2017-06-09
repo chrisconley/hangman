@@ -1,4 +1,98 @@
-from collections import defaultdict
+from collections import Counter, defaultdict, OrderedDict
+from decimal import Decimal
+import random
+
+from hang import entropy
+
+
+class OrderedCounter(Counter, OrderedDict):
+    pass
+
+
+def _get_counts(potentials):
+    remaining_words = potentials.code_words
+    counts = {}
+    for guess, responses in potentials.items():
+        counts[guess] = OrderedCounter()
+        all_words = set()
+        for response, words in responses.items():
+            counts[guess][response] = len(words)
+            if response != '!':
+                all_words |= words
+        counts[guess]['*'] = len(all_words)
+    pmfs = entropy.get_pmfs(counts, len(remaining_words))
+    common = {letter: pmf['*'] for letter, pmf in pmfs.items()}
+    entropies = entropy.get_entropies(pmfs, len(remaining_words))
+    results = {}
+    if len(remaining_words) <= 26:
+        results['remaining_words'] = remaining_words
+    results['common'] = common
+    results['entropies'] = entropies
+    return results
+
+
+def build_strategy(info_focus, success_focus, final_word_guess=True, use_cache=False):
+    cache = {}
+
+    def strategy(potentials, game_log):
+        # key = get_cache_key(game_state)
+        cached_guess = False #= cache.get(key, None)
+
+        if cached_guess and use_cache:
+            return cached_guess
+        else:
+            data = _get_counts(potentials)
+
+            if len(data.get('remaining_words', [])) == 1:
+                return data['remaining_words'][0]
+
+            common = data.get('common')
+            entropies = data.get('entropies')
+
+            choices = {}
+            for letter, pmf in common.items():
+                if common[letter] == 0.0 and success_focus == 0.0:
+                    common_weight = 1
+                else:
+                    common_weight = common[letter]**Decimal(success_focus)
+                if entropies[letter] == Decimal(0) and info_focus == 0.0:
+                    entropy_weight = 1
+                else:
+                    entropy_weight = entropies[letter]**Decimal(info_focus)
+                choices[letter] = entropy_weight * common_weight
+
+            next_guess = get_actual_next_guess(game_log, choices)
+            # cache[key] = next_guess
+            return next_guess
+
+    return strategy
+
+
+def _most_common(counter):
+    counter = OrderedCounter(counter)
+    for letter, count in counter.most_common():
+        if letter == '*':
+            continue
+        yield letter, count
+
+
+def get_actual_next_guess(game_log, choices):
+    assert choices.get('*') is None
+    most_common_letters = []
+    most_common_count = None
+    for letter, count in _most_common(choices):
+        if letter not in game_log.guesses:
+            if most_common_count is None:
+                most_common_count = count
+                most_common_letters.append(letter)
+            elif most_common_count == count:
+                most_common_letters.append(letter)
+            else:
+                break
+    if len(most_common_letters) == 0:
+        return None
+    else:
+        return random.choice(sorted(most_common_letters))
 
 
 def get_next_guess_naive(potentials, game_log):

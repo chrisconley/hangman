@@ -55,6 +55,12 @@ def most_common(game_state, encoded_dictionary):
     return get_actual_next_guess(game_state, counts)
 
 
+def get_cache_key(game_state):
+    current = list(game_state)
+    key = "{}:{}".format("".join(current), "".join(sorted(game_state.missed_letters)))
+    return key
+
+
 def _get_counts(remaining_words):
     counts = counters.count_positional_letters(remaining_words)
     pmfs = entropy.get_pmfs(counts, len(remaining_words))
@@ -68,14 +74,9 @@ def _get_counts(remaining_words):
     return results
 
 
-def get_cache_key(game_state):
-    current = list(game_state)
-    key = "{}:{}".format("".join(current), "".join(sorted(game_state.missed_letters)))
-    return key
-
-
 def build_strategy(info_focus, success_focus, final_word_guess=True, use_cache=False):
     cache = {}
+
     def strategy(game_state, encoded_dictionary):
         key = get_cache_key(game_state)
         cached_guess = cache.get(key, None)
@@ -106,11 +107,6 @@ def build_strategy(info_focus, success_focus, final_word_guess=True, use_cache=F
                 choices[letter] = entropy_weight * common_weight
 
             next_guess = get_actual_next_guess(game_state, choices)
-            if cached_guess and cached_guess != next_guess:
-                raise
-                print(key)
-                print('cached: ', cached_guess, '|', 'next: ', next_guess)
-                print(data)
             cache[key] = next_guess
             return next_guess
 
