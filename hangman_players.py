@@ -9,7 +9,7 @@ from hangman_utils import counters
 import scorers
 
 
-getcontext().prec = 100
+# getcontext().prec = 100
 
 
 ALPHABET = 'abcdefghijklmnopqrstuvwxyz'

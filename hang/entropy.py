@@ -2,7 +2,7 @@ from decimal import Decimal, getcontext
 import fractions
 import math
 
-getcontext().prec = 100
+# getcontext().prec = 10
 
 from collections import Counter, OrderedDict
 

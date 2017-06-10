@@ -5,7 +5,7 @@ import random
 import entropy
 
 
-getcontext().prec = 100
+# getcontext().prec = 10
 
 
 class OrderedCounter(Counter, OrderedDict):
@@ -198,13 +198,20 @@ class PotentialOutcomes(dict):
 
 
 def get_potentials(remaining_code_words, get_response, game_log):
+    remaining_code_words = set(remaining_code_words)
     indexed_potentials = PotentialOutcomes()
     potential_guesses = 'esiarntolcdupmghbyfvkwzxqj'
     worthwhile_guesses = set(''.join(remaining_code_words))
-    for guess in potential_guesses:
-        if guess not in worthwhile_guesses:
-            continue
-        for code_word in remaining_code_words:
+    for code_word in remaining_code_words:
+        for guess in set(code_word):
             response = get_response(code_word, guess)
             indexed_potentials.add(guess, response, code_word)
+    for guess, possible_responses in indexed_potentials.items():
+        seen_words = set()
+        for response, words in possible_responses.items():
+            seen_words |= words
+        non_matches = remaining_code_words - seen_words
+        if non_matches != set():
+            indexed_potentials[guess]['!'] = non_matches
+
     return indexed_potentials
