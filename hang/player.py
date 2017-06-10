@@ -1,50 +1,89 @@
 from collections import Counter, defaultdict, OrderedDict
-from decimal import Decimal
+from decimal import Decimal, getcontext
 import random
 
-from hang import entropy
+import entropy
+
+
+getcontext().prec = 100
 
 
 class OrderedCounter(Counter, OrderedDict):
     pass
 
 
-def _get_counts(potentials):
-    remaining_words = potentials.code_words
-    counts = {}
-    for guess, responses in potentials.items():
-        counts[guess] = OrderedCounter()
-        all_words = set()
-        for response, words in responses.items():
-            counts[guess][response] = len(words)
-            if response != '!':
-                all_words |= words
-        counts[guess]['*'] = len(all_words)
-    pmfs = entropy.get_pmfs(counts, len(remaining_words))
-    common = {letter: pmf['*'] for letter, pmf in pmfs.items()}
-    entropies = entropy.get_entropies(pmfs, len(remaining_words))
+def _get_pmf_for_success(possible_responses):
+    counter = OrderedCounter()
+    successful_code_words = set()
+    seen_words = set()
+    for response, code_words in possible_responses.items():
+        assert code_words.isdisjoint(seen_words), 'There should not be duplicate code words across responses'
+        seen_words |= code_words
+        if response == '!':
+            counter['!'] = Decimal(len(code_words))
+        else:
+            successful_code_words |= code_words
+    counter['*'] = Decimal(len(successful_code_words))
+    return entropy.get_pmf(counter)
+
+
+def _get_pmf_for_entropy(possible_responses):
+    counter = OrderedCounter()
+    seen_words = set()
+    for response, code_words in possible_responses.items():
+        assert code_words.isdisjoint(seen_words), 'There should not be duplicate code words across responses'
+        seen_words |= code_words
+        counter[response] = Decimal(len(code_words))
+    return entropy.get_pmf(counter)
+
+
+def _get_counts(potential_outcomes):
+    common = {}
+    entropies = {}
+    for guess, possible_responses in potential_outcomes.items():
+        common_pmf = _get_pmf_for_success(possible_responses)
+        common[guess] = common_pmf['*']
+        entropy_pmf = _get_pmf_for_entropy(possible_responses)
+        entropies[guess] = entropy.get_entropy(entropy_pmf)
+
     results = {}
-    if len(remaining_words) <= 26:
-        results['remaining_words'] = remaining_words
     results['common'] = common
     results['entropies'] = entropies
     return results
 
 
+def _get_cache_key(game_log):
+    hidden_word = []
+    missed_guesses = set()
+    for entry in game_log:
+        if entry['result'] == '!':
+            missed_guesses.add(entry['guess'])
+        else:
+            if hidden_word == []:
+                hidden_word = list(entry['result'])
+            else:
+                for index, character in enumerate(entry['result']):
+                    if character == '-':
+                        continue
+                    hidden_word[index] = character
+    key = "{}:{}".format("".join(hidden_word), "".join(sorted(missed_guesses)))
+    return key
+
+
 def build_strategy(info_focus, success_focus, final_word_guess=True, use_cache=False):
     cache = {}
 
-    def strategy(potentials, game_log):
-        # key = get_cache_key(game_state)
-        cached_guess = False #= cache.get(key, None)
+    def strategy(potential_outcomes, game_log):
+        key = _get_cache_key(game_log)
+        cached_guess = cache.get(key, None)
 
         if cached_guess and use_cache:
             return cached_guess
         else:
-            data = _get_counts(potentials)
+            data = _get_counts(potential_outcomes)
 
-            if len(data.get('remaining_words', [])) == 1:
-                return list(data['remaining_words'])[0]
+            if len(potential_outcomes.all_code_words) == 1:
+                return list(potential_outcomes.all_code_words)[0]
 
             common = data.get('common')
             entropies = data.get('entropies')
@@ -62,7 +101,7 @@ def build_strategy(info_focus, success_focus, final_word_guess=True, use_cache=F
                 choices[letter] = entropy_weight * common_weight
 
             next_guess = get_actual_next_guess(game_log, choices)
-            # cache[key] = next_guess
+            cache[key] = next_guess
             return next_guess
 
     return strategy
@@ -99,17 +138,36 @@ def get_next_guess_naive(potentials, game_log):
     # If we've whittled down to return one remaining word,
     # return that word as our next guess to finish the game.
     if potentials.total_length == 1:
-        return list(potentials.code_words)[0]
+        return list(potentials.all_code_words)[0]
 
     potential_guesses = 'esiarntolcdupmghbyfvkwzxqj'
-    worthwhile_guesses = set(''.join(potentials.code_words))
+    worthwhile_guesses = set(''.join(potentials.all_code_words))
     for guess in potential_guesses:
         if guess in game_log.guesses or guess not in worthwhile_guesses:
             continue
         return guess
 
 
-class Potential(dict):
+class PossibleResponses(defaultdict):
+    def __init__(self, guess):
+        self.guess = guess
+        super().__init__(set)
+
+    def as_counts(self):
+        counter = OrderedCounter()
+        for response, code_words in self.items():
+            counter[response] = len(code_words)
+        return counter
+
+    @classmethod
+    def from_dict(cls, guess, data):
+        possible_responses = cls(guess)
+        for response, code_words in data.items():
+            possible_responses[response] = code_words
+        return possible_responses
+
+
+class PotentialOutcomes(dict):
     def __init__(self, data={}):
         self._code_words = set()
         super().__init__(self)
@@ -119,7 +177,7 @@ class Potential(dict):
 
     def add(self, guess, response, code_word):
         if self.get(guess) is None:
-            self[guess] = defaultdict(set)
+            self[guess] = PossibleResponses(guess)
         self[guess][response].add(code_word)
         self._code_words.add(code_word)
 
@@ -135,12 +193,12 @@ class Potential(dict):
         return len(self._code_words)
 
     @property
-    def code_words(self):
+    def all_code_words(self):
         return self._code_words
 
 
 def get_potentials(remaining_code_words, get_response, game_log):
-    indexed_potentials = Potential()
+    indexed_potentials = PotentialOutcomes()
     potential_guesses = 'esiarntolcdupmghbyfvkwzxqj'
     worthwhile_guesses = set(''.join(remaining_code_words))
     for guess in potential_guesses:

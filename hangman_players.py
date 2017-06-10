@@ -1,5 +1,5 @@
 from collections import Counter, OrderedDict
-from decimal import Decimal
+from decimal import Decimal, getcontext
 import fractions
 import random
 
@@ -7,6 +7,9 @@ import dictionary
 from hang import entropy
 from hangman_utils import counters
 import scorers
+
+
+getcontext().prec = 100
 
 
 ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
@@ -63,9 +66,9 @@ def get_cache_key(game_state):
 
 def _get_counts(remaining_words):
     counts = counters.count_positional_letters(remaining_words)
-    pmfs = entropy.get_pmfs(counts, len(remaining_words))
+    pmfs = entropy.get_pmfs_deprecated(counts, len(remaining_words))
     common = {letter: pmf['*'] for letter, pmf in pmfs.items()}
-    entropies = entropy.get_entropies(pmfs, len(remaining_words))
+    entropies = entropy.get_entropies_deprecated(pmfs, len(remaining_words))
     results = {}
     if len(remaining_words) <= 26:
         results['remaining_words'] = remaining_words

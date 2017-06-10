@@ -45,8 +45,8 @@ def _get_next_guess(next_words, total_remaining_words):
         counts[next_guess] = {}
         for next_response, potentials in next_guess_potentials.items():
             counts[next_guess][next_response] = len(potentials)
-    pmfs = entropy.get_pmfs(counts, total_remaining_words)
-    entropies = entropy.get_entropies(pmfs, total_remaining_words)
+    pmfs = entropy.get_pmfs_deprecated(counts, total_remaining_words)
+    entropies = entropy.get_entropies_deprecated(pmfs, total_remaining_words)
 
     return hangman_players.get_actual_next_guess(GameState(), entropies)
 

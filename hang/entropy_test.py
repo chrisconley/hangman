@@ -36,12 +36,49 @@ class EntropyTests(unittest.TestCase):
         self.assertDecimalAlmostEqual(entropy.log_probability(Decimal(0.99)), 0.0144, places=4)
 
     def test_get_pmf(self):
+        counts = {'ee': 80, 'eee': 2, '*': 10, 'e': 8, '!': 0}
+        pmf = entropy.get_pmf(counts)
+        self.assertDecimalAlmostEqual(pmf['ee'], 0.80, places=4)
+        self.assertDecimalAlmostEqual(pmf['!'], 0.00, places=4)
+        self.assertDecimalAlmostEqual(pmf['*'], 0.10, places=4)
+
+        counts = {'ee': 18, 'eee': 2, '*': 107, 'e': 87}
+        pmf = entropy.get_pmf(counts)
+        self.assertDecimalAlmostEqual(pmf['ee'], 0.08411214953271028, places=17)
+
+    def test_get_entropy(self):
+        pmf = {
+            'q': Decimal(0.5),
+            'b': Decimal(0.125),
+            'c': Decimal(0.125),
+            'd': Decimal(0.25)
+        }
+        pmf_entropy = entropy.get_entropy(pmf)
+        self.assertDecimalAlmostEqual(pmf_entropy, Decimal('1.75000000000000000'), places=17)
+
+    def test_get_entropy_requires_decimals(self):
+        pmf = {
+            'q': 0.99,
+            'r': 0.01
+        }
+        with self.assertRaises(AssertionError):
+            entropy.get_entropy(pmf)
+
+    def test_get_entropy_requires_pmf_probababilities_add_to_one(self):
+        pmf = {
+            'q': 1.00,
+            'r': 0.01
+        }
+        with self.assertRaises(AssertionError):
+            entropy.get_entropy(pmf)
+
+    def test_get_pmfs_deprecated(self):
         counters = {
             'e': {'ee': 18, 'eee': 2, '*': 107, 'e': 87},
             'x': {'x': 185, '*': 185}
         }
         total = 185
-        pmf = entropy.get_pmfs(counters, total)
+        pmf = entropy.get_pmfs_deprecated(counters, total)
         self.assertAlmostEqual(float(pmf['e']['!']), 0.4216, places=4)
         self.assertAlmostEqual(float(pmf['e']['*']), 0.5784, places=4)
         self.assertAlmostEqual(float(pmf['e']['e']), 0.4703, places=4)
@@ -58,8 +95,8 @@ class EntropyTests(unittest.TestCase):
             'a': {'a': 185, '*': 185}
         }
         total = 185
-        pmfs = entropy.get_pmfs(counters, total)
-        entropies = entropy.get_entropies(pmfs, total)
+        pmfs = entropy.get_pmfs_deprecated(counters, total)
+        entropies = entropy.get_entropies_deprecated(pmfs, total)
         most_common = entropies.most_common()
         self.assertEqual(most_common[0], ('e', Decimal('1.434861961943034532507727964')))
         self.assertEqual(most_common[1], ('x', Decimal('0.04848740692447229998691670478')))
@@ -73,8 +110,8 @@ class EntropyTests(unittest.TestCase):
             'b': {'b--': 185, '*': 185}
         }
         total = 185
-        pmfs = entropy.get_pmfs(counters, total)
-        entropies = entropy.get_entropies(pmfs, total)
+        pmfs = entropy.get_pmfs_deprecated(counters, total)
+        entropies = entropy.get_entropies_deprecated(pmfs, total)
         most_common = entropies.most_common()
         self.assertEqual(most_common[0][0], 'e')
         self.assertDecimalAlmostEqual(most_common[0][1], 1.551051838789653, places=5)

@@ -2,7 +2,7 @@ from decimal import Decimal, getcontext
 import fractions
 import math
 
-getcontext = 50
+getcontext().prec = 100
 
 from collections import Counter, OrderedDict
 
@@ -11,7 +11,25 @@ class OrderedCounter(Counter, OrderedDict):
     pass
 
 
-def get_pmfs(counters, total):
+# TODO: change so last subset makes up difference to 1.0?
+def get_pmf(counter):
+    pmf = {}
+    total = Decimal(sum(counter.values()))
+    for subset, count in counter.items():
+        pmf[subset] = Decimal(count) / total
+    return pmf
+
+
+def get_entropy(pmf):
+    probabilities = list(pmf.values())
+    probabilities_sum = sum(probabilities)
+    assert type(probabilities_sum) == Decimal, 'PMF values must be Decimals'
+    # assert probabilities_sum == Decimal(1.0), "Probability sum {} does not equal 1.00".format(probabilities_sum)
+    entropy = sum([log_probability(p) for p in probabilities])
+    return entropy
+
+
+def get_pmfs_deprecated(counters, total):
     """
     Takes a counter and returns a probability mass function in the form of
 
@@ -30,6 +48,7 @@ def get_pmfs(counters, total):
     pmfs = OrderedDict()
     for letter, counter in counters.items():
         if letter == '*':
+            # TODO: Get this out of here
             continue
         pmf = pmfs.setdefault(letter, {})
         if counter.get('*'):
@@ -63,7 +82,7 @@ def log_probability(probability):
     return -probability * (probability.ln() / Decimal(2.0).ln())
 
 
-def get_entropy(probabilities):
+def get_entropy_deprecated(probabilities):
     entropy = sum([log_probability(p) for p in probabilities])
     return entropy
 
@@ -80,7 +99,7 @@ def get_hinge_loss(probabilities):
         return maximum
 
 
-def get_entropies(pmfs, word_count):
+def get_entropies_deprecated(pmfs, word_count):
     entropies = OrderedCounter()
     for letter, pmf in pmfs.items():
         if letter == '*':
@@ -89,10 +108,10 @@ def get_entropies(pmfs, word_count):
         probabilities = [p for (subset, p) in pmf.items() if subset != '*']
         s = "{:0.8f}".format(float(sum(probabilities)))
         assert s == '1.00000000', "Probability sum {} does not equal 1.00".format(s)
-        entropies[letter] = get_entropy(probabilities)
+        entropies[letter] = get_entropy_deprecated(probabilities)
     return entropies
 
 
 def get_new_entropies(counts):
-    pmfs = get_pmfs(counts, counts['*'])
-    return get_entropies(pmfs, counts['*'])
+    pmfs = get_pmfs_deprecated(counts, counts['*'])
+    return get_entropies_deprecated(pmfs, counts['*'])

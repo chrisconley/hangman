@@ -1,4 +1,4 @@
-from hang import opponent, player
+import opponent, player
 
 
 class GameLog(list):
@@ -7,12 +7,12 @@ class GameLog(list):
         return {t['guess'] for t in self}
 
 
-def play(code_word, possible_words, get_potentials, get_next_guess, get_response):
+def play(code_word, possible_words, get_potential_outcomes, get_next_guess, get_response):
     game_log = GameLog()
     possible_words = list(possible_words)
     while True:
-        potentials = get_potentials(possible_words, get_response, game_log)
-        next_guess = get_next_guess(potentials, game_log)
+        potential_outcomes = get_potential_outcomes(possible_words, get_response, game_log)
+        next_guess = get_next_guess(potential_outcomes, game_log)
         response = get_response(code_word, next_guess)
         game_log.append({
             'guess': next_guess,
@@ -21,7 +21,7 @@ def play(code_word, possible_words, get_potentials, get_next_guess, get_response
         })
         if next_guess == code_word:
             break
-        possible_words = potentials.get_by_guess_response(next_guess, response)
+        possible_words = potential_outcomes.get_by_guess_response(next_guess, response)
 
     return next_guess, game_log
 
@@ -52,7 +52,7 @@ if __name__ == '__main__':
             word,
             words,
             player.get_potentials,
-            player.build_strategy(info_focus=0.0, success_focus=1.0, final_word_guess=True),
+            player.build_strategy(info_focus=1.0, success_focus=0.0, final_word_guess=True, use_cache=True),
             opponent.get_response
         )
         assert(game_state == word)
