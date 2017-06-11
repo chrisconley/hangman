@@ -1,6 +1,7 @@
 import unittest
 
-from hang import play, player, opponent
+from games import play
+from games.hangman import player, opponent
 import code_words
 
 

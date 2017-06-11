@@ -3,7 +3,8 @@ import random
 import unittest
 from unittest.mock import patch
 
-from hang import opponent, player, play
+from games.hangman import opponent, player
+from games import play
 
 
 class HangmanPlayerTests(unittest.TestCase):
@@ -220,7 +221,7 @@ class HangmanPlayerTests(unittest.TestCase):
         cache_key = player._get_cache_key(game_log)
         self.assertEqual(cache_key, 's-r---e-r:')
 
-    @patch('hang.player.get_actual_next_guess', return_value='hi')
+    @patch('games.hangman.player.get_actual_next_guess', return_value='hi')
     def test_build_strategy_does_not_cache_counts_by_default(self, get_next_guess):
         random.seed(15243)
         words = ['scrabbler', 'scrambler', 'scratcher', 'scrounger',
@@ -241,7 +242,7 @@ class HangmanPlayerTests(unittest.TestCase):
 
         self.assertEqual(get_next_guess.call_count, 2)
 
-    @patch('hang.player.get_actual_next_guess', return_value='hi')
+    @patch('games.hangman.player.get_actual_next_guess', return_value='hi')
     def test_build_strategy_does_cache_counts_when_use_cache_is_true(self, get_next_guess):
         random.seed(15243)
         words = ['scrabbler', 'scrambler', 'scratcher', 'scrounger',

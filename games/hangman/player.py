@@ -2,7 +2,7 @@ from collections import Counter, defaultdict, OrderedDict
 from decimal import Decimal, getcontext
 import random
 
-import entropy
+from games import entropy
 
 
 # getcontext().prec = 10

@@ -2,7 +2,7 @@
 Takes a input file of words and prints a list of most common letters.
 
 Usage:
-$ cat ./hangman_utils/words.txt | python -m hangman_utils.load_common_letters -
+$ cat ./games/hangman/words.txt | python -m games.hangman.load_common_letters -
 esiarntolcdupmghbyfvkwzxqj
 """
 from hangman_utils import counters

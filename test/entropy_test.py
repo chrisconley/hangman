@@ -2,7 +2,7 @@ from decimal import Decimal
 import random
 import unittest
 
-from hang import entropy
+from games import entropy
 from hangman_utils import counters
 
 

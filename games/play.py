@@ -1,4 +1,4 @@
-import opponent, player
+from games.hangman import opponent, player
 import dictionary
 import code_words
 

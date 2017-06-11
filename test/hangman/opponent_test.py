@@ -1,6 +1,6 @@
 import unittest
 
-from hang import opponent
+from games.hangman import opponent
 
 
 class HangmanOpponentTests(unittest.TestCase):
