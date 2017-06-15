@@ -11,11 +11,6 @@ class GameState(str):
         return []
 
 
-def generate_words(symbols, length):
-    tuples = itertools.product(symbols, repeat=length)
-    return sorted(map(lambda t: ''.join(t), tuples))
-
-
 def play(word, get_next_guess, possible_words):
     game_log = []
     possible_words = list(possible_words)

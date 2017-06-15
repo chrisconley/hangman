@@ -1,3 +1,4 @@
+# TODO: Rename to math, or optimizations
 from decimal import Decimal, getcontext
 import fractions
 import math
@@ -12,6 +13,9 @@ class OrderedCounter(Counter, OrderedDict):
 
 
 # TODO: change so last subset makes up difference to 1.0?
+# TODO: change to fractions? Then convert to decimal in entropy
+# get_pmf asserts that counter values are integers and returns fraction
+# get_entropy asserts that values are fractions and returns Decimals
 def get_pmf(counter):
     pmf = {}
     total = Decimal(sum(counter.values()))

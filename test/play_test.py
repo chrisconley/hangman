@@ -1,8 +1,7 @@
 import unittest
 
-from games import play
+from games import play, code_words
 from games.hangman import player, opponent
-import code_words
 
 
 class HangmanTests(unittest.TestCase):
@@ -12,9 +11,10 @@ class HangmanTests(unittest.TestCase):
         word, game_log = play.play(
             'cat',
             words,
-            player.get_potentials,
+            opponent.get_potentials,
             player.get_next_guess_naive,
-            opponent.get_response
+            opponent.get_response,
+            opponent.GameLog()
         )
 
         self.assertEqual(word, 'cat')
@@ -30,9 +30,10 @@ class HangmanTests(unittest.TestCase):
         word, game_log = play.play(
             'cot',
             words,
-            player.get_potentials,
+            opponent.get_potentials,
             player.get_next_guess_naive,
-            opponent.get_response
+            opponent.get_response,
+            opponent.GameLog()
         )
 
         self.assertEqual(word, 'cot')

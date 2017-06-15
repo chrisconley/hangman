@@ -1,12 +1,4 @@
-from games.hangman import opponent, player
-import dictionary
-import code_words
-
-
-class GameLog(list):
-    @property
-    def guesses(self):
-        return {t['guess'] for t in self}
+from games import code_words, hangman
 
 
 def _get_cache_key(game_log):
@@ -30,8 +22,7 @@ GUESS_CACHE = {}
 REMAINING_WORDS_CACHE = {}
 
 
-def play(code_word, dictionary, get_potential_outcomes, get_next_guess, get_response):
-    game_log = GameLog()
+def play(code_word, dictionary, get_potential_outcomes, get_next_guess, get_response, game_log):
     possible_words = list(dictionary)
     while True:
         cache_key = _get_cache_key(game_log)
@@ -85,9 +76,10 @@ if __name__ == '__main__':
         game_state, game_log = play(
             word,
             code_words.Dictionary(words),
-            player.get_potentials,
-            player.build_strategy(info_focus=1.0, success_focus=0.0, final_word_guess=True, use_cache=True),
-            opponent.get_response
+            hangman.opponent.get_potentials,
+            hangman.player.build_strategy(info_focus=1.0, success_focus=0.0, final_word_guess=True, use_cache=True),
+            hangman.opponent.get_response,
+            game_log=hangman.opponent.GameLog()
         )
         assert(game_state == word)
         # print(word, game_state)

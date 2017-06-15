@@ -2,7 +2,7 @@ import unittest
 
 from bitarray import bitarray
 
-import code_words
+from games import code_words
 
 
 class CodeWordsTests(unittest.TestCase):

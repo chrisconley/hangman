@@ -1,3 +1,15 @@
+from collections import Counter, defaultdict, OrderedDict
+
+
+class OrderedCounter(Counter, OrderedDict):
+    pass
+
+
+class GameLog(list):
+    @property
+    def guesses(self):
+        return {t['guess'] for t in self}
+
 CACHE = {}
 
 
@@ -24,7 +36,78 @@ def get_response(code_word, guess):
     CACHE[cache_key] = response
     return response
 
-# (hangman) Chriss-iMac:hangman chris$ time PYTHONPATH=`pwd` cat build/splits/9 | python -m cProfile -s time hang/play.py - --limit 50
+
+# TODO: Move potential/possible stuff to opponent
+class PossibleResponses(defaultdict):
+    def __init__(self, guess):
+        self.guess = guess
+        super().__init__(set)
+
+    def as_counts(self):
+        counter = OrderedCounter()
+        for response, code_words in self.items():
+            counter[response] = len(code_words)
+        return counter
+
+    @classmethod
+    def from_dict(cls, guess, data):
+        possible_responses = cls(guess)
+        for response, code_words in data.items():
+            possible_responses[response] = code_words
+        return possible_responses
+
+
+class PotentialOutcomes(dict):
+    def __init__(self, data={}):
+        self._code_words = set()
+        super().__init__(self)
+        for guess, responses in data.items():
+            for response, code_words in responses.items():
+                [self.add(guess, response, w) for w in code_words]
+
+    def add(self, guess, response, code_word):
+        if self.get(guess) is None:
+            self[guess] = PossibleResponses(guess)
+        self[guess][response].add(code_word)
+        self._code_words.add(code_word)
+
+    def get_by_guess_response(self, guess, response):
+        return self[guess][response]
+
+    @property
+    def guesses(self):
+        return set(self.keys())
+
+    @property
+    def total_length(self):
+        return len(self._code_words)
+
+    @property
+    def all_code_words(self):
+        return self._code_words
+
+
+def get_potentials(remaining_code_words, get_response, game_log):
+    remaining_code_words = set(remaining_code_words)
+    indexed_potentials = PotentialOutcomes()
+    potential_guesses = 'esiarntolcdupmghbyfvkwzxqj'
+    worthwhile_guesses = set(''.join(remaining_code_words))
+    for code_word in remaining_code_words:
+        for guess in set(code_word):
+            response = get_response(code_word, guess)
+            indexed_potentials.add(guess, response, code_word)
+    for guess, possible_responses in indexed_potentials.items():
+        seen_words = set()
+        for response, words in possible_responses.items():
+            seen_words |= words
+        non_matches = remaining_code_words - seen_words
+        if non_matches != set():
+            indexed_potentials[guess]['!'] = non_matches
+
+    return indexed_potentials
+
+
+        # (hangman) Chriss-iMac:hangman chris$ time PYTHONPATH=`pwd` cat build/splits/9 | python -m cProfile -s time hang/play.py - --limit 50
 # 25011
 # Average guesses:  6.16
 #          260180638 function calls (260180405 primitive calls) in 162.902 seconds
