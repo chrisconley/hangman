@@ -11,7 +11,7 @@ class MastermindPlayTests(unittest.TestCase):
         word, game_log = play.play(
             'YRY',
             words,
-            opponent.get_potential_next_guesses,
+            opponent.get_potentials,
             player.build_strategy(info_focus=1.0, success_focus=0.0),
             opponent.get_response,
             opponent.GameLog(),

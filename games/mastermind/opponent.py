@@ -33,11 +33,6 @@ def get_response(actual_word, word_guess):
     return response_key
 
 
-def generate_words(symbols, length):
-    tuples = itertools.product(symbols, repeat=length)
-    return sorted(map(lambda t: ''.join(t), tuples))
-
-
 def get_unique_guesses(words):
     uniques = {}
     for word in list(reversed(sorted(words))):
@@ -65,7 +60,7 @@ def partition_word(word):
     return tuple(reversed(sorted(seen_letters.values())))
 
 
-def get_potential_next_guesses(remaining_words, get_response, game_log):
+def get_potentials(remaining_words, get_response, game_log):
     indexed_potentials = code_words.PotentialOutcomes()
 
     word_guesses = get_unique_guesses(remaining_words)

@@ -1,5 +1,13 @@
+#!/usr/bin/env python
+"""
+Hangman:
+cat ./build/splits/9 | ./games/play.py - --game hangman --limit 10
+
+Mastermind:
+./games/mastermind/word_generator.py ABCDEF:4 | ./games/play.py - --game hangman --limit 1
+"""
+
 from games import code_words
-from games.mastermind import opponent, player
 
 
 GUESS_CACHE = {}
@@ -44,6 +52,7 @@ if __name__ == '__main__':
     from argparse import ArgumentParser
     import fileinput
     import random
+    import sys
 
     # Seed random so we can do multiple runs with same set of random words
     # TODO: Move this to argument
@@ -51,16 +60,20 @@ if __name__ == '__main__':
 
     parser = ArgumentParser()
     parser.add_argument('file', help='input words')
+    parser.add_argument('--game')
     parser.add_argument('--limit', default=1000, type=int)
     args = parser.parse_args()
 
-    # words = [word.strip() for word in fileinput.input(args.file)]
-    # print(len(words))
-    words = opponent.generate_words('ABCDEF', 4)
+    words = [word.strip() for word in fileinput.input(args.file)]
     print(len(words))
 
     if args.limit:
         words_to_play = random.sample(words, args.limit)
+
+    name = 'games.{}.opponent'.format(args.game)
+    opponent = __import__(name, fromlist=[''])
+    name = 'games.{}.player'.format(args.game)
+    player = __import__(name, fromlist=[''])
 
     # TODO: Add Minimax
     # TODO: Change counts/pmfs to objects, so we don't have '!' and '*' bugs
@@ -72,11 +85,10 @@ if __name__ == '__main__':
         game_state, game_log = play(
             word,
             code_words.Dictionary(words),
-            opponent.get_potential_next_guesses,
+            opponent.get_potentials,
             player.build_strategy(info_focus=1.0, success_focus=0.0),
             opponent.get_response,
-            game_log=opponent.GameLog(),
-            use_cache=False
+            game_log=opponent.GameLog()
         )
         assert(game_state == word)
         # print(word, game_state)

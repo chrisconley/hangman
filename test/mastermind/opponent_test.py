@@ -1,11 +1,11 @@
 import unittest
 
-from games.mastermind import opponent
+from games.mastermind import opponent, word_generator
 
 
 class MastermindOpponentTests(unittest.TestCase):
     def test_get_unique_guesses_full_mastermind(self):
-        words = opponent.generate_words('ABCDEF', 4)
+        words = word_generator.generate_words('ABCDEF', 4)
         self.assertEqual(opponent.get_unique_guesses(words), [
             'AAAA',
             'AAAB',
@@ -15,7 +15,7 @@ class MastermindOpponentTests(unittest.TestCase):
         ])
 
     def test_get_unique_guesses_short_symbols(self):
-        words = opponent.generate_words('ABC', 4)
+        words = word_generator.generate_words('ABC', 4)
         self.assertEqual(opponent.get_unique_guesses(words), [
             'AAAA',
             'AAAB',
@@ -71,7 +71,7 @@ class MastermindOpponentTests(unittest.TestCase):
 
     def test_get_potential_next_guesses(self):
         words = ['YYY', 'YYR', 'YRY', 'RYY', 'YRR', 'RYR', 'RRY', 'RRR']
-        potentials = opponent.get_potential_next_guesses(words, opponent.get_response, opponent.GameLog())
+        potentials = opponent.get_potentials(words, opponent.get_response, opponent.GameLog())
         self.assertEqual(potentials, {
             'RRR': {
                 'BBB': {'RRR'}, 'BB': {'RRY', 'YRR', 'RYR'}, 'B': {'RYY', 'YYR', 'YRY'}, '': {'YYY'}
