@@ -3,7 +3,7 @@ from decimal import Decimal, getcontext
 import random
 
 from games import entropy
-from games.player import get_actual_next_guess
+from games.player_utils import get_actual_next_guess
 
 
 # getcontext().prec = 10

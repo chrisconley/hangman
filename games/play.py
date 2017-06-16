@@ -62,6 +62,10 @@ if __name__ == '__main__':
     if args.limit:
         words_to_play = random.sample(words, args.limit)
 
+    # TODO: Add Minimax
+    # TODO: Change counts/pmfs to objects, so we don't have '!' and '*' bugs
+    # TODO: In game log turn entry, capture expected info gain, minimax, success expectation
+    # TODO: In aggregrated game logs, state avg number of turns, max number of turns, (maybe distribution too?)
     games = []
     # words_to_play = ['micrified']
     for word in words_to_play:

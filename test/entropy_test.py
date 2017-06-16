@@ -3,26 +3,12 @@ import random
 import unittest
 
 from games import entropy
-from hangman_utils import counters
 
 
 class EntropyTests(unittest.TestCase):
     def assertDecimalAlmostEqual(self, actual, expected, places):
         self.assertEqual(type(actual), Decimal)
         self.assertAlmostEqual(float(actual), expected, places=places)
-
-    def test_max_info_gain(self):
-        random.seed(15243)
-        words = ['scrabbler', 'scrambler', 'scratcher', 'scrounger',
-                 'straddler', 'straggler', 'strangler', 'struggler'
-                 ]
-        counts = counters.count_positional_letters(words)
-        entropies = entropy.get_new_entropies(counts)
-
-        self.assertDecimalAlmostEqual(entropies['g'], 1.750, places=3)
-        self.assertDecimalAlmostEqual(entropies['t'], 1.406, places=3)
-        self.assertDecimalAlmostEqual(entropies['a'], 0.811, places=3)
-        self.assertDecimalAlmostEqual(entropies['h'], 0.544, places=3)
 
     def test_log_entropy(self):
         self.assertDecimalAlmostEqual(entropy.log_probability(Decimal(1.0)), 0, places=4)

@@ -2,7 +2,7 @@ from collections import defaultdict
 
 from bitarray import bitarray
 
-from games.player import OrderedCounter
+from games.player_utils import OrderedCounter
 
 
 class Dictionary(list):

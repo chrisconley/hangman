@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from games import entropy
 from games.mastermind import opponent
-from games.player import get_actual_next_guess
+from games.player_utils import get_actual_next_guess
 
 
 class OrderedCounter(Counter, OrderedDict):
