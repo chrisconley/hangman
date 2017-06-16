@@ -2,7 +2,6 @@ import itertools
 import unittest
 
 from hangman_utils import counters
-import mastermind
 
 
 class WordCounterTests(unittest.TestCase):

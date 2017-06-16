@@ -58,30 +58,7 @@ def build_strategy(info_focus, success_focus, final_word_guess=True):
                 entropy_weight = entropies[letter]**Decimal(info_focus)
             choices[letter] = entropy_weight# * common_weight
 
-        next_guess = get_actual_next_guess(choices)
+        next_guess = get_actual_next_guess(choices, game_log)
         return next_guess
 
     return strategy
-
-
-def count_mastermind_letters(words, get_response):
-    return count_mastermind_letters_brute(
-        words,
-        get_response,
-        opponent.get_unique_guesses(words)
-    )
-
-
-def count_mastermind_letters_brute(words, get_response, word_guesses=None):
-    counts = defaultdict(Counter)
-    counts['*'] = 0
-    if word_guesses is None:
-        word_guesses = words
-    for word_guess in word_guesses:
-        for actual_word in words:
-            response_key = get_response(actual_word, word_guess)
-            counter = counts[word_guess]
-            counter['*'] += 1
-            counter[response_key] += 1
-        counts['*'] += 1
-    return counts

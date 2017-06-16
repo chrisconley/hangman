@@ -4,7 +4,7 @@ from hangman_players import get_actual_next_guess
 import battleship_opponent as battleship
 from hangman_utils import counters
 import dictionary
-from hang import entropy
+from games import entropy
 
 
 def get_next_entropy_guess(game_state, words):

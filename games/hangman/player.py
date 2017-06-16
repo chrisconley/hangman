@@ -101,7 +101,7 @@ def build_strategy(info_focus, success_focus, final_word_guess=True, use_cache=F
                     entropy_weight = entropies[letter]**Decimal(info_focus)
                 choices[letter] = entropy_weight * common_weight
 
-            next_guess = get_actual_next_guess(choices)
+            next_guess = get_actual_next_guess(choices, game_log)
             cache[key] = next_guess
             return next_guess
 

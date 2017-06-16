@@ -4,6 +4,12 @@ import unittest
 from games import player
 
 
+class GameLog(list):
+    @property
+    def guesses(self):
+        return {t['guess'] for t in self}
+
+
 class GetNextGuessTests(unittest.TestCase):
     def test_actual_next_guess(self):
         random.seed(15243)
@@ -24,7 +30,7 @@ class GetNextGuessTests(unittest.TestCase):
             'r': 0.0,
             's': 0.0
         }
-        next_guess = player.get_actual_next_guess(choices)
+        next_guess = player.get_actual_next_guess(choices, GameLog())
         self.assertEqual(next_guess, 'g')
 
     def test_actual_next_guess_tied(self):
@@ -34,11 +40,28 @@ class GetNextGuessTests(unittest.TestCase):
             'c': 1.4056390622295662,
             'n': 1.061278124459133,
         }
-        next_guess = player.get_actual_next_guess(choices)
+        next_guess = player.get_actual_next_guess(choices, GameLog())
         self.assertEqual(next_guess, 'c')
+
+    def test_actual_next_guess_already_guessed(self):
+        random.seed(15243)
+        choices = {
+            'b': 1,
+            'n': 0.5
+        }
+        game_log = GameLog([{'guess': 'b'}])
+        next_guess = player.get_actual_next_guess(choices, game_log)
+        self.assertEqual(next_guess, 'n')
 
     def test_actual_next_guess_no_guesses_left(self):
         random.seed(15243)
+        choices = {
+            'b': 1
+        }
+        game_log = GameLog([{'guess': 'b'}])
+        next_guess = player.get_actual_next_guess(choices, game_log)
+        self.assertEqual(next_guess, None)
+
         choices = {}
-        next_guess = player.get_actual_next_guess(choices)
+        next_guess = player.get_actual_next_guess(choices, GameLog())
         self.assertEqual(next_guess, None)
