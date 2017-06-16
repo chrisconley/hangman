@@ -1,5 +1,6 @@
 import unittest
 
+import games.code_words
 from games.hangman import opponent
 
 
@@ -45,15 +46,15 @@ class HangmanPotentialsTests(unittest.TestCase):
 
 class PossibleResponsesTests(unittest.TestCase):
     def test_initialization(self):
-        result = opponent.PossibleResponses(guess='c')
+        result = games.code_words.PossibleResponses(guess='c')
         self.assertEqual(result, {})
         self.assertEqual(result.guess, 'c')
 
-        result = opponent.PossibleResponses(guess='c')
+        result = games.code_words.PossibleResponses(guess='c')
         self.assertEqual(result['random response'], set())
 
     def test_as_counts(self):
-        possible_responses = opponent.PossibleResponses(guess='c')
+        possible_responses = games.code_words.PossibleResponses(guess='c')
         possible_responses['c--'].add('cat')
         possible_responses['c--'].add('can')
         possible_responses['--n'].add('can')
@@ -74,7 +75,7 @@ class PossibleResponsesTests(unittest.TestCase):
         ])
 
     def test_from_dict(self):
-        possible_responses = opponent.PossibleResponses.from_dict('c', {
+        possible_responses = games.code_words.PossibleResponses.from_dict('c', {
             'c--': {'cat'},
             '-c-': {'ace'},
             '!': {'bar', 'tab', 'tar'}
@@ -87,35 +88,35 @@ class PossibleResponsesTests(unittest.TestCase):
 
 class PotentialGuessesTests(unittest.TestCase):
     def test_initialization(self):
-        potential_guesses = opponent.PotentialOutcomes()
+        potential_guesses = games.code_words.PotentialOutcomes()
         self.assertEqual(potential_guesses, {})
 
-        potential_guesses = opponent.PotentialOutcomes({'c': {'c--': {'cat'}}})
+        potential_guesses = games.code_words.PotentialOutcomes({'c': {'c--': {'cat'}}})
         possible_response = potential_guesses.get('c')
 
-        self.assertEqual(type(possible_response), opponent.PossibleResponses)
+        self.assertEqual(type(possible_response), games.code_words.PossibleResponses)
         self.assertEqual(possible_response.guess, 'c')
         self.assertEqual(possible_response['c--'], {'cat'})
 
         self.assertEqual(potential_guesses.all_code_words, {'cat'})
 
     def test_add(self):
-        potential_guesses = opponent.PotentialOutcomes()
+        potential_guesses = games.code_words.PotentialOutcomes()
         potential_guesses.add('c', 'c--', 'cat')
         possible_response = potential_guesses.get('c')
 
-        self.assertEqual(type(possible_response), opponent.PossibleResponses)
+        self.assertEqual(type(possible_response), games.code_words.PossibleResponses)
         self.assertEqual(possible_response.guess, 'c')
         self.assertEqual(possible_response['c--'], {'cat'})
 
         self.assertEqual(potential_guesses.all_code_words, {'cat'})
 
     def test_get_by_guess_response(self):
-        potential_guesses = opponent.PotentialOutcomes()
+        potential_guesses = games.code_words.PotentialOutcomes()
         potential_guesses.add('c', 'c--', 'cat')
         self.assertEqual(potential_guesses.get_by_guess_response('c', 'c--'), {'cat'})
 
     def test_guesses(self):
-        potential_guesses = opponent.PotentialOutcomes()
+        potential_guesses = games.code_words.PotentialOutcomes()
         potential_guesses.add('c', 'c--', 'cat')
         self.assertEqual(potential_guesses.guesses, {'c'})

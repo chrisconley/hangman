@@ -2,7 +2,7 @@ import itertools
 
 import hangman_players
 from mastermind import opponent, player
-from hang import entropy
+from games import entropy
 
 
 class GameState(str):
@@ -15,7 +15,7 @@ def play(word, get_next_guess, possible_words):
     game_log = []
     possible_words = list(possible_words)
     while True:
-        next_guess, remaining_word_lists = get_next_guess(possible_words)
+        next_guess, remaining_word_lists = get_next_guess(possible_words, game_log)
         response = opponent.get_response(word, next_guess)
         game_log.append({
             'guess': next_guess,
@@ -27,23 +27,6 @@ def play(word, get_next_guess, possible_words):
 
     return word, game_log
 
-
-def get_next_guess(possible_words):
-    next_words = player.get_potential_next_guesses(possible_words, opponent.get_response)
-    next_guess = _get_next_guess(next_words, len(possible_words))
-    return next_guess, next_words.get(next_guess)
-
-
-def _get_next_guess(next_words, total_remaining_words):
-    counts = {}
-    for next_guess, next_guess_potentials in next_words.items():
-        counts[next_guess] = {}
-        for next_response, potentials in next_guess_potentials.items():
-            counts[next_guess][next_response] = len(potentials)
-    pmfs = entropy.get_pmfs_deprecated(counts, total_remaining_words)
-    entropies = entropy.get_entropies_deprecated(pmfs, total_remaining_words)
-
-    return hangman_players.get_actual_next_guess(GameState(), entropies)
 
 if __name__ == '__main__':
     from argparse import ArgumentParser

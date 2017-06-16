@@ -4,7 +4,7 @@ import fractions
 import random
 
 import dictionary
-from hang import entropy
+from games import entropy
 from hangman_utils import counters
 import scorers
 

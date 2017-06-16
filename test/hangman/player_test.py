@@ -3,6 +3,7 @@ import random
 import unittest
 from unittest.mock import patch
 
+import games.code_words
 from games.hangman import opponent, player
 
 
@@ -52,7 +53,7 @@ class HangmanPlayerTests(unittest.TestCase):
         self.assertEqual(next_guess, 'scrabbler')
 
     def test_get_next_guess_naive(self):
-        potentials = opponent.PotentialOutcomes({
+        potentials = games.code_words.PotentialOutcomes({
             'a': {
                 '-a-': {'cat', 'bat'}
             },
@@ -70,7 +71,7 @@ class HangmanPlayerTests(unittest.TestCase):
         self.assertEqual(next_guess, 'a')
 
     def test_get_next_guess_naive_with_game_log(self):
-        potentials = opponent.PotentialOutcomes({
+        potentials = games.code_words.PotentialOutcomes({
             'b': {
                 'b--': {'bat'}, '!': {'cat'}
             },
@@ -86,7 +87,7 @@ class HangmanPlayerTests(unittest.TestCase):
         self.assertEqual(next_guess, 't')
 
     def test_get_next_guess_naive_with_one_word_left(self):
-        potentials = opponent.PotentialOutcomes({
+        potentials = games.code_words.PotentialOutcomes({
             'b': {
                 'b--': {'bat'}
             },
@@ -102,7 +103,7 @@ class HangmanPlayerTests(unittest.TestCase):
         self.assertEqual(next_guess, 'bat')
 
     def test_get_pmf_for_success(self):
-        possible_responses = opponent.PossibleResponses.from_dict('c', {
+        possible_responses = games.code_words.PossibleResponses.from_dict('c', {
             'c--': {'cat'},
             '-c-': {'ace'},
             '!': {'bar', 'tab', 'tar'}
@@ -111,7 +112,7 @@ class HangmanPlayerTests(unittest.TestCase):
         self.assertDecimalAlmostEqual(pmf['*'], Decimal('0.40000000000000'), places=17)
         self.assertDecimalAlmostEqual(pmf['!'], Decimal('0.60000000000000'), places=17)
 
-        possible_responses = opponent.PossibleResponses.from_dict('d', {
+        possible_responses = games.code_words.PossibleResponses.from_dict('d', {
             '!': {'bar', 'tab', 'tar', 'ace', 'cat'}
         })
         pmf = player._get_pmf_for_success(possible_responses)
@@ -119,7 +120,7 @@ class HangmanPlayerTests(unittest.TestCase):
         self.assertDecimalAlmostEqual(pmf['!'], Decimal('1.00000000000000'), places=17)
 
     def test_get_pmf_for_success_raises_if_duplicate_invalid_codewords(self):
-        possible_responses = opponent.PossibleResponses.from_dict('c', {
+        possible_responses = games.code_words.PossibleResponses.from_dict('c', {
             'c--': {'cat'},
             '-c-': {'ace', 'cat'},
             '!': {'bar', 'tab', 'tar'}
@@ -127,7 +128,7 @@ class HangmanPlayerTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             player._get_pmf_for_success(possible_responses)
 
-        possible_responses = opponent.PossibleResponses.from_dict('c', {
+        possible_responses = games.code_words.PossibleResponses.from_dict('c', {
             'c--': {'cat'},
             '-c-': {'ace'},
             '!': {'bar', 'tab', 'tar', 'cat'}
@@ -136,7 +137,7 @@ class HangmanPlayerTests(unittest.TestCase):
             player._get_pmf_for_success(possible_responses)
 
     def test_get_pmf_for_entropy(self):
-        possible_responses = opponent.PossibleResponses.from_dict('c', {
+        possible_responses = games.code_words.PossibleResponses.from_dict('c', {
             'c--': {'cat'},
             '-c-': {'ace'},
             '!': {'bar', 'tab', 'tar'}
@@ -146,7 +147,7 @@ class HangmanPlayerTests(unittest.TestCase):
         self.assertDecimalAlmostEqual(pmf['c--'], Decimal('0.20000000000000'), places=17)
         self.assertDecimalAlmostEqual(pmf['!'], Decimal('0.60000000000000'), places=17)
 
-        possible_responses = opponent.PossibleResponses.from_dict('d', {
+        possible_responses = games.code_words.PossibleResponses.from_dict('d', {
             '!': {'bar', 'tab', 'tar', 'ace', 'cat'}
         })
         pmf = player._get_pmf_for_entropy(possible_responses)
@@ -154,7 +155,7 @@ class HangmanPlayerTests(unittest.TestCase):
         self.assertDecimalAlmostEqual(pmf['!'], Decimal('1.00000000000000'), places=17)
         
     def test_get_pmf_for_entropy_raises_if_duplicate_invalid_codewords(self):
-        possible_responses = opponent.PossibleResponses.from_dict('c', {
+        possible_responses = games.code_words.PossibleResponses.from_dict('c', {
             'c--': {'cat'},
             '-c-': {'ace', 'cat'},
             '!': {'bar', 'tab', 'tar'}
@@ -162,7 +163,7 @@ class HangmanPlayerTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             player._get_pmf_for_entropy(possible_responses)
 
-        possible_responses = opponent.PossibleResponses.from_dict('c', {
+        possible_responses = games.code_words.PossibleResponses.from_dict('c', {
             'c--': {'cat'},
             '-c-': {'ace'},
             '!': {'bar', 'tab', 'tar', 'cat'}

@@ -4,7 +4,7 @@ from games import play, code_words
 from games.hangman import player, opponent
 
 
-class HangmanTests(unittest.TestCase):
+class HangmanPlayTests(unittest.TestCase):
 
     def test_play(self):
         words = code_words.Dictionary(['cat', 'cot', 'can', 'car', 'bat'])

@@ -3,6 +3,7 @@ from decimal import Decimal, getcontext
 import random
 
 from games import entropy
+from games.player import get_actual_next_guess
 
 
 # getcontext().prec = 10
@@ -100,38 +101,11 @@ def build_strategy(info_focus, success_focus, final_word_guess=True, use_cache=F
                     entropy_weight = entropies[letter]**Decimal(info_focus)
                 choices[letter] = entropy_weight * common_weight
 
-            next_guess = get_actual_next_guess(game_log, choices)
+            next_guess = get_actual_next_guess(choices)
             cache[key] = next_guess
             return next_guess
 
     return strategy
-
-
-def _most_common(counter):
-    counter = OrderedCounter(counter)
-    for letter, count in counter.most_common():
-        if letter == '*':
-            continue
-        yield letter, count
-
-
-def get_actual_next_guess(game_log, choices):
-    assert choices.get('*') is None
-    most_common_letters = []
-    most_common_count = None
-    for letter, count in _most_common(choices):
-        if letter not in game_log.guesses:
-            if most_common_count is None:
-                most_common_count = count
-                most_common_letters.append(letter)
-            elif most_common_count == count:
-                most_common_letters.append(letter)
-            else:
-                break
-    if len(most_common_letters) == 0:
-        return None
-    else:
-        return random.choice(sorted(most_common_letters))
 
 
 def get_next_guess_naive(potentials, game_log):

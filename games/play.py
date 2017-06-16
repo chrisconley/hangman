@@ -1,32 +1,22 @@
-from games import code_words, hangman
+from games import code_words
+from games.mastermind import opponent, player
 
-
-def _get_cache_key(game_log):
-    hidden_word = []
-    missed_guesses = set()
-    for entry in game_log:
-        if entry['result'] == '!':
-            missed_guesses.add(entry['guess'])
-        else:
-            if hidden_word == []:
-                hidden_word = list(entry['result'])
-            else:
-                for index, character in enumerate(entry['result']):
-                    if character == '-':
-                        continue
-                    hidden_word[index] = character
-    key = "{}:{}".format("".join(hidden_word), "".join(sorted(missed_guesses)))
-    return key
 
 GUESS_CACHE = {}
 REMAINING_WORDS_CACHE = {}
 
 
-def play(code_word, dictionary, get_potential_outcomes, get_next_guess, get_response, game_log):
+def play(code_word, dictionary, get_potential_outcomes, get_next_guess, get_response, game_log, use_cache=True):
     possible_words = list(dictionary)
     while True:
-        cache_key = _get_cache_key(game_log)
-        next_guess, possible_responses = GUESS_CACHE.get(cache_key, (None, None))
+        if use_cache:
+            cache_key = game_log.get_cache_key()
+            if cache_key:
+                next_guess, possible_responses = GUESS_CACHE.get(cache_key, (None, None))
+            else:
+                next_guess, possible_responses, cache_key = None, None, None
+        else:
+            next_guess, possible_responses, cache_key = None, None, None
         if next_guess is None:
             potential_outcomes = get_potential_outcomes(possible_words, get_response, game_log)
             next_guess = get_next_guess(potential_outcomes, game_log)
@@ -64,7 +54,9 @@ if __name__ == '__main__':
     parser.add_argument('--limit', default=1000, type=int)
     args = parser.parse_args()
 
-    words = [word.strip() for word in fileinput.input(args.file)]
+    # words = [word.strip() for word in fileinput.input(args.file)]
+    # print(len(words))
+    words = opponent.generate_words('ABCDEF', 4)
     print(len(words))
 
     if args.limit:
@@ -76,10 +68,11 @@ if __name__ == '__main__':
         game_state, game_log = play(
             word,
             code_words.Dictionary(words),
-            hangman.opponent.get_potentials,
-            hangman.player.build_strategy(info_focus=1.0, success_focus=0.0, final_word_guess=True, use_cache=True),
-            hangman.opponent.get_response,
-            game_log=hangman.opponent.GameLog()
+            opponent.get_potential_next_guesses,
+            player.build_strategy(info_focus=1.0, success_focus=0.0),
+            opponent.get_response,
+            game_log=opponent.GameLog(),
+            use_cache=False
         )
         assert(game_state == word)
         # print(word, game_state)
