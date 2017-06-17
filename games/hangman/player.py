@@ -21,10 +21,10 @@ def _get_pmf_for_success(possible_responses):
         assert code_words.isdisjoint(seen_words), 'There should not be duplicate code words across responses'
         seen_words |= code_words
         if response == '!':
-            counter['!'] = Decimal(len(code_words))
+            counter['!'] = len(code_words)
         else:
             successful_code_words |= code_words
-    counter['*'] = Decimal(len(successful_code_words))
+    counter['*'] = len(successful_code_words)
     return entropy.get_pmf(counter)
 
 
@@ -34,7 +34,7 @@ def _get_pmf_for_entropy(possible_responses):
     for response, code_words in possible_responses.items():
         assert code_words.isdisjoint(seen_words), 'There should not be duplicate code words across responses'
         seen_words |= code_words
-        counter[response] = Decimal(len(code_words))
+        counter[response] = len(code_words)
     return entropy.get_pmf(counter)
 
 

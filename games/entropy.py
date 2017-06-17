@@ -1,7 +1,6 @@
 # TODO: Rename to math, or optimizations
 from decimal import Decimal, getcontext
-import fractions
-import math
+from fractions import Fraction
 
 # getcontext().prec = 10
 
@@ -18,17 +17,18 @@ class OrderedCounter(Counter, OrderedDict):
 # get_entropy asserts that values are fractions and returns Decimals
 def get_pmf(counter):
     pmf = {}
-    total = Decimal(sum(counter.values()))
+    assert all([type(v) == int for v in counter.values()]), 'All counter values must be integers'
+    total = sum(counter.values())
     for subset, count in counter.items():
-        pmf[subset] = Decimal(count) / total
+        pmf[subset] = Fraction(count, total)
     return pmf
 
 
 def get_entropy(pmf):
+    assert all([type(v) == Fraction for v in pmf.values()]), 'All pmf values must be Fractions'
     probabilities = list(pmf.values())
     probabilities_sum = sum(probabilities)
-    assert type(probabilities_sum) == Decimal, 'PMF values must be Decimals'
-    # assert probabilities_sum == Decimal(1.0), "Probability sum {} does not equal 1.00".format(probabilities_sum)
+    #assert probabilities_sum == Decimal(1.0), "Probability sum {} does not equal 1.00".format(probabilities_sum)
     entropy = sum([log_probability(p) for p in probabilities])
     return entropy
 
@@ -81,9 +81,10 @@ def log_probability(probability):
     """
     -xlog(x) (base 2)
     """
-    if probability == 0.0:
+    assert type(probability) == Fraction, 'Probability must be a Fraction'
+    if probability == Fraction(0, 1):
         return Decimal(0)
-    return -probability * (probability.ln() / Decimal(2.0).ln())
+    return -(Decimal(probability.numerator) / Decimal(probability.denominator)) * ((Decimal(probability.numerator).ln() - Decimal(probability.denominator).ln()) / Decimal(2.0).ln())
 
 
 def get_entropy_deprecated(probabilities):

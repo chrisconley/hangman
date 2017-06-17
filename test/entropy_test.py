@@ -1,4 +1,5 @@
 from decimal import Decimal
+from fractions import Fraction
 import random
 import unittest
 
@@ -24,28 +25,33 @@ class EntropyTests(unittest.TestCase):
     def test_get_pmf(self):
         counts = {'ee': 80, 'eee': 2, '*': 10, 'e': 8, '!': 0}
         pmf = entropy.get_pmf(counts)
-        self.assertDecimalAlmostEqual(pmf['ee'], 0.80, places=4)
-        self.assertDecimalAlmostEqual(pmf['!'], 0.00, places=4)
-        self.assertDecimalAlmostEqual(pmf['*'], 0.10, places=4)
+        self.assertEqual(pmf['ee'], Fraction(8, 10))
+        self.assertEqual(pmf['!'], Fraction(0, 10))
+        self.assertEqual(pmf['*'], Fraction(1, 10))
 
         counts = {'ee': 18, 'eee': 2, '*': 107, 'e': 87}
         pmf = entropy.get_pmf(counts)
-        self.assertDecimalAlmostEqual(pmf['ee'], 0.08411214953271028, places=17)
+        self.assertEqual(pmf['ee'], Fraction(18, 214))
+
+    def test_get_pmf_with_non_integer_values(self):
+        counts = {'ee': 80.0, 'eee': 2}
+        with self.assertRaises(AssertionError):
+            entropy.get_pmf(counts)
 
     def test_get_entropy(self):
         pmf = {
-            'q': Decimal(0.5),
-            'b': Decimal(0.125),
-            'c': Decimal(0.125),
-            'd': Decimal(0.25)
+            'q': Fraction(1, 2),
+            'b': Fraction(1, 8),
+            'c': Fraction(1, 8),
+            'd': Fraction(1, 4)
         }
         pmf_entropy = entropy.get_entropy(pmf)
         self.assertDecimalAlmostEqual(pmf_entropy, Decimal('1.75000000000000000'), places=17)
 
-    def test_get_entropy_requires_decimals(self):
+    def test_get_entropy_requires_Fractions(self):
         pmf = {
             'q': 0.99,
-            'r': 0.01
+            'r': Decimal('0.01')
         }
         with self.assertRaises(AssertionError):
             entropy.get_entropy(pmf)
