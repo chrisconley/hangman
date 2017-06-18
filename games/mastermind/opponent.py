@@ -29,6 +29,8 @@ def get_response(actual_word, word_guess):
             continue
         if letter in actual_letters:
             response.append('W')
+            actual_letters[actual_letters.index(letter)] = '-'
+            guess_letters[index] = '-'
     response_key = ''.join(sorted(response))
     return response_key
 
@@ -68,4 +70,9 @@ def get_potentials(remaining_words, get_response, game_log):
         for actual_word in remaining_words:
             response_key = get_response(actual_word, word_guess)
             indexed_potentials.add(word_guess, response_key, actual_word)
+    all_responses = defaultdict(set)
+    for guess, possible_responses in indexed_potentials.items():
+        for response, words in possible_responses.items():
+            all_responses[response] |= words
+    total = sum([len(x) for x in all_responses.values()])
     return indexed_potentials

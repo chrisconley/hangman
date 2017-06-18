@@ -1,7 +1,7 @@
 import unittest
 
 from games import play, code_words
-from games.mastermind import player, opponent
+from games.mastermind import player, opponent, word_generator
 
 
 class MastermindPlayTests(unittest.TestCase):
@@ -35,3 +35,17 @@ class MastermindPlayTests(unittest.TestCase):
         # )
         #
         # self.assertEqual(word, 'cot')
+
+    def test_play_minimax(self):
+        words = word_generator.generate_words('123456', 4)
+        words = code_words.Dictionary(words)
+        word, game_log = play.play(
+            '3632',
+            words,
+            opponent.get_potentials,
+            player.build_strategy(info_focus=1.0, success_focus=0.0),
+            opponent.get_response,
+            opponent.GameLog(),
+            use_cache=False,
+        )
+        self.assertEqual(word, '3632')
