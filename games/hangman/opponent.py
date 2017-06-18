@@ -56,12 +56,11 @@ def get_response(code_word, guess):
     return response
 
 
-def get_potentials(remaining_code_words, get_response, game_log):
-    remaining_code_words = set(remaining_code_words)
+def get_potentials(partial_dictionary, get_response, game_log):
     indexed_potentials = code_words.PotentialOutcomes()
     potential_guesses = 'esiarntolcdupmghbyfvkwzxqj'
-    worthwhile_guesses = set(''.join(remaining_code_words))
-    for code_word in remaining_code_words:
+    worthwhile_guesses = set(''.join(partial_dictionary.as_words))
+    for code_word in partial_dictionary.as_words:
         for guess in set(code_word):
             response = get_response(code_word, guess)
             indexed_potentials.add(guess, response, code_word)
@@ -69,7 +68,7 @@ def get_potentials(remaining_code_words, get_response, game_log):
         seen_words = set()
         for response, words in possible_responses.items():
             seen_words |= words
-        non_matches = remaining_code_words - seen_words
+        non_matches = partial_dictionary.as_words - seen_words
         if non_matches != set():
             indexed_potentials[guess]['!'] = non_matches
 

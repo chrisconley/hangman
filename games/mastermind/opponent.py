@@ -29,6 +29,8 @@ def get_response(actual_word, word_guess):
             continue
         if letter in actual_letters:
             response.append('W')
+            actual_letters[actual_letters.index(letter)] = '-'
+            guess_letters[index] = '-'
     response_key = ''.join(sorted(response))
     return response_key
 
@@ -60,12 +62,12 @@ def partition_word(word):
     return tuple(reversed(sorted(seen_letters.values())))
 
 
-def get_potentials(remaining_words, get_response, game_log):
+def get_potentials(partial_dictionary, get_response, game_log):
     indexed_potentials = code_words.PotentialOutcomes()
 
-    word_guesses = get_unique_guesses(remaining_words)
-    for word_guess in word_guesses:
-        for actual_word in remaining_words:
+    # word_guesses = get_unique_guesses(remaining_words)
+    for word_guess in partial_dictionary.all_words:
+        for actual_word in partial_dictionary.as_words:
             response_key = get_response(actual_word, word_guess)
             indexed_potentials.add(word_guess, response_key, actual_word)
     return indexed_potentials

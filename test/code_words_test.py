@@ -6,6 +6,13 @@ from games import code_words
 
 
 class CodeWordsTests(unittest.TestCase):
+    def test_get_partial_dictionary(self):
+        dictionary = code_words.Dictionary(['cat', 'bat'])
+        result = dictionary.get_partial_dictionary({'bat'})
+        self.assertEqual(result.as_bits, bitarray('01'))
+        self.assertEqual(result.as_words, {'bat'})
+        self.assertEqual(result.all_words, ['cat', 'bat'])
+
     def test_words_to_bits(self):
         dictionary = code_words.Dictionary(['cat', 'bat'])
         result = dictionary.words_to_bits({'bat'})

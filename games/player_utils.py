@@ -24,4 +24,4 @@ def get_actual_next_guess(choices, game_log):
             break
     if most_common_count is None:
         return None
-    return random.choice(sorted(most_common_guesses))
+    return sorted(most_common_guesses)[0]

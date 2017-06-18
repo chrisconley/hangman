@@ -17,6 +17,7 @@ class HangmanPlayerTests(unittest.TestCase):
         words = ['scrabbler', 'scrambler', 'scratcher', 'scrounger',
                  'straddler', 'straggler', 'strangler', 'struggler'
                  ]
+        words = games.code_words.Dictionary(words).get_partial_dictionary(set(words))
         game_log = opponent.GameLog([
             {'guess': 's', 'result': 's--------'},
             {'guess': 'r', 'result': '--r-----r'},
@@ -40,6 +41,7 @@ class HangmanPlayerTests(unittest.TestCase):
     def test_build_strategy_final_word_guess(self):
         random.seed(15243)
         words = ['scrabbler']
+        words = games.code_words.Dictionary(words).get_partial_dictionary(set(words))
         game_log = opponent.GameLog([
             {'guess': 's', 'result': 's--------'},
             {'guess': 'r', 'result': '--r-----r'},
@@ -208,6 +210,7 @@ class HangmanPlayerTests(unittest.TestCase):
         words = ['scrabbler', 'scrambler', 'scratcher', 'scrounger',
                  'straddler', 'straggler', 'strangler', 'struggler'
                  ]
+        words = games.code_words.Dictionary(words).get_partial_dictionary(set(words))
         game_log = opponent.GameLog([
             {'guess': 's', 'result': 's--------'},
             {'guess': 'r', 'result': '--r-----r'},
@@ -229,6 +232,7 @@ class HangmanPlayerTests(unittest.TestCase):
         words = ['scrabbler', 'scrambler', 'scratcher', 'scrounger',
                  'straddler', 'straggler', 'strangler', 'struggler'
                  ]
+        words = games.code_words.Dictionary(words).get_partial_dictionary(set(words))
         game_log = opponent.GameLog([
             {'guess': 's', 'result': 's--------'},
             {'guess': 'r', 'result': '--r-----r'},

@@ -26,8 +26,8 @@ class HangmanOpponentTests(unittest.TestCase):
 class HangmanPotentialsTests(unittest.TestCase):
     def test_get_potentials(self):
         words = ['cat', 'bat']
+        words = games.code_words.Dictionary(words).get_partial_dictionary(set(words))
         potentials = opponent.get_potentials(words, opponent.get_response, opponent.GameLog())
-        print(potentials)
         self.assertEqual(potentials, {
             'a': {
                 '-a-': {'cat', 'bat'}

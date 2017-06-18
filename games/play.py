@@ -15,7 +15,7 @@ REMAINING_WORDS_CACHE = {}
 
 
 def play(code_word, dictionary, get_potential_outcomes, get_next_guess, get_response, game_log, use_cache=True):
-    possible_words = list(dictionary)
+    partial_dictionary = dictionary.get_partial_dictionary(set(dictionary))
     while True:
         if use_cache:
             cache_key = game_log.get_cache_key()
@@ -26,7 +26,7 @@ def play(code_word, dictionary, get_potential_outcomes, get_next_guess, get_resp
         else:
             next_guess, possible_responses, cache_key = None, None, None
         if next_guess is None:
-            potential_outcomes = get_potential_outcomes(possible_words, get_response, game_log)
+            potential_outcomes = get_potential_outcomes(partial_dictionary, get_response, game_log)
             next_guess = get_next_guess(potential_outcomes, game_log)
             if next_guess != code_word:
                 possible_responses = {response: dictionary.words_to_bits(words) for response, words in potential_outcomes[next_guess].items()}
@@ -42,7 +42,8 @@ def play(code_word, dictionary, get_potential_outcomes, get_next_guess, get_resp
             break
 
         remaining_word_bits = possible_responses[response]
-        possible_words = dictionary.bits_to_words(remaining_word_bits)
+        words = dictionary.bits_to_words(remaining_word_bits)
+        partial_dictionary = dictionary.get_partial_dictionary(words)
 
 
     return next_guess, game_log
@@ -96,3 +97,4 @@ if __name__ == '__main__':
         games.append(game_log)
 
     print('Average guesses: ', sum([len(l) for l in games])/len(games))
+    print('Max guesses: ', max([len(l) for l in games]))
