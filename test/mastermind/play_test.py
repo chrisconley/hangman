@@ -1,3 +1,4 @@
+import random
 import unittest
 
 from games import play, code_words
@@ -7,6 +8,7 @@ from games.mastermind import player, opponent, word_generator
 class MastermindPlayTests(unittest.TestCase):
 
     def test_play(self):
+        random.seed(1234, version=1)
         words = code_words.Dictionary(['YYY', 'YYR', 'YRY', 'RYY', 'YRR', 'RYR', 'RRY', 'RRR'])
         word, game_log = play.play(
             'YRY',
@@ -20,8 +22,7 @@ class MastermindPlayTests(unittest.TestCase):
 
         self.assertEqual(word, 'YRY')
         self.assertEqual(game_log, [
-            {'guess': 'RRY', 'result': 'BB'},
-            {'guess': 'RYY', 'result': 'BWW'},
+            {'guess': 'YRR', 'result': 'BB'},
             {'guess': 'YRY', 'result': 'BBB'},
         ])
 
@@ -43,6 +44,7 @@ class MastermindPlayTests(unittest.TestCase):
         ])
 
     def test_play_minimax(self):
+        random.seed(12345, version=1)
         all_words = word_generator.generate_words('123456', 4)
         dictionary = code_words.Dictionary(all_words)
         word, game_log = play.play(
@@ -57,10 +59,10 @@ class MastermindPlayTests(unittest.TestCase):
 
         self.assertEqual(word, '3632')
         self.assertEqual(game_log, [
-            {'guess': '1122', 'result': 'B'},
-            {'guess': '1344', 'result': 'W'},
-            {'guess': '1525', 'result': 'W'},
-            {'guess': '1633', 'result': 'BBW'},
+            {'guess': '4433', 'result': 'BW'},
+            {'guess': '6533', 'result': 'BWW'},
+            {'guess': '1335', 'result': 'BW'},
+            {'guess': '4532', 'result': 'BB'},
             {'guess': '3632', 'result': 'BBBB'},
         ])
 

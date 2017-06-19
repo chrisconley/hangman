@@ -1,3 +1,4 @@
+import random
 import unittest
 
 import games.code_words
@@ -54,6 +55,7 @@ class PossibleResponsesTests(unittest.TestCase):
         self.assertEqual(result['random response'], set())
 
     def test_as_counts(self):
+        random.seed(123, version=1)
         possible_responses = games.code_words.PossibleResponses(guess='c')
         possible_responses['c--'].add('cat')
         possible_responses['c--'].add('can')
