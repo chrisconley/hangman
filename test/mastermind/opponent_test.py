@@ -137,3 +137,22 @@ class MastermindOpponentTests(unittest.TestCase):
         self.assertEqual(potentials['RRY'], {
             'BB': {'RRR', 'RYY', 'YRY'}, 'BWW': {'YRR', 'RYR'}, 'BBB': {'RRY'}, 'B': {'YYY'}, 'WW': {'YYR'}
         })
+
+
+class MastermindGameLogTests(unittest.TestCase):
+    def test_cache_key_sorts_properly(self):
+        game_log = opponent.GameLog([
+            {'guess': '123', 'result': 'BB'},
+            {'guess': '321', 'result': 'BBW'},
+        ])
+        self.assertEqual(game_log.get_cache_key(), '123BB:321BBW')
+
+        game_log = opponent.GameLog([
+            {'guess': '321', 'result': 'BBW'},
+            {'guess': '123', 'result': 'BB'},
+        ])
+        self.assertEqual(game_log.get_cache_key(), '123BB:321BBW')
+
+    def test_cache_key_empty_game_log(self):
+        game_log = opponent.GameLog()
+        self.assertEqual(game_log.get_cache_key(), 'START')

@@ -10,7 +10,11 @@ class GameLog(list):
         return {t['guess'] for t in self}
 
     def get_cache_key(self):
-        return None
+        if len(self) == 0:
+            return 'START'
+        sorted_turns = sorted(self, key=lambda t: t['guess'])
+        key = ':'.join(['{}{}'.format(t['guess'], t['result']) for t in sorted_turns])
+        return key
 
 GameState = GameLog
 
@@ -65,8 +69,14 @@ def partition_word(word):
 def get_potentials(partial_dictionary, get_response, game_log):
     indexed_potentials = code_words.PotentialOutcomes()
 
-    # word_guesses = get_unique_guesses(remaining_words)
-    for word_guess in partial_dictionary.all_words:
+    # We can only use unique guesses the first turn because
+    # in later turns we may need to use guesses that we know are incorrect.
+    if len(game_log) == 0:
+        words = get_unique_guesses(partial_dictionary.as_words)
+    else:
+        words = partial_dictionary.all_words
+
+    for word_guess in words:
         for actual_word in partial_dictionary.as_words:
             response_key = get_response(actual_word, word_guess)
             indexed_potentials.add(word_guess, response_key, actual_word)

@@ -87,13 +87,11 @@ if __name__ == '__main__':
             word,
             code_words.Dictionary(words),
             opponent.get_potentials,
-            player.build_strategy(info_focus=1.0, success_focus=0.0),
+            player.build_strategy(info_focus=1.0, success_focus=0.0, minimax_focus=0.0),
             opponent.get_response,
             game_log=opponent.GameLog()
         )
         assert(game_state == word)
-        # print(word, game_state)
-        # print(len(game_log))
         games.append(game_log)
 
     print('Average guesses: ', sum([len(l) for l in games])/len(games))
