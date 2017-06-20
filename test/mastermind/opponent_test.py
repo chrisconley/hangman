@@ -151,7 +151,7 @@ class MastermindGameLogTests(unittest.TestCase):
             {'guess': '321', 'result': 'BBW'},
             {'guess': '123', 'result': 'BB'},
         ])
-        self.assertEqual(game_log.get_cache_key(), '123BB:321BBW')
+        self.assertEqual(game_log.get_cache_key(), '321BBW:123BB')
 
     def test_cache_key_empty_game_log(self):
         game_log = opponent.GameLog()

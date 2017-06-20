@@ -12,8 +12,7 @@ class GameLog(list):
     def get_cache_key(self):
         if len(self) == 0:
             return 'START'
-        sorted_turns = sorted(self, key=lambda t: t['guess'])
-        key = ':'.join(['{}{}'.format(t['guess'], t['result']) for t in sorted_turns])
+        key = ':'.join(['{}{}'.format(t['guess'], t['result']) for t in self])
         return key
 
 GameState = GameLog

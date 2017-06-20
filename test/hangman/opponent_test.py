@@ -62,16 +62,17 @@ class PossibleResponsesTests(unittest.TestCase):
         possible_responses['--n'].add('can')
         possible_responses['!'].add('tar')
         possible_responses['!'].add('bus')
+        possible_responses['!'].add('fir')
         counts = possible_responses.as_counts()
         self.assertEqual(counts, {
             'c--': 2,
             '--n': 1,
-            '!': 2
+            '!': 3
         })
 
         self.assertEqual(counts.most_common(), [
+            ('!', 3),
             ('c--', 2),
-            ('!', 2),
             ('--n', 1),
 
         ])

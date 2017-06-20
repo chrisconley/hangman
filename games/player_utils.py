@@ -1,4 +1,5 @@
 from collections import Counter, defaultdict, OrderedDict
+from decimal import Decimal
 import random
 
 
@@ -13,6 +14,7 @@ def get_actual_next_guess(choices, game_log):
     most_common_guesses = []
     most_common_count = None
     for guess, count in OrderedCounter(choices).most_common():
+        count = count.quantize(Decimal('1e-20'))
         if guess in game_log.guesses:
             continue
         if most_common_count is None:
