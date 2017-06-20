@@ -76,6 +76,9 @@ class MastermindPlayTests(unittest.TestCase):
             opponent.GameLog(),
         )
 
+        for entry in game_log:
+            print(entry)
+
         self.assertEqual(word, '3632')
         self.assertEqual(game_log, [
             {'guess': '1122', 'result': 'B'},

@@ -26,14 +26,14 @@ def get_response(actual_word, word_guess):
         if letter == actual_word[index]:
             response.append('B')
             actual_letters[index] = '-'
-            guess_letters[index] = '-'
+            # guess_letters[index] = '-'
     for index, letter in enumerate(guess_letters):
         if letter == '-':
             continue
         if letter in actual_letters:
             response.append('W')
-            actual_letters[actual_letters.index(letter)] = '-'
-            guess_letters[index] = '-'
+            # actual_letters[actual_letters.index(letter)] = '-'
+            # guess_letters[index] = '-'
     response_key = ''.join(sorted(response))
     return response_key
 
@@ -74,6 +74,7 @@ def get_potentials(partial_dictionary, get_response, game_log):
         words = get_unique_guesses(partial_dictionary.as_words)
     else:
         words = partial_dictionary.all_words
+        # words = get_unique_guesses(partial_dictionary.as_words)
 
     for word_guess in words:
         for actual_word in partial_dictionary.as_words:

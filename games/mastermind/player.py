@@ -46,6 +46,8 @@ def _get_counts(potential_outcomes):
 def build_strategy(info_focus, success_focus, minimax_focus=0.0, final_word_guess=True):
 
     def strategy(potential_outcomes, game_log):
+        if len(game_log) == 0:
+            return '1122'
         data = _get_counts(potential_outcomes)
 
         if len(potential_outcomes.all_code_words) == 1:
@@ -72,6 +74,9 @@ def build_strategy(info_focus, success_focus, minimax_focus=0.0, final_word_gues
             choices[letter] = entropy_weight * common_weight * minimax_weight
 
         next_guess = get_actual_next_guess(choices, game_log)
+        # print(choices)
+        # print(next_guess, choices[next_guess], entropies[next_guess], Decimal(info_focus),
+        #       entropies[next_guess] ** Decimal(info_focus))
         return next_guess
 
     return strategy
