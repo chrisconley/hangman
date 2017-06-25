@@ -43,11 +43,20 @@ def _get_counts(potential_outcomes):
     return results
 
 
-def build_strategy(info_focus, success_focus, minimax_focus=0.0, final_word_guess=True):
+def build_knuth_strategy():
+    minimax_strategy = build_strategy(info_focus=0.0, success_focus=0.0, minimax_focus=1.0)
 
     def strategy(potential_outcomes, game_log):
         if len(game_log) == 0:
             return '1122'
+        else:
+            return minimax_strategy(potential_outcomes, game_log)
+    return strategy
+
+
+def build_strategy(info_focus, success_focus, minimax_focus=0.0, final_word_guess=True):
+
+    def strategy(potential_outcomes, game_log):
         data = _get_counts(potential_outcomes)
 
         if len(potential_outcomes.all_code_words) == 1:

@@ -23,7 +23,7 @@ class MastermindOpponentTests(unittest.TestCase):
         response = opponent.get_response('3632', word_guess='6642')
         self.assertEqual(response, 'BB')
         response = opponent.get_response('3632', word_guess='6326')
-        self.assertEqual(response, 'WWW')
+        self.assertEqual(response, 'WWWW')
         response = opponent.get_response('3632', word_guess='2363')
         self.assertEqual(response, 'WWWW')
         response = opponent.get_response('3632', word_guess='6323')
@@ -38,6 +38,60 @@ class MastermindOpponentTests(unittest.TestCase):
         responses = defaultdict(set)
         for guess in words:
             response = opponent.get_response('3632', guess)
+            responses[response].add(guess)
+
+        self.assertEqual(sum([len(x) for x in responses.values()]), 1296)
+        self.assertEqual(len(responses['WWWW']), 16)
+        self.assertEqual(len(responses['WWW']), 96)
+        self.assertEqual(len(responses['WW']), 216)
+        self.assertEqual(len(responses['W']), 216)
+        self.assertEqual(len(responses['']), 81)
+
+        self.assertEqual(len(responses['BWWW']), 18)
+        self.assertEqual(len(responses['BWW']), 96)
+        self.assertEqual(len(responses['BW']), 204)
+        self.assertEqual(len(responses['B']), 182)
+
+        self.assertEqual(len(responses['BBWW']), 5)
+        self.assertEqual(len(responses['BBW']), 40)
+        self.assertEqual(len(responses['BB']), 105)
+
+        self.assertEqual(len(responses['BBBW']), 0)
+        self.assertEqual(len(responses['BBB']), 20)
+        self.assertEqual(len(responses['BBBB']), 1)
+
+    def test_get_response_2211_alternative(self):
+        response = opponent.get_response_alternative('2211', word_guess='1122')
+        self.assertEqual(response, 'WWWW')
+        words = word_generator.generate_words('123456', 4)
+        responses = defaultdict(set)
+        for guess in words:
+            response = opponent.get_response_alternative('2211', guess)
+            responses[response].add(guess)
+        self.assertEqual(len(responses['WWWW']), 1)
+        self.assertEqual(len(responses['WWW']), 16)
+
+    def test_get_response_3632_alternative(self):
+        response = opponent.get_response_alternative('3632', word_guess='1611')
+        self.assertEqual(response, 'B')
+        response = opponent.get_response_alternative('3632', word_guess='6642')
+        self.assertEqual(response, 'BB')
+        response = opponent.get_response_alternative('3632', word_guess='6326')
+        self.assertEqual(response, 'WWW')
+        response = opponent.get_response_alternative('3632', word_guess='2363')
+        self.assertEqual(response, 'WWWW')
+        response = opponent.get_response_alternative('3632', word_guess='6323')
+        self.assertEqual(response, 'WWWW')
+
+        response = opponent.get_response_alternative('3632', word_guess='1435')
+        self.assertEqual(response, 'B')
+        response = opponent.get_response_alternative('3632', word_guess='1335')
+        self.assertEqual(response, 'BW')
+
+        words = word_generator.generate_words('123456', 4)
+        responses = defaultdict(set)
+        for guess in words:
+            response = opponent.get_response_alternative('3632', guess)
             responses[response].add(guess)
 
         self.assertEqual(sum([len(x) for x in responses.values()]), 1296)
@@ -125,11 +179,11 @@ class MastermindOpponentTests(unittest.TestCase):
         partition = opponent.partition_word('ABCD')
         self.assertEqual(partition, (1, 1, 1, 1))
 
-    def test_get_potential_next_guesses(self):
+    def test_get_potential_next_guesses_alternative(self):
         all_words = ['YYY', 'YYR', 'YRY', 'RYY', 'YRR', 'RYR', 'RRY', 'RRR']
         dictionary = code_words.Dictionary(all_words)
         words = dictionary.get_partial_dictionary(set(all_words))
-        potentials = opponent.get_potentials(words, opponent.get_response, opponent.GameLog())
+        potentials = opponent.get_potentials(words, opponent.get_response_alternative, opponent.GameLog())
 
         self.assertEqual(potentials['RRR'], {
             'BBB': {'RRR'}, 'BB': {'RRY', 'YRR', 'RYR'}, 'B': {'RYY', 'YYR', 'YRY'}, '': {'YYY'}

@@ -4,6 +4,7 @@ import random
 
 from games import entropy
 from games.player_utils import get_actual_next_guess
+# from games.mastermind.player import build_strategy
 
 
 # getcontext().prec = 10
@@ -71,7 +72,7 @@ def _get_cache_key(game_log):
     return key
 
 
-def build_strategy(info_focus, success_focus, final_word_guess=True, use_cache=False):
+def build_strategy(info_focus, success_focus, minimax_focus=0.0, final_word_guess=True, use_cache=False):
     cache = {}
 
     def strategy(potential_outcomes, game_log):
