@@ -91,7 +91,9 @@ def partition_word(word):
     return tuple(reversed(sorted(seen_letters.values())))
 
 
-def get_potentials(partial_dictionary, get_response, game_log):
+# This differs from `get_potentials` in that it doesn't whittle words down
+# for the player.
+def get_minimax_potentials(partial_dictionary, get_response, game_log):
     indexed_potentials = code_words.PotentialOutcomes()
 
     # We can only use unique guesses the first turn because
@@ -100,8 +102,17 @@ def get_potentials(partial_dictionary, get_response, game_log):
         words = get_unique_guesses(partial_dictionary.as_words)
     else:
         words = partial_dictionary.all_words
-        # words = get_unique_guesses(partial_dictionary.as_words)
 
+    for word_guess in words:
+        for actual_word in partial_dictionary.as_words:
+            response_key = get_response(actual_word, word_guess)
+            indexed_potentials.add(word_guess, response_key, actual_word)
+    return indexed_potentials
+
+
+def get_potentials(partial_dictionary, get_response, game_log):
+    indexed_potentials = code_words.PotentialOutcomes()
+    words = get_unique_guesses(partial_dictionary.as_words)
     for word_guess in words:
         for actual_word in partial_dictionary.as_words:
             response_key = get_response(actual_word, word_guess)

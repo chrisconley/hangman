@@ -44,7 +44,7 @@ def _get_counts(potential_outcomes):
 
 
 def build_knuth_strategy():
-    minimax_strategy = build_strategy(info_focus=0.0, success_focus=0.0, minimax_focus=1.0)
+    minimax_strategy = build_strategy(info_focus=0.0, success_focus=0.0, minimax_focus=1.0, should_sort=True)
 
     def strategy(potential_outcomes, game_log):
         if len(game_log) == 0:
@@ -54,7 +54,7 @@ def build_knuth_strategy():
     return strategy
 
 
-def build_strategy(info_focus, success_focus, minimax_focus=0.0, final_word_guess=True):
+def build_strategy(info_focus, success_focus, minimax_focus=0.0, should_sort=False):
 
     def strategy(potential_outcomes, game_log):
         data = _get_counts(potential_outcomes)
@@ -82,7 +82,7 @@ def build_strategy(info_focus, success_focus, minimax_focus=0.0, final_word_gues
                 minimax_weight = minimax[letter]**Decimal(minimax_focus)
             choices[letter] = entropy_weight * common_weight * minimax_weight
 
-        next_guess = get_actual_next_guess(choices, game_log)
+        next_guess = get_actual_next_guess(choices, game_log, should_sort)
         # print(choices)
         # print(next_guess, choices[next_guess], entropies[next_guess], Decimal(info_focus),
         #       entropies[next_guess] ** Decimal(info_focus))

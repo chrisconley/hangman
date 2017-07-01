@@ -7,7 +7,7 @@ class OrderedCounter(Counter, OrderedDict):
     pass
 
 
-def get_actual_next_guess(choices, game_log):
+def get_actual_next_guess(choices, game_log, should_sort=False):
     if len(choices) == 0:
         return None
 
@@ -26,5 +26,7 @@ def get_actual_next_guess(choices, game_log):
             break
     if most_common_count is None:
         return None
-    return random.choice(sorted(most_common_guesses))
-    # return sorted(most_common_guesses)[0]
+    if should_sort:
+        return sorted(most_common_guesses)[0]
+    else:
+        return random.choice(sorted(most_common_guesses))

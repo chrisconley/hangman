@@ -44,6 +44,7 @@ class MastermindPlayTests(unittest.TestCase):
         ])
 
     def test_play_entropy_alternative(self):
+        random.seed(123)
         all_words = word_generator.generate_words('123456', 4)
         dictionary = code_words.Dictionary(all_words)
         word, game_log = play.play(
@@ -59,8 +60,9 @@ class MastermindPlayTests(unittest.TestCase):
         self.assertEqual(game_log, [
             {'guess': '1234', 'result': 'BW'},
             {'guess': '1356', 'result': 'WW'},
-            {'guess': '6223', 'result': 'WWW'},
-            {'guess': '1115', 'result': ''},
+            {'guess': '2215', 'result': 'W'},
+            {'guess': '3544', 'result': 'B'},
+            {'guess': '3133', 'result': 'BB'},
             {'guess': '3632', 'result': 'BBBB'},
         ])
 
@@ -71,7 +73,7 @@ class MastermindPlayTests(unittest.TestCase):
             '3632',
             dictionary,
             opponent.get_potentials,
-            player.build_strategy(info_focus=0.0, success_focus=0.0, minimax_focus=1.0),
+            player.build_strategy(info_focus=0.0, success_focus=0.0, minimax_focus=1.0, should_sort=True),
             opponent.get_response_alternative,
             opponent.GameLog(),
         )
@@ -79,9 +81,9 @@ class MastermindPlayTests(unittest.TestCase):
         self.assertEqual(word, '3632')
         self.assertEqual(game_log, [
             {'guess': '1122', 'result': 'B'},
-            {'guess': '1344', 'result': 'W'},
-            {'guess': '1525', 'result': 'W'},
-            {'guess': '1633', 'result': 'BBW'},
+            {'guess': '1334', 'result': 'BW'},
+            {'guess': '1456', 'result': 'W'},
+            {'guess': '3325', 'result': 'BWW'},
             {'guess': '3632', 'result': 'BBBB'},
         ])
 
@@ -91,8 +93,8 @@ class MastermindPlayTests(unittest.TestCase):
         word, game_log = play.play(
             '3632',
             dictionary,
-            opponent.get_potentials,
-            player.build_strategy(info_focus=0.0, success_focus=0.0, minimax_focus=1.0),
+            opponent.get_minimax_potentials,
+            player.build_strategy(info_focus=0.0, success_focus=0.0, minimax_focus=1.0, should_sort=True),
             opponent.get_response,
             opponent.GameLog(),
         )
@@ -112,7 +114,7 @@ class MastermindPlayTests(unittest.TestCase):
         word, game_log = play.play(
             '3632',
             dictionary,
-            opponent.get_potentials,
+            opponent.get_minimax_potentials,
             player.build_knuth_strategy(),
             opponent.get_response,
             opponent.GameLog(),
