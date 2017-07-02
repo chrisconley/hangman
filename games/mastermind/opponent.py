@@ -1,6 +1,3 @@
-from collections import Counter, defaultdict
-import itertools
-
 from games import code_words
 
 
@@ -14,8 +11,6 @@ class GameLog(list):
             return 'START'
         key = ':'.join(['{}{}'.format(t['guess'], t['result']) for t in self])
         return key
-
-GameState = GameLog
 
 
 def get_response(actual_word, word_guess, track_white_responses=False):

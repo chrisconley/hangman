@@ -3,6 +3,7 @@ import random
 import unittest
 
 from games import player_utils
+import games.code_words
 
 
 class GameLog(list):
@@ -66,3 +67,44 @@ class GetNextGuessTests(unittest.TestCase):
         choices = {}
         next_guess = player_utils.get_actual_next_guess(choices, GameLog())
         self.assertEqual(next_guess, None)
+
+
+class CounterTests(unittest.TestCase):
+    def assertDecimalAlmostEqual(self, actual, expected, places):
+        self.assertEqual(type(actual), Decimal)
+        self.assertAlmostEqual(float(actual), float(expected), places=places)
+
+    def test_get_pmf_for_entropy(self):
+        possible_responses = games.code_words.PossibleResponses.from_dict('c', {
+            'c--': {'cat'},
+            '-c-': {'ace'},
+            '!': {'bar', 'tab', 'tar'}
+        })
+        pmf = player_utils._get_pmf_for_entropy(possible_responses)
+        self.assertIsNone(pmf.get('*'))
+        self.assertDecimalAlmostEqual(pmf['c--'], Decimal('0.20000000000000'), places=17)
+        self.assertDecimalAlmostEqual(pmf['!'], Decimal('0.60000000000000'), places=17)
+
+        possible_responses = games.code_words.PossibleResponses.from_dict('d', {
+            '!': {'bar', 'tab', 'tar', 'ace', 'cat'}
+        })
+        pmf = player_utils._get_pmf_for_entropy(possible_responses)
+        self.assertIsNone(pmf.get('*'))
+        self.assertDecimalAlmostEqual(pmf['!'], Decimal('1.00000000000000'), places=17)
+
+    def test_get_pmf_for_entropy_raises_if_duplicate_invalid_codewords(self):
+        possible_responses = games.code_words.PossibleResponses.from_dict('c', {
+            'c--': {'cat'},
+            '-c-': {'ace', 'cat'},
+            '!': {'bar', 'tab', 'tar'}
+        })
+        with self.assertRaises(AssertionError):
+            player_utils._get_pmf_for_entropy(possible_responses)
+
+        possible_responses = games.code_words.PossibleResponses.from_dict('c', {
+            'c--': {'cat'},
+            '-c-': {'ace'},
+            '!': {'bar', 'tab', 'tar', 'cat'}
+        })
+        with self.assertRaises(AssertionError):
+            player_utils._get_pmf_for_entropy(possible_responses)

@@ -1,10 +1,4 @@
-from collections import Counter, OrderedDict
-
 from games import code_words
-
-
-class OrderedCounter(Counter, OrderedDict):
-    pass
 
 
 class GameLog(list):

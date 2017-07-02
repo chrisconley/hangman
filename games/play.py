@@ -45,7 +45,6 @@ def play(code_word, dictionary, get_potential_outcomes, get_next_guess, get_resp
         words = dictionary.bits_to_words(remaining_word_bits)
         partial_dictionary = dictionary.get_partial_dictionary(words)
 
-
     return next_guess, game_log
 
 
