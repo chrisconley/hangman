@@ -1,4 +1,5 @@
 from decimal import Decimal
+import numpy as np
 import random
 import unittest
 
@@ -108,3 +109,13 @@ class CounterTests(unittest.TestCase):
         })
         with self.assertRaises(AssertionError):
             player_utils._get_pmf_for_entropy(possible_responses)
+
+    def test_get_pmf_for_speed(self):
+        np.random.seed(23)
+        possible_responses = games.code_words.PossibleResponses.from_dict('c', {
+            'c--': {'cat'},
+            '-c-': {'ace'},
+            '!': {'bar', 'tab', 'tar'}
+        })
+        pmf = player_utils._get_pmf_for_speed(possible_responses)
+        self.assertDecimalAlmostEqual(sum(pmf.values()), Decimal('1.0'), places=3)

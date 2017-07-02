@@ -2,6 +2,8 @@ from collections import Counter, OrderedDict
 from decimal import Decimal
 import random
 
+import numpy as np
+
 from games import entropy
 
 
@@ -19,7 +21,17 @@ def _get_pmf_for_entropy(possible_responses):
     return entropy.get_pmf(counter)
 
 
+def _get_pmf_for_speed(potential_outcomes):
+    length = len(potential_outcomes)
+    distribution = np.random.dirichlet(np.ones(length), size=1)[0]
+    pmf = {}
+    for index, (guess, _) in enumerate(potential_outcomes.items()):
+        pmf[guess] = Decimal(distribution[index])
+    return pmf
+
+
 def _get_counts(potential_outcomes, success_pmf):
+    speed = _get_pmf_for_speed(potential_outcomes)
     common = {}
     entropies = {}
     minimax = {}
@@ -31,13 +43,14 @@ def _get_counts(potential_outcomes, success_pmf):
         entropies[guess] = entropy.get_entropy(entropy_pmf)
 
     results = {}
+    results['speed'] = speed
     results['common'] = common
     results['entropies'] = entropies
     results['minimax'] = minimax
     return results
 
 
-def build_strategy(info_focus, success_focus, minimax_focus=0.0, success_pmf=None, should_sort=False):
+def build_strategy(info_focus, success_focus, speed_focus=0.0, minimax_focus=0.0, success_pmf=None, should_sort=False):
 
     def strategy(potential_outcomes, game_log):
         data = _get_counts(potential_outcomes, success_pmf)
@@ -45,12 +58,17 @@ def build_strategy(info_focus, success_focus, minimax_focus=0.0, success_pmf=Non
         if len(potential_outcomes.all_code_words) == 1:
             return list(potential_outcomes.all_code_words)[0]
 
+        speed = data.get('speed')
         common = data.get('common')
         entropies = data.get('entropies')
         minimax = data.get('minimax')
 
         choices = {}
         for letter, pmf in entropies.items():
+            if speed[letter] == 0.0 and speed_focus == 0.0:
+                speed_weight = 1
+            else:
+                speed_weight = speed[letter]**Decimal(speed_focus)
             if common[letter] == 0.0 and success_focus == 0.0:
                 common_weight = 1
             else:
@@ -63,7 +81,7 @@ def build_strategy(info_focus, success_focus, minimax_focus=0.0, success_pmf=Non
                 minimax_weight = 1
             else:
                 minimax_weight = minimax[letter]**Decimal(minimax_focus)
-            choices[letter] = entropy_weight * common_weight * minimax_weight
+            choices[letter] = speed_weight * entropy_weight * common_weight * minimax_weight
 
         next_guess = get_actual_next_guess(choices, game_log, should_sort)
         # print(choices)
