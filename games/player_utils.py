@@ -1,4 +1,4 @@
-from collections import Counter, OrderedDict
+from collections import Counter, OrderedDict, defaultdict
 from decimal import Decimal
 import random
 
@@ -31,62 +31,73 @@ def _get_pmf_for_speed(potential_outcomes):
 
 
 def _get_counts(potential_outcomes, success_pmf):
-    speed = _get_pmf_for_speed(potential_outcomes)
-    common = {}
-    entropies = {}
-    minimax = {}
+    results = {
+        'info': {},
+        'reward': {},
+        'speed': _get_pmf_for_speed(potential_outcomes),
+        'minimax': {},
+    }
     for guess, possible_responses in potential_outcomes.items():
-        common_pmf = success_pmf(possible_responses)
-        common[guess] = common_pmf['*']
+        reward_pmf = success_pmf(possible_responses)
+        results['reward'][guess] = reward_pmf['*']
         entropy_pmf = _get_pmf_for_entropy(possible_responses)
-        minimax[guess] = entropy.get_inverse_minimax(entropy_pmf)
-        entropies[guess] = entropy.get_entropy(entropy_pmf)
+        results['info'][guess] = entropy.get_entropy(entropy_pmf)
+        results['minimax'][guess] = entropy.get_inverse_minimax(entropy_pmf)
 
-    results = {}
-    results['speed'] = speed
-    results['common'] = common
-    results['entropies'] = entropies
-    results['minimax'] = minimax
     return results
 
 
-def build_strategy(info_focus, success_focus, speed_focus=0.0, minimax_focus=0.0, success_pmf=None, should_sort=False):
+def weighted_sum(data, foci):
+    normalized_data = {}
+    for strategy, strategy_values in data.items():
+        total = sum(strategy_values.values())
+        normalized_data[strategy] = {k: v/total for k, v in strategy_values.items()}
+    guesses = data['info'].keys()
+    sums = Counter()
+    for guess in guesses:
+        for strategy, weight in foci.items():
+            strategy_value = normalized_data[strategy][guess]
+            if strategy_value == 0.0 and weight == 0.0:
+                weighted_value = 0
+            else:
+                weighted_value = strategy_value*Decimal(weight)
+            sums[guess] += weighted_value
+    return sums
+
+
+def weighted_product(data, foci):
+    guesses = data['info'].keys()
+    products = defaultdict(lambda: 1)
+    for guess in guesses:
+        for strategy, weight in foci.items():
+            strategy_value = data[strategy][guess]
+            if strategy_value == 0.0 and weight == 0.0:
+                weighted_value = 1
+            else:
+                weighted_value = strategy_value**Decimal(weight)
+            products[guess] *= weighted_value
+    return products
+
+
+def weighted_og(data, foci):
+    assert foci == {}, 'The og_weighted model takes no foci'
+    guesses = data['info'].keys()
+    products = {}
+    for guess in guesses:
+        products[guess] = data['info'][guess] * data['reward'][guess]
+    return products
+
+
+def build_strategy(foci, model=weighted_sum, reward_pmf=None, should_sort=False):
 
     def strategy(potential_outcomes, game_log):
-        data = _get_counts(potential_outcomes, success_pmf)
+        data = _get_counts(potential_outcomes, reward_pmf)
 
         if len(potential_outcomes.all_code_words) == 1:
             return list(potential_outcomes.all_code_words)[0]
 
-        speed = data.get('speed')
-        common = data.get('common')
-        entropies = data.get('entropies')
-        minimax = data.get('minimax')
-
-        choices = {}
-        for letter, pmf in entropies.items():
-            if speed[letter] == 0.0 and speed_focus == 0.0:
-                speed_weight = 1
-            else:
-                speed_weight = speed[letter]**Decimal(speed_focus)
-            if common[letter] == 0.0 and success_focus == 0.0:
-                common_weight = 1
-            else:
-                common_weight = common[letter]**Decimal(success_focus)
-            if entropies[letter] == Decimal(0) and info_focus == 0.0:
-                entropy_weight = 1
-            else:
-                entropy_weight = entropies[letter]**Decimal(info_focus)
-            if minimax[letter] == Decimal(0) and minimax_focus == 0.0:
-                minimax_weight = 1
-            else:
-                minimax_weight = minimax[letter]**Decimal(minimax_focus)
-            choices[letter] = speed_weight * entropy_weight * common_weight * minimax_weight
-
+        choices = model(data, foci)
         next_guess = get_actual_next_guess(choices, game_log, should_sort)
-        # print(choices)
-        # print(next_guess, choices[next_guess], entropies[next_guess], Decimal(info_focus),
-        #       entropies[next_guess] ** Decimal(info_focus))
         return next_guess
 
     return strategy

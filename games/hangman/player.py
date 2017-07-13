@@ -18,13 +18,11 @@ def _get_pmf_for_success(possible_responses):
     return entropy.get_pmf(counter)
 
 
-def build_strategy(info_focus, success_focus, speed_focus, minimax_focus=0.0, should_sort=False):
+def build_strategy(foci, model, should_sort=False):
     return generic_build_strategy(
-        info_focus=info_focus,
-        success_focus=success_focus,
-        speed_focus=speed_focus,
-        minimax_focus=minimax_focus,
-        success_pmf=_get_pmf_for_success,
+        foci=foci,
+        model=model,
+        reward_pmf=_get_pmf_for_success,
         should_sort=should_sort)
 
 

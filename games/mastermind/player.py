@@ -1,5 +1,5 @@
-from games.player_utils import build_strategy as generic_build_strategy
-from games.player_utils import OrderedCounter, Decimal
+from games import player_utils
+from games.player_utils import Decimal
 
 
 # TODO: Implement this
@@ -9,9 +9,8 @@ def _get_pmf_for_success(possible_responses):
 
 def build_knuth_strategy():
     minimax_strategy = build_strategy(
-        info_focus=0.0,
-        success_focus=0.0,
-        minimax_focus=1.0,
+        foci={'minimax': 1.0},
+        model=player_utils.weighted_product,
         should_sort=True)
 
     def strategy(potential_outcomes, game_log):
@@ -22,10 +21,9 @@ def build_knuth_strategy():
     return strategy
 
 
-def build_strategy(info_focus, success_focus, minimax_focus=0.0, should_sort=False):
-    return generic_build_strategy(
-        info_focus=info_focus,
-        success_focus=success_focus,
-        minimax_focus=minimax_focus,
-        success_pmf=_get_pmf_for_success,
+def build_strategy(foci, model, should_sort=False):
+    return player_utils.build_strategy(
+        foci=foci,
+        model=model,
+        reward_pmf=_get_pmf_for_success,
         should_sort=should_sort)

@@ -6,7 +6,7 @@ cat ./build/splits/9 | ./games/play.py - --game hangman --limit 10
 Mastermind:
 ./games/mastermind/word_generator.py ABCDEF:4 | ./games/play.py - --game hangman --limit 1
 """
-from games import code_words
+from games import code_words, player_utils
 
 
 GUESS_CACHE = {}
@@ -49,10 +49,9 @@ def play(code_word, dictionary, get_potential_outcomes, get_next_guess, get_resp
 
 
 class RIS(object):
-    def __init__(self, foci):
-        self.info = foci.get('info') or 0.0
-        self.reward = foci.get('reward') or 0.0
-        self.speed = foci.get('speed') or 0.0
+    def __init__(self, model, foci):
+        self.model = getattr(player_utils, model)
+        self.foci = foci
 
 if __name__ == '__main__':
     from argparse import ArgumentParser, ArgumentTypeError
@@ -64,6 +63,7 @@ if __name__ == '__main__':
         """
         Ex: "info:80;reward:10;speed:10"
         """
+        model, string = string.split('|')
         splits = string.split(';')
         foci = {}
         for split in splits:
@@ -72,7 +72,7 @@ if __name__ == '__main__':
         if sum(foci.values()) != 1.0:
             message = 'strategy must add to 100'
             raise ArgumentTypeError(message)
-        return RIS(foci)
+        return RIS(model, foci)
 
     # Seed random so we can do multiple runs with same set of random words
     # TODO: Move this to argument
@@ -106,7 +106,7 @@ if __name__ == '__main__':
             word,
             code_words.Dictionary(words),
             opponent.get_potentials,
-            player.build_strategy(info_focus=args.strategy.info, success_focus=args.strategy.reward, speed_focus=args.strategy.speed),
+            player.build_strategy(args.strategy.foci, args.strategy.model),
             opponent.get_response,
             game_log=opponent.GameLog()
         )
@@ -114,4 +114,7 @@ if __name__ == '__main__':
         games.append(game_log)
 
     print('Average guesses: ', sum([len(l) for l in games])/len(games))
+    def _count_wrongs(log):
+        return len([turn for turn in log if turn['result'] == '!'])
+    print('Average wrong guesses: ', sum(_count_wrongs(log) for log in games) / len(games))
     print('Max guesses: ', max([len(l) for l in games]))

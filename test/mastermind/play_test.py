@@ -1,7 +1,7 @@
 import random
 import unittest
 
-from games import play, code_words
+from games import play, code_words, player_utils
 from games.mastermind import player, opponent, word_generator
 
 
@@ -15,7 +15,7 @@ class MastermindPlayTests(unittest.TestCase):
             'YRY',
             words,
             opponent.get_potentials,
-            player.build_strategy(info_focus=1.0, success_focus=0.0, minimax_focus=0.0),
+            player.build_strategy({'info': 1.0}, model=player_utils.weighted_sum),
             opponent.get_response,
             opponent.GameLog(),
         )
@@ -31,7 +31,7 @@ class MastermindPlayTests(unittest.TestCase):
             'RRR',
             words,
             opponent.get_potentials,
-            player.build_strategy(info_focus=1.0, success_focus=0.0, minimax_focus=0.0),
+            player.build_strategy({'info': 1.0}, model=player_utils.weighted_sum),
             opponent.get_response,
             opponent.GameLog(),
         )
@@ -51,7 +51,7 @@ class MastermindPlayTests(unittest.TestCase):
             '3632',
             dictionary,
             opponent.get_potentials,
-            player.build_strategy(info_focus=1.0, success_focus=0.0, minimax_focus=0.0),
+            player.build_strategy({'info': 1.0}, model=player_utils.weighted_sum),
             opponent.get_response_alternative,
             opponent.GameLog(),
         )
@@ -73,7 +73,7 @@ class MastermindPlayTests(unittest.TestCase):
             '3632',
             dictionary,
             opponent.get_potentials,
-            player.build_strategy(info_focus=0.0, success_focus=0.0, minimax_focus=1.0, should_sort=True),
+            player.build_strategy({'minimax': 1.0}, model=player_utils.weighted_sum, should_sort=True),
             opponent.get_response_alternative,
             opponent.GameLog(),
         )
@@ -94,7 +94,7 @@ class MastermindPlayTests(unittest.TestCase):
             '3632',
             dictionary,
             opponent.get_minimax_potentials,
-            player.build_strategy(info_focus=0.0, success_focus=0.0, minimax_focus=1.0, should_sort=True),
+            player.build_strategy({'minimax': 1.0}, model=player_utils.weighted_sum, should_sort=True),
             opponent.get_response,
             opponent.GameLog(),
         )
