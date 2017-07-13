@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
     def _ris_strategy(string):
         """
-        Ex: "info:80;reward:10;speed:10"
+        Ex: "weighted_sum|info:80;reward:10;speed:10"
         """
         model, string = string.split('|')
         splits = string.split(';')
@@ -112,9 +112,12 @@ if __name__ == '__main__':
         )
         assert(game_state == word)
         games.append(game_log)
+        for turn in game_log:
+            print(turn['guess'], turn['guess'].data)
 
     print('Average guesses: ', sum([len(l) for l in games])/len(games))
     def _count_wrongs(log):
         return len([turn for turn in log if turn['result'] == '!'])
     print('Average wrong guesses: ', sum(_count_wrongs(log) for log in games) / len(games))
     print('Max guesses: ', max([len(l) for l in games]))
+

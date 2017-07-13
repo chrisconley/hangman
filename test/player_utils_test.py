@@ -155,7 +155,8 @@ class BuildStrategyTests(unittest.TestCase):
         self.assertEqual(result, 'cat')
 
     def test_build_strategy_random_selection_vs_sorted(self):
-        random.seed(1234)
+        seed = 12
+        random.seed(seed)
         strategy = player_utils.build_strategy(
             foci={},
             model=Mock('model', return_value={'e': Decimal(1.0), 't': Decimal(1.0)}),
@@ -164,12 +165,15 @@ class BuildStrategyTests(unittest.TestCase):
         )
 
         potential_outcomes = games.code_words.PotentialOutcomes()
-        potential_outcomes.add('c', 'c--', 'cate')
-        potential_outcomes.add('c', 'c--', 'cote')
+        potential_outcomes.add('t', '--t-', 'cate')
+        potential_outcomes.add('t', '--t-', 'cote')
+        potential_outcomes.add('e', '---e', 'cate')
+        potential_outcomes.add('e', '---e', 'cote')
+
         result = strategy(potential_outcomes, GameLog())
         self.assertEqual(result, 't')
 
-        random.seed(1234)
+        random.seed(seed)
         strategy = player_utils.build_strategy(
             foci={},
             model=Mock('model', return_value={'e': Decimal(1.0), 't': Decimal(1.0)}),
@@ -178,8 +182,10 @@ class BuildStrategyTests(unittest.TestCase):
         )
 
         potential_outcomes = games.code_words.PotentialOutcomes()
-        potential_outcomes.add('c', 'c--', 'cate')
-        potential_outcomes.add('c', 'c--', 'cote')
+        potential_outcomes.add('t', '--t-', 'cate')
+        potential_outcomes.add('t', '--t-', 'cote')
+        potential_outcomes.add('e', '---e', 'cate')
+        potential_outcomes.add('e', '---e', 'cote')
         result = strategy(potential_outcomes, GameLog())
         self.assertEqual(result, 'e')
 
@@ -232,4 +238,4 @@ class CounterTests(unittest.TestCase):
             '!': {'bar', 'tab', 'tar'}
         })
         pmf = player_utils._get_pmf_for_speed(possible_responses)
-        self.assertDecimalAlmostEqual(sum(pmf.values()), Decimal('1.0'), places=3)
+        self.assertDecimalAlmostEqual(sum(pmf.values()), Decimal('2.2297'), places=3)

@@ -23,7 +23,7 @@ def _get_pmf_for_entropy(possible_responses):
 
 def _get_pmf_for_speed(potential_outcomes):
     length = len(potential_outcomes)
-    distribution = np.random.dirichlet(np.ones(length), size=1)[0]
+    distribution = np.random.uniform(0.0, 1.0, length)
     pmf = {}
     for index, (guess, _) in enumerate(potential_outcomes.items()):
         pmf[guess] = Decimal(distribution[index])
@@ -88,17 +88,27 @@ def weighted_og(data, foci):
     return products
 
 
+class Guess(str):
+    def __new__(cls, guess, data):
+        obj = super().__new__(cls, guess)
+        obj.data = data
+        return obj
+
+
 def build_strategy(foci, model=weighted_sum, reward_pmf=None, should_sort=False):
 
     def strategy(potential_outcomes, game_log):
         data = _get_counts(potential_outcomes, reward_pmf)
 
         if len(potential_outcomes.all_code_words) == 1:
-            return list(potential_outcomes.all_code_words)[0]
+            return Guess(list(potential_outcomes.all_code_words)[0], {})
 
         choices = model(data, foci)
         next_guess = get_actual_next_guess(choices, game_log, should_sort)
-        return next_guess
+        guess_data = {}
+        for strategy, outcomes in data.items():
+            guess_data[strategy] = outcomes[next_guess]
+        return Guess(next_guess, guess_data)
 
     return strategy
 
