@@ -48,14 +48,38 @@ def play(code_word, dictionary, get_potential_outcomes, get_next_guess, get_resp
     return next_guess, game_log
 
 
+def game_log_as_json(game, strategy, game_log, seed):
+    log_json = []
+    for entry in game_log:
+        log_json.append({
+            'guess': [entry['guess'], {k: float(v) for k,v in entry['guess'].data.items()}],
+
+            'result': entry['result']
+        })
+
+    result = {
+        'game': game,
+        'seed': seed,
+        'strategy': {
+            'model': strategy.model_string,
+            'foci': strategy.foci
+        },
+        'log': log_json
+    }
+    return result
+
+
 class RIS(object):
     def __init__(self, model, foci):
+        self.model_string = model
         self.model = getattr(player_utils, model)
         self.foci = foci
 
 if __name__ == '__main__':
     from argparse import ArgumentParser, ArgumentTypeError
+    import argparse
     import fileinput
+    import json
     import random
     import sys
 
@@ -66,27 +90,31 @@ if __name__ == '__main__':
         model, string = string.split('|')
         splits = string.split(';')
         foci = {}
+        the_sum = 0
         for split in splits:
             focus, amount = split.split(':')
             foci[focus] = int(amount) / 100.0
-        if sum(foci.values()) != 1.0:
+            the_sum += int(amount)
+        if the_sum != 100:
             message = 'strategy must add to 100'
             raise ArgumentTypeError(message)
         return RIS(model, foci)
-
-    # Seed random so we can do multiple runs with same set of random words
-    # TODO: Move this to argument
-    random.seed(91514, version=1)
 
     parser = ArgumentParser()
     parser.add_argument('file', help='input words')
     parser.add_argument('--game')
     parser.add_argument('--limit', default=1000, type=int)
     parser.add_argument('--strategy', type=_ris_strategy)
+    parser.add_argument('--seed', type=int)
+    parser.add_argument('--outfile', type=argparse.FileType('w'), default=sys.stdout)
     args = parser.parse_args()
 
     words = [word.strip() for word in fileinput.input(args.file)]
-    print(len(words))
+    print(len(words), file=sys.stderr)
+
+    # Seed random so we can do multiple runs with same set of random words
+    if args.seed:
+        random.seed(args.seed, version=1)
 
     word_to_play = words
     if args.limit:
@@ -112,12 +140,13 @@ if __name__ == '__main__':
         )
         assert(game_state == word)
         games.append(game_log)
-        for turn in game_log:
-            print(turn['guess'], turn['guess'].data)
+        print(json.dumps(game_log_as_json(
+            args.game,
+            args.strategy,
+            game_log,
+            args.seed
+        )), file=args.outfile)
 
-    print('Average guesses: ', sum([len(l) for l in games])/len(games))
-    def _count_wrongs(log):
-        return len([turn for turn in log if turn['result'] == '!'])
-    print('Average wrong guesses: ', sum(_count_wrongs(log) for log in games) / len(games))
-    print('Max guesses: ', max([len(l) for l in games]))
+    print('Average guesses: ', sum([len(l) for l in games])/len(games), file=sys.stderr)
+    print('Max guesses: ', max([len(l) for l in games]), file=sys.stderr)
 

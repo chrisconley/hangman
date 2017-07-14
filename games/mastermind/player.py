@@ -4,6 +4,7 @@ from games.player_utils import Decimal
 
 # TODO: Implement this
 def _get_pmf_for_success(possible_responses):
+    # print(possible_responses)
     return {'*': Decimal(1.0)}
 
 
