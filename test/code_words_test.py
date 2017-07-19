@@ -80,6 +80,15 @@ class PossibleResponsesTests(unittest.TestCase):
         self.assertEqual(possible_responses['c--'], {'cat'})
         self.assertEqual(possible_responses['!'], {'bar', 'tab', 'tar'})
 
+    def test_code_words(self):
+        possible_responses = code_words.PossibleResponses.from_dict('c', {
+            'c--': {'cat'},
+            '-c-': {'ace'},
+            '!': {'bar', 'tab', 'tar'}
+        })
+
+        self.assertEqual(possible_responses.code_words, {'cat', 'ace', 'bar', 'tab', 'tar'})
+
 
 class PotentialGuessesTests(unittest.TestCase):
     def test_initialization(self):

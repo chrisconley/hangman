@@ -89,6 +89,13 @@ class PossibleResponses(defaultdict):
             counter[response] = len(code_words)
         return counter
 
+    @property
+    def code_words(self):
+        all = set()
+        for response, code_words in self.items():
+            all |= code_words
+        return all
+
     @classmethod
     def from_dict(cls, guess, data):
         possible_responses = cls(guess)
