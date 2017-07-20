@@ -1,14 +1,26 @@
+from collections import defaultdict
 import random
 
-from play import get_actual_next_guess
+from games.player_utils import get_actual_next_guess, OrderedCounter
 import battleship_opponent as battleship
-from hangman_utils import counters
 import dictionary
-import entropy
+from games import entropy
+
+
+def count_index_letters(words):
+    counts = defaultdict(OrderedCounter)
+    counts['*'] = 0
+    for word in words:
+        for index, letter in enumerate(word):
+            counter = counts[str(index)]
+            counter[letter] += 1
+            counter['*'] += 1
+        counts['*'] += 1
+    return counts
 
 
 def get_next_entropy_guess(game_state, words):
-    counts = counters.count_index_letters(words)
+    counts = count_index_letters(words)
     entropies = entropy.get_new_entropies(counts)
     return get_actual_next_guess(game_state, entropies)
 
