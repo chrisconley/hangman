@@ -21,6 +21,8 @@ def analyze_hangman_log(data):
 def analyze_game_log(data):
     if data['game'] == 'hangman':
         return analyze_hangman_log(data)
+    elif data['game'] == 'mastermind': # TODO: Build mastermind analyzer
+        return analyze_hangman_log(data)
     else:
         raise RuntimeError('Unrecognized game {}'.format(data['game']))
 
@@ -38,7 +40,7 @@ if __name__ == '__main__':
             print(filepath, file=sys.stderr)
             with open(filepath) as f:
                 for line in f:
-                    line = re.sub("'", '"', line.strip())
+                    # line = re.sub("'", '"', line.strip())
                     data = json.loads(line)
                     game_key = (
                         data['game'],
@@ -49,8 +51,7 @@ if __name__ == '__main__':
                             data['strategy']['foci']['speed'],
                         )
                     )
-                    if data['game'] == 'mastermind':
-                        continue
+
                     analysis = analyze_game_log(data)
                     games[game_key].append(analysis)
 
@@ -68,7 +69,3 @@ if __name__ == '__main__':
 
     for game_key, stats in aggregates.items():
         print(json.dumps({'game_key': game_key, 'stats': stats}), file=args.out_file)
-
-import ternary
-
-ternary.figure
