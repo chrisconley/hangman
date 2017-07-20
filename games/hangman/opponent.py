@@ -1,10 +1,4 @@
-from collections import Counter, OrderedDict
-
 from games import code_words
-
-
-class OrderedCounter(Counter, OrderedDict):
-    pass
 
 
 class GameLog(list):
@@ -29,19 +23,8 @@ class GameLog(list):
         key = "{}:{}".format("".join(hidden_word), "".join(sorted(missed_guesses)))
         return key
 
-CACHE = {}
-
-
-def clear_cache():
-    CACHE = {}
-
 
 def get_response(code_word, guess):
-    cache_key = (code_word, guess)
-    cached_response = CACHE.get(cache_key)
-    if cached_response:
-        return cached_response
-
     if code_word == guess:
         response = code_word
     else:
@@ -52,16 +35,12 @@ def get_response(code_word, guess):
         if set(response) == {'-'}:
             response = ['!']
         response = ''.join(response)
-    CACHE[cache_key] = response
     return response
 
 
-def get_potentials(remaining_code_words, get_response, game_log):
-    remaining_code_words = set(remaining_code_words)
+def get_potentials(partial_dictionary, get_response, game_log):
     indexed_potentials = code_words.PotentialOutcomes()
-    potential_guesses = 'esiarntolcdupmghbyfvkwzxqj'
-    worthwhile_guesses = set(''.join(remaining_code_words))
-    for code_word in remaining_code_words:
+    for code_word in partial_dictionary.as_words:
         for guess in set(code_word):
             response = get_response(code_word, guess)
             indexed_potentials.add(guess, response, code_word)
@@ -69,7 +48,7 @@ def get_potentials(remaining_code_words, get_response, game_log):
         seen_words = set()
         for response, words in possible_responses.items():
             seen_words |= words
-        non_matches = remaining_code_words - seen_words
+        non_matches = partial_dictionary.as_words - seen_words
         if non_matches != set():
             indexed_potentials[guess]['!'] = non_matches
 

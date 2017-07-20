@@ -8,7 +8,7 @@ from games import entropy
 class EntropyTests(unittest.TestCase):
     def assertDecimalAlmostEqual(self, actual, expected, places):
         self.assertEqual(type(actual), Decimal)
-        self.assertAlmostEqual(float(actual), expected, places=places)
+        self.assertAlmostEqual(float(actual), float(expected), places=places)
 
     def test_log_entropy(self):
         self.assertDecimalAlmostEqual(entropy.log_probability(Decimal(1.0)), 0, places=4)
@@ -84,7 +84,8 @@ class EntropyTests(unittest.TestCase):
         pmfs = entropy.get_pmfs_deprecated(counters, total)
         entropies = entropy.get_entropies_deprecated(pmfs, total)
         most_common = entropies.most_common()
-        self.assertEqual(most_common[0], ('e', Decimal('1.434861961943034532507727964')))
+        self.assertEqual(most_common[0][0], 'e')
+        self.assertDecimalAlmostEqual(most_common[0][1], Decimal('1.434861961943034532507727964'), places=10)
         self.assertEqual(most_common[1], ('x', Decimal('0.04848740692447229998691670478')))
         self.assertEqual(most_common[2], ('a', Decimal(0.0)))
 
@@ -110,15 +111,25 @@ class EntropyTests(unittest.TestCase):
 
         self.assertEqual(most_common[3], ('b', 0.0))
 
-    def test_minimax(self):
+    def test_minimax_deprecated(self):
         counters = {
             'e': {'e-e': 6, '-ee': 11, 'ee-': 1, 'eee': 2, '*': 107, 'e': 87},
             'a': {'--a': 180, 'a--': 5, '*': 185},
             'b': {'b--': 185, '*': 185}
         }
-        minimax = entropy.get_minimax(counters)
+        minimax = entropy.get_minimax_deprecated(counters)
         self.assertEqual(minimax, {
             'e': 87,
             'a': 180,
             'b': 185,
         })
+
+    def test_get_inverse_minimax(self):
+        pmf = {
+            'e-e': Decimal(0.65),
+            '-ee': Decimal(0.125),
+            'ee-': Decimal(0.125),
+            'eee': Decimal(0.10)
+        }
+        minimax = entropy.get_inverse_minimax(pmf)
+        self.assertDecimalAlmostEqual(minimax, Decimal('0.35'), places=3)

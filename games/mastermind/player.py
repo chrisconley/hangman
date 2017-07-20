@@ -1,64 +1,49 @@
-from collections import Counter, defaultdict, OrderedDict
-from decimal import Decimal
-
-from games import entropy
-from games.mastermind import opponent
-from games.player_utils import get_actual_next_guess
+from games import player_utils
+from games.player_utils import Decimal
 
 
-class OrderedCounter(Counter, OrderedDict):
-    pass
+def _get_percents(response):
+    if len(response) > 4:  # TODO: Fix this - will need to pass in codeword length
+        raise RuntimeError('Mastermind codeword of length 4 is only supported')
+    result = 0.0
+    for character in response:
+        if character == 'B':
+            result += 0.25
+        elif character == 'W':
+            result += 0.125
+        else:
+            raise ValueError('Response must only include "B" or "W"')
+    return result
 
 
-def _get_pmf_for_entropy(possible_responses):
-    counter = OrderedCounter()
-    seen_words = set()
+def _get_pmf_for_success(possible_responses):
+    total = 0.0
     for response, code_words in possible_responses.items():
-        assert code_words.isdisjoint(seen_words), 'There should not be duplicate code words across responses'
-        seen_words |= code_words
-        counter[response] = Decimal(len(code_words))
-    return entropy.get_pmf(counter)
+        total += _get_percents(response) * len(code_words)
+    success_percent = Decimal(total/len(possible_responses.code_words))
+    return {
+        '*': success_percent,
+        '!': Decimal(1.0) - success_percent
+    }
 
 
-def _get_counts(potential_outcomes):
-    common = {}
-    entropies = {}
-    for guess, possible_responses in potential_outcomes.items():
-        # common_pmf = _get_pmf_for_success(possible_responses)
-        # common[guess] = common_pmf['*']
-        entropy_pmf = _get_pmf_for_entropy(possible_responses)
-        entropies[guess] = entropy.get_entropy(entropy_pmf)
-
-    results = {}
-    results['common'] = common
-    results['entropies'] = entropies
-    return results
-
-
-def build_strategy(info_focus, success_focus, final_word_guess=True):
+def build_knuth_strategy():
+    minimax_strategy = build_strategy(
+        foci={'minimax': 1.0},
+        model=player_utils.weighted_product,
+        should_sort=True)
 
     def strategy(potential_outcomes, game_log):
-        data = _get_counts(potential_outcomes)
-
-        if len(potential_outcomes.all_code_words) == 1:
-            return list(potential_outcomes.all_code_words)[0]
-
-        common = data.get('common')
-        entropies = data.get('entropies')
-
-        choices = {}
-        for letter, pmf in entropies.items():
-            # if common[letter] == 0.0 and success_focus == 0.0:
-            #     common_weight = 1
-            # else:
-            #     common_weight = common[letter]**Decimal(success_focus)
-            if entropies[letter] == Decimal(0) and info_focus == 0.0:
-                entropy_weight = 1
-            else:
-                entropy_weight = entropies[letter]**Decimal(info_focus)
-            choices[letter] = entropy_weight# * common_weight
-
-        next_guess = get_actual_next_guess(choices, game_log)
-        return next_guess
-
+        if len(game_log) == 0:
+            return '1122'
+        else:
+            return minimax_strategy(potential_outcomes, game_log)
     return strategy
+
+
+def build_strategy(foci, model, should_sort=False):
+    return player_utils.build_strategy(
+        foci=foci,
+        model=model,
+        reward_pmf=_get_pmf_for_success,
+        should_sort=should_sort)

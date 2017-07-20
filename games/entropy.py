@@ -64,7 +64,11 @@ def get_pmfs_deprecated(counters, total):
     return pmfs
 
 
-def get_minimax(counters):
+def get_inverse_minimax(pmf):
+    return Decimal(1) - max(pmf.values())
+
+
+def get_minimax_deprecated(counters):
     """
 
     """

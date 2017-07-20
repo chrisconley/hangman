@@ -6,6 +6,9 @@ from games.player_utils import OrderedCounter
 
 
 class Dictionary(list):
+    def get_partial_dictionary(self, words):
+        return PartialDictionary(dictionary=self, partial_words=words)
+
     def words_to_bits(self, words):
         assert type(words) == set, "Words collection must be a set"
         bits = self._initialize_bits()
@@ -20,6 +23,27 @@ class Dictionary(list):
 
     def _initialize_bits(self):
         bits = bitarray(len(self))
+        bits[0:] = False
+        return bits
+
+
+class PartialDictionary(object):
+    def __init__(self, dictionary, partial_words):
+        assert type(dictionary) == Dictionary, "Dictionary collection must be a list"
+        assert type(partial_words) == set, "Partial words collection must be a set"
+        self.as_words = partial_words
+        self.all_words = dictionary
+
+    @property
+    def as_bits(self):
+        bits = self._initialize_bits()
+        for index, code_word in enumerate(self.all_words):
+            if code_word in self.as_words:
+                bits[index] = True
+        return bits
+
+    def _initialize_bits(self):
+        bits = bitarray(len(self.all_words))
         bits[0:] = False
         return bits
 
@@ -64,6 +88,13 @@ class PossibleResponses(defaultdict):
         for response, code_words in self.items():
             counter[response] = len(code_words)
         return counter
+
+    @property
+    def code_words(self):
+        all = set()
+        for response, code_words in self.items():
+            all |= code_words
+        return all
 
     @classmethod
     def from_dict(cls, guess, data):
