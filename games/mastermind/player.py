@@ -3,14 +3,14 @@ from games.player_utils import Decimal
 
 
 def _get_percents(response):
-    if len(response) > 4:  # TODO: Fix this - will need to pass in codeword length
+    if len(response) > 5:  # TODO: Fix this - will need to pass in codeword length
         raise RuntimeError('Mastermind codeword of length 4 is only supported')
     result = 0.0
     for character in response:
         if character == 'B':
-            result += 0.25
+            result += 0.2
         elif character == 'W':
-            result += 0.125
+            result += 0.2/2.0
         else:
             raise ValueError('Response must only include "B" or "W"')
     return result

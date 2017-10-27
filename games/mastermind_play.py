@@ -7,14 +7,102 @@ Mastermind:
 ./games/mastermind/word_generator.py ABCDEF:4 | ./games/play.py - --game hangman --limit 1
 """
 from collections import defaultdict
-from games import code_words, player_utils
+from decimal import Decimal
+from fractions import Fraction
+
+from games import code_words, player_utils, entropy
+from games.player_utils import Guess, OrderedCounter, get_actual_next_guess#, weighted_product
+from games.mastermind.opponent import get_unique_guesses
+from games.mastermind.player import _get_pmf_for_success
 
 
 GUESS_CACHE = {}
 RESPONSE_CACHE = {}
 
 
-def play(code_word, dictionary, get_potential_outcomes, get_next_guess, get_response, game_log, use_cache=True):
+def get_potential_outcomes(partial_dictionary, get_response, game_log):
+    indexed_potentials = code_words.PotentialOutcomes()
+
+    # We can only use unique guesses the first turn because
+    # in later turns we may need to use guesses that we know are incorrect.
+    # if len(game_log) == 0:
+    #     words = get_unique_guesses(partial_dictionary.as_words)
+    # else:
+    #     words = partial_dictionary.all_words #third option of .as_words
+    words = get_unique_guesses(partial_dictionary.as_words)
+    # words = partial_dictionary.as_words
+    #words = partial_dictionary.all_words
+    for word_guess in words:
+        for actual_word in partial_dictionary.as_words:
+            response_key = get_response(actual_word, word_guess)
+            indexed_potentials.add(word_guess, response_key, actual_word)
+    return indexed_potentials
+
+
+def _get_pmf_for_entropy(possible_responses):
+    counter = OrderedCounter()
+    seen_words = set()
+    for response, code_words in possible_responses.items():
+        assert code_words.isdisjoint(seen_words), 'There should not be duplicate code words across responses'
+        seen_words |= code_words
+        counter[response] = len(code_words)
+    return entropy.get_pmf(counter)
+
+
+def _get_counts(potential_outcomes, success_pmf):
+    results = {
+        'info': {},
+        'reward': {},
+        'minimax': {},
+    }
+    for guess, possible_responses in potential_outcomes.items():
+        reward_pmf = success_pmf(possible_responses)
+        results['reward'][guess] = reward_pmf['*']
+        entropy_pmf = _get_pmf_for_entropy(possible_responses)
+        # print(entropy_pmf)
+        results['info'][guess] = entropy.get_entropy(entropy_pmf)
+        results['minimax'][guess] = entropy.get_inverse_minimax(entropy_pmf)
+
+    return results
+
+
+def get_next_guess(potential_outcomes, game_log):
+    foci = {
+        'info': 1.0,
+        'minimax': 0.0,
+    }
+    data = _get_counts(potential_outcomes, _get_pmf_for_success)
+
+    if len(potential_outcomes.all_code_words) == 1:
+        return Guess(list(potential_outcomes.all_code_words)[0], {})
+
+    def weighted_product(data, foci):
+        guesses = data['info'].keys()
+        products = defaultdict(lambda: 1)
+        for guess in guesses:
+            strategy_value = data['info'][guess]
+            products[guess] = strategy_value
+        return products
+
+    choices = weighted_product(data, foci)
+
+    def sort_by_reward(guesses):
+        c = {g: data['reward'][g] for g in guesses if g in data['reward']}
+        return get_actual_next_guess(c, game_log)
+
+    if False:
+        sort_function = lambda guesses: sorted(guesses)[0]
+    else:
+        sort_function = sort_by_reward
+
+    next_guess = get_actual_next_guess(choices, game_log, sort_function)
+    guess_data = {}
+    for strategy, outcomes in data.items():
+        guess_data[strategy] = outcomes[next_guess]
+    return Guess(next_guess, guess_data)
+
+
+def play(code_word, dictionary, get_response, game_log, use_cache=True):
     partial_dictionary = dictionary.get_partial_dictionary(set(dictionary))
     while True:
         if use_cache:
@@ -84,28 +172,10 @@ if __name__ == '__main__':
     import random
     import sys
 
-    def _ris_strategy(string):
-        """
-        Ex: "weighted_sum|info:80;reward:10;speed:10"
-        """
-        model, string = string.split('|')
-        splits = string.split(';')
-        foci = {}
-        the_sum = 0
-        for split in splits:
-            focus, amount = split.split(':')
-            foci[focus] = int(amount) / 100.0
-            the_sum += int(amount)
-        if the_sum != 100:
-            message = 'strategy must add to 100'
-            raise ArgumentTypeError(message)
-        return RIS(model, foci)
-
     parser = ArgumentParser()
     parser.add_argument('file', help='input words')
     parser.add_argument('--game')
     parser.add_argument('--limit', default=1000, type=int)
-    parser.add_argument('--strategy', type=_ris_strategy)
     parser.add_argument('--seed', type=int)
     parser.add_argument('--outfile', type=argparse.FileType('w'), default=sys.stdout)
     args = parser.parse_args()
@@ -135,8 +205,6 @@ if __name__ == '__main__':
         game_state, game_log = play(
             word,
             code_words.Dictionary(words),
-            opponent.get_potentials,
-            player.build_strategy(args.strategy.foci, args.strategy.model),
             opponent.get_response,
             game_log=opponent.GameLog()
         )

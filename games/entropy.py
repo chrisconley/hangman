@@ -1,9 +1,9 @@
 # TODO: Rename to math, or optimizations
 from decimal import Decimal, getcontext
-import fractions
+from fractions import Fraction
 import math
 
-# getcontext().prec = 10
+getcontext().prec = 1000
 
 from collections import Counter, OrderedDict
 
@@ -18,18 +18,43 @@ class OrderedCounter(Counter, OrderedDict):
 # get_entropy asserts that values are fractions and returns Decimals
 def get_pmf(counter):
     pmf = {}
-    total = Decimal(sum(counter.values()))
+    total = sum(counter.values())
     for subset, count in counter.items():
-        pmf[subset] = Decimal(count) / total
+        pmf[subset] = Fraction(count, total)
     return pmf
 
 
 def get_entropy(pmf):
     probabilities = list(pmf.values())
     probabilities_sum = sum(probabilities)
-    assert type(probabilities_sum) == Decimal, 'PMF values must be Decimals'
-    # assert probabilities_sum == Decimal(1.0), "Probability sum {} does not equal 1.00".format(probabilities_sum)
-    entropy = sum([log_probability(p) for p in probabilities])
+    total = max([p.denominator for p in probabilities])
+    # assert type(probabilities_sum) == Decimal, 'PMF values must be Decimals'
+    # print(probabilities_sum)
+    assert probabilities_sum == Fraction(1, 1), "Probability sum {} does not equal 1.00".format(probabilities_sum)
+
+    # def log_probability2(probability):
+    #     """
+    #     -xlog(x) (base 2)
+    #     """
+    #     if probability == Fraction(0):
+    #         return Decimal(0.0)
+    #     dec_prob = Decimal(probability.numerator) / Decimal(probability.denominator)
+    #     return -dec_prob * dec_prob.ln()
+    # entropy = sum([log_probability2(p) for p in probabilities])
+
+    def log_probability2(probability):
+        """
+        -xlog(x) (base 2)
+        """
+        if probability == 0.0:
+            return Fraction(0)
+        multiplier = total / probability.denominator
+        numerator = probability.numerator * multiplier
+        dec_prob = Decimal(probability.numerator) / Decimal(probability.denominator)
+        # return -dec_prob * Fraction(dec_prob.ln())
+        #return -numerator * Fraction(dec_prob.ln())
+        return -numerator * Fraction((Decimal(numerator).ln()) - (Decimal(total).ln()))
+    entropy = Fraction(1, total) * sum([log_probability2(p) for p in probabilities])
     return entropy
 
 
@@ -65,7 +90,7 @@ def get_pmfs_deprecated(counters, total):
 
 
 def get_inverse_minimax(pmf):
-    return Decimal(1) - max(pmf.values())
+    return Fraction(1, 1) - max(pmf.values())
 
 
 def get_minimax_deprecated(counters):
@@ -86,8 +111,9 @@ def log_probability(probability):
     -xlog(x) (base 2)
     """
     if probability == 0.0:
-        return Decimal(0)
-    return -probability * (probability.ln() / Decimal(2.0).ln())
+        return Fraction(0)
+    dec_prob = Decimal(probability.numerator) / Decimal(probability.denominator)
+    return -probability * Fraction(dec_prob.ln() / Decimal(2.0).ln())
 
 
 def get_entropy_deprecated(probabilities):

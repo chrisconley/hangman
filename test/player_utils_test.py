@@ -140,18 +140,20 @@ class ModelsTests(unittest.TestCase):
         self.assertDecimalAlmostEqual(results['t'], Decimal(0.87853), places=4)
         self.assertDecimalAlmostEqual(results['a'], Decimal(0.60846), places=5)
 
+
 class BuildStrategyTests(unittest.TestCase):
     def test_build_strategy_with_one_word_left(self):
         strategy = player_utils.build_strategy(
             foci={},
-            model=Mock('model', return_value={'g': Decimal(1.0), 't': Decimal(1.0)}),
+            model=Mock('model', return_value={'c': Decimal(1.0), 't': Decimal(1.0)}),
             reward_pmf=Mock('reward_pmf', return_value={'*': Decimal(1.0), '!': Decimal(1.0)}),
             should_sort=False
         )
 
         potential_outcomes = games.code_words.PotentialOutcomes()
         potential_outcomes.add('c', 'c--', 'cat')
-        result = strategy(potential_outcomes, GameLog)
+        potential_outcomes.add('t', '--t', 'cat')
+        result = strategy(potential_outcomes, GameLog())
         self.assertEqual(result, 'cat')
 
     def test_build_strategy_random_selection_vs_sorted(self):

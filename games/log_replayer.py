@@ -18,11 +18,33 @@ def analyze_hangman_log(data):
     }
 
 
+def _get_percents(response):
+    if len(response) > 4:  # TODO: Fix this - will need to pass in codeword length
+        raise RuntimeError('Mastermind codeword of length 4 is only supported')
+    result = 0.0
+    for character in response:
+        if character == 'B':
+            result += 0.33333
+        elif character == 'W':
+            result += 0.33333/2.0
+        else:
+            raise ValueError('Response must only include "B" or "W"')
+    return result
+
+
+def analyze_mastermind_log(data):
+    game_log = data['log']
+    return {
+        'turns': len(game_log),
+        'reward': sum([_get_percents(t['result']) for t in game_log]),
+        'pain': sum([1.0-_get_percents(t['result']) for t in game_log]),
+    }
+
 def analyze_game_log(data):
     if data['game'] == 'hangman':
         return analyze_hangman_log(data)
     elif data['game'] == 'mastermind': # TODO: Build mastermind analyzer
-        return analyze_hangman_log(data)
+        return analyze_mastermind_log(data)
     else:
         raise RuntimeError('Unrecognized game {}'.format(data['game']))
 

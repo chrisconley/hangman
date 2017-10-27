@@ -94,7 +94,7 @@ class EntropyTests(unittest.TestCase):
             'e': {'e-e': 6, '-ee': 11, 'ee-': 1, 'eee': 2, '*': 107, 'e': 87},
             'x': {'x--': 1, '*': 1},
             'a': {'--a': 180, 'a--': 5, '*': 185},
-            'b': {'b--': 185, '*': 185}
+            'b': {'b--': 185, '*': 185},
         }
         total = 185
         pmfs = entropy.get_pmfs_deprecated(counters, total)

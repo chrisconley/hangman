@@ -1,5 +1,6 @@
 from collections import Counter, OrderedDict, defaultdict
 from decimal import Decimal
+from fractions import Fraction
 import random
 
 import numpy as np
@@ -74,7 +75,7 @@ def weighted_product(data, foci):
             if strategy_value == 0.0 and weight == 0.0:
                 weighted_value = 1
             else:
-                weighted_value = strategy_value**Decimal(weight)
+                weighted_value = strategy_value**Fraction(weight)
             products[guess] *= weighted_value
     return products
 
@@ -103,8 +104,23 @@ def build_strategy(foci, model=weighted_sum, reward_pmf=None, should_sort=False)
         if len(potential_outcomes.all_code_words) == 1:
             return Guess(list(potential_outcomes.all_code_words)[0], {})
 
+        # correct_key, incorrect_letters = game_log.get_cache_key().split(':')
+        # if correct_key != '' and '-' not in correct_key:
+        #     # print(correct_key)
+        #     return Guess(list(potential_outcomes.all_code_words)[0], {})
+
         choices = model(data, foci)
-        next_guess = get_actual_next_guess(choices, game_log, should_sort)
+
+        def sort_by_reward(guesses):
+            c = {g: data['reward'][g] for g in guesses if g in data['reward']}
+            return get_actual_next_guess(c, game_log)
+
+        if should_sort:
+            sort_function = lambda guesses: sorted(guesses)[0]
+        else:
+            sort_function = sort_by_reward
+
+        next_guess = get_actual_next_guess(choices, game_log, sort_function)
         guess_data = {}
         for strategy, outcomes in data.items():
             guess_data[strategy] = outcomes[next_guess]
@@ -113,14 +129,14 @@ def build_strategy(foci, model=weighted_sum, reward_pmf=None, should_sort=False)
     return strategy
 
 
-def get_actual_next_guess(choices, game_log, should_sort=False):
+def get_actual_next_guess(choices, game_log, sort_function=None):
     if len(choices) == 0:
         return None
 
     most_common_guesses = []
     most_common_count = None
     for guess, count in OrderedCounter(choices).most_common():
-        count = count.quantize(Decimal('1e-20'))
+        # count = count.quantize(Decimal('1e-20'))
         if guess in game_log.guesses:
             continue
         if most_common_count is None:
@@ -132,7 +148,8 @@ def get_actual_next_guess(choices, game_log, should_sort=False):
             break
     if most_common_count is None:
         return None
-    if should_sort:
-        return sorted(most_common_guesses)[0]
+
+    if sort_function:
+        return sort_function(most_common_guesses)
     else:
-        return random.choice(sorted(most_common_guesses))
+        return sorted(most_common_guesses)[0]
