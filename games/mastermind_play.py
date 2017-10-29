@@ -29,9 +29,9 @@ def get_potential_outcomes(partial_dictionary, get_response, game_log):
     #     words = get_unique_guesses(partial_dictionary.as_words)
     # else:
     #     words = partial_dictionary.all_words #third option of .as_words
-    words = get_unique_guesses(partial_dictionary.as_words)
-    # words = partial_dictionary.as_words
-    #words = partial_dictionary.all_words
+    #words = get_unique_guesses(partial_dictionary.as_words)
+    #words = partial_dictionary.as_words
+    words = partial_dictionary.all_words
     for word_guess in words:
         for actual_word in partial_dictionary.as_words:
             response_key = get_response(actual_word, word_guess)
@@ -67,6 +67,9 @@ def _get_counts(potential_outcomes, success_pmf):
 
 
 def get_next_guess(potential_outcomes, game_log):
+    # if len(game_log) == 0:
+    #     return '1234'
+
     foci = {
         'info': 1.0,
         'minimax': 0.0,
@@ -90,7 +93,7 @@ def get_next_guess(potential_outcomes, game_log):
         c = {g: data['reward'][g] for g in guesses if g in data['reward']}
         return get_actual_next_guess(c, game_log)
 
-    if False:
+    if True:
         sort_function = lambda guesses: sorted(guesses)[0]
     else:
         sort_function = sort_by_reward
@@ -137,7 +140,7 @@ def play(code_word, dictionary, get_response, game_log, use_cache=True):
     return next_guess, game_log
 
 
-def game_log_as_json(game, strategy, game_log, seed):
+def game_log_as_json(game, game_log, seed):
     log_json = []
     for entry in game_log:
         log_json.append({
@@ -149,10 +152,6 @@ def game_log_as_json(game, strategy, game_log, seed):
     result = {
         'game': game,
         'seed': seed,
-        'strategy': {
-            'model': strategy.model_string,
-            'foci': strategy.foci
-        },
         'log': log_json
     }
     return result
@@ -175,7 +174,7 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('file', help='input words')
     parser.add_argument('--game')
-    parser.add_argument('--limit', default=1000, type=int)
+    parser.add_argument('--limit', type=int)
     parser.add_argument('--seed', type=int)
     parser.add_argument('--outfile', type=argparse.FileType('w'), default=sys.stdout)
     args = parser.parse_args()
@@ -187,9 +186,11 @@ if __name__ == '__main__':
     if args.seed:
         random.seed(args.seed, version=1)
 
-    word_to_play = words
+    words_to_play = words
     if args.limit:
         words_to_play = random.sample(words, args.limit)
+    # else:
+    #     words_to_play = random.sample(words, len(words))
 
     name = 'games.{}.opponent'.format(args.game)
     opponent = __import__(name, fromlist=[''])
@@ -206,18 +207,19 @@ if __name__ == '__main__':
             word,
             code_words.Dictionary(words),
             opponent.get_response,
-            game_log=opponent.GameLog()
+            game_log=opponent.GameLog(),
+            # use_cache=False,
         )
         assert(game_state == word)
         games.append(game_log)
-        # print(json.dumps(game_log_as_json(
-        #     args.game,
-        #     args.strategy,
-        #     game_log,
-        #     args.seed
-        # )), file=args.outfile)
+        print(json.dumps(game_log_as_json(
+            args.game,
+            game_log,
+            args.seed
+        )), file=args.outfile)
         print(','.join([word, str(len(game_log))]), file=args.outfile)
 
+    print('Total Games: ', len(games), file=sys.stderr)
     print('Average guesses: ', sum([len(l) for l in games])/len(games), file=sys.stderr)
     print('Total guesses: ', sum([len(l) for l in games]), file=sys.stderr)
     print('Max guesses: ', max([len(l) for l in games]), file=sys.stderr)

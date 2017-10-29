@@ -20,17 +20,17 @@ def get_pmf(counter):
     pmf = {}
     total = sum(counter.values())
     for subset, count in counter.items():
-        pmf[subset] = Fraction(count, total)
+        pmf[subset] = count / total
     return pmf
 
 
 def get_entropy(pmf):
     probabilities = list(pmf.values())
     probabilities_sum = sum(probabilities)
-    total = max([p.denominator for p in probabilities])
+    # total = max([p.denominator for p in probabilities])
     # assert type(probabilities_sum) == Decimal, 'PMF values must be Decimals'
     # print(probabilities_sum)
-    assert probabilities_sum == Fraction(1, 1), "Probability sum {} does not equal 1.00".format(probabilities_sum)
+    # assert probabilities_sum == Fraction(1, 1), "Probability sum {} does not equal 1.00".format(probabilities_sum)
 
     # def log_probability2(probability):
     #     """
@@ -47,14 +47,14 @@ def get_entropy(pmf):
         -xlog(x) (base 2)
         """
         if probability == 0.0:
-            return Fraction(0)
-        multiplier = total / probability.denominator
-        numerator = probability.numerator * multiplier
-        dec_prob = Decimal(probability.numerator) / Decimal(probability.denominator)
+            return 0.0
+        # multiplier = total / probability.denominator
+        # numerator = probability.numerator * multiplier
+        # dec_prob = Decimal(probability.numerator) / Decimal(probability.denominator)
         # return -dec_prob * Fraction(dec_prob.ln())
         #return -numerator * Fraction(dec_prob.ln())
-        return -numerator * Fraction((Decimal(numerator).ln()) - (Decimal(total).ln()))
-    entropy = Fraction(1, total) * sum([log_probability2(p) for p in probabilities])
+        return -probability * math.log(probability, 2)
+    entropy = sum([log_probability2(p) for p in probabilities])
     return entropy
 
 
@@ -90,7 +90,7 @@ def get_pmfs_deprecated(counters, total):
 
 
 def get_inverse_minimax(pmf):
-    return Fraction(1, 1) - max(pmf.values())
+    return 1 - max(pmf.values())
 
 
 def get_minimax_deprecated(counters):
