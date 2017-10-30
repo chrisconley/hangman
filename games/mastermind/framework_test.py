@@ -141,6 +141,25 @@ class FrameworkTests(unittest.TestCase):
             0
         ]])
 
+    def test_game_log_to_strategy_first_guess(self):
+        responses = [
+            'WW',  # 02
+            'W',  # 01
+            '',  # 00
+            'B',  # 10
+            'BB',  # 20
+        ]
+        index = {r: i for i, r in enumerate(responses)}
+        game_log = [
+            {"log": [
+                {"guess": ["12", {}], "result": "BB"}
+            ]},
+        ]
+
+        expected = [1, '12']
+        actual = export(game_log, index)
+        self.assertEqual(actual, expected)
+
     def test_game_log_to_strategy(self):
         responses = [
             'WW',  # 02
@@ -193,25 +212,16 @@ class FrameworkTests(unittest.TestCase):
             ]},
         ]
 
-        expected = [
-            9,
-            '12',
-            [
-                1,  # WW
-                [2, '11', [0, 0, [1, '23'], [1, '31'], 0]],  # W
-                1,  #
-                [4, '13', [0, [1, '23'], [1, '31'], [1, '23'], [1, '13']]],  # B
-                1,  # BB
-            ]
-        ]
         expected = [9, '12', [
-            [1, '21'],
-            [2, '11', [0, 0, [1, '23'], [1, '31'], 0]],
-            [1, '33'],
-            [3, '13', [0, [1, '32'], [1, '22'], [1, '11'], 0]],
-            0
+            [1, '21', [0, 0, 0, 0, 1]],
+            [2, '11', [0, 0, [1, '23', [0, 0, 0, 0, 1]], [1, '31', [0, 0, 0, 0, 1]], 0]],
+            [1, '33', [0, 0, 0, 0, 1]],
+            [4, '13', [0, [1, '32', [0, 0, 0, 0, 1]], [1, '22', [0, 0, 0, 0, 1]], [1, '11', [0, 0, 0, 0, 1]], 1]],
+            1
         ]]
         actual = export(game_log, index)
+        for a in actual[2]:
+            print(a)
         self.assertEqual(actual, expected)
 
 
@@ -268,27 +278,36 @@ def update(strategy, log, index):
     if len(log) == 0:
         return strategy
 
+
     next_turn = log[0]
     response = next_turn['result']
     guess = next_turn['guess'][0]
-    strategy.count = strategy.count + 1
+    strategy.count += 1
     strategy.guess = guess
     if response == 'BB':
-        strategy.remove_responses()
+        print('***', (strategy.parent and strategy.parent.guess), guess)
+        strategy[2][-1] = 1
         while True:
             if strategy.parent is None:
                 return strategy
             else:
                 strategy = strategy.parent
     else:
-        print('---', strategy)
         if strategy.count == 0:
             new_leaf = strategy.init_response(guess, response)
         else:
             new_leaf = strategy.get_response(response)
             if new_leaf == 0:
                 new_leaf = strategy.init_response(guess, response)
-            print('hell', new_leaf)
+            elif new_leaf == 1:
+                strategy.remove_responses()
+                while True:
+                    if strategy.parent is None:
+                        return strategy
+                    else:
+                        strategy = strategy.parent
+            elif type(new_leaf) == int:
+                raise Exception('hi there {}'.format(new_leaf))
         return update(new_leaf, log[1:], index)
 
 
