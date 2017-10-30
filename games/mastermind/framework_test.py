@@ -82,7 +82,7 @@ class FrameworkTests(unittest.TestCase):
 
         self.assertEqual(total_guesses, 75)
 
-    def test_game_log_to_strategy_partial(self):
+    def test_game_log_to_strategy_one_game(self):
         responses = [
             'WW',  # 02
             'W',  # 01
@@ -103,38 +103,43 @@ class FrameworkTests(unittest.TestCase):
         actual = export(game_log, index)
         self.assertEqual(actual, [1, '12', [
             0,
-            [1, '11', [0, 0, 0, 0, 1]],
+            [1, '11', [0, 0, 0, [1, '31'], 0]],
             0,
             0,
             0
         ]])
 
-        # game_log = [
-        #     {"log": [
-        #         {"guess": ["12", {}], "result": "W"},
-        #         {"guess": ["11", {}], "result": "B"},
-        #         {"guess": ["31", {}], "result": "BB"}
-        #     ]}
-        # ]
-        #
-        # actual = export(game_log, index)
-        # self.assertEqual(actual, [1, '12', [0, 1, 0, 0, 0]])
-        #
-        # game_log = [
-        #     {"log": [
-        #         {"guess": ["12", {}], "result": "W"},
-        #         {"guess": ["11", {}], "result": "B"},
-        #         # {"guess": ["31", {}], "result": "BB"}
-        #     ]},
-        #     {"log": [
-        #         {"guess": ["12", {}], "result": "W"},
-        #         {"guess": ["11", {}], "result": ""},
-        #         # {"guess": ["23", {}], "result": "BB"}
-        #     ]},
-        # ]
-        #
-        # actual = export(game_log, index)
-        # self.assertEqual(actual, [2, '12', [0, [2, '11', [0, 0, 1, 1, 0]], 0, 0, 0]])
+    def test_game_log_to_strategy_partial(self):
+        responses = [
+            'WW',  # 02
+            'W',  # 01
+            '',  # 00
+            'B',  # 10
+            'BB',  # 20
+        ]
+        index = {r: i for i, r in enumerate(responses)}
+
+        game_log = [
+            {"log": [
+                {"guess": ["12", {}], "result": "W"},
+                {"guess": ["11", {}], "result": "B"},
+                {"guess": ["31", {}], "result": "BB"}
+            ]},
+            {"log": [
+                {"guess": ["12", {}], "result": "W"},
+                {"guess": ["11", {}], "result": ""},
+                {"guess": ["23", {}], "result": "BB"}
+            ]},
+        ]
+
+        actual = export(game_log, index)
+        self.assertEqual(actual, [2, '12', [
+            0,
+            [2, '11', [0, 0, [1, '23'], [1, '31'], 0]],
+            0,
+            0,
+            0
+        ]])
 
     def test_game_log_to_strategy(self):
         responses = [
@@ -193,12 +198,19 @@ class FrameworkTests(unittest.TestCase):
             '12',
             [
                 1,  # WW
-                [2, '11', [0, 0, 1, 1, 0]],  # W
+                [2, '11', [0, 0, [1, '23'], [1, '31'], 0]],  # W
                 1,  #
-                [4, '13', [0, 1, 1, 1, 1]],  # B
+                [4, '13', [0, [1, '23'], [1, '31'], [1, '23'], [1, '13']]],  # B
                 1,  # BB
             ]
         ]
+        expected = [9, '12', [
+            [1, '21'],
+            [2, '11', [0, 0, [1, '23'], [1, '31'], 0]],
+            [1, '33'],
+            [3, '13', [0, [1, '32'], [1, '22'], [1, '11'], 0]],
+            0
+        ]]
         actual = export(game_log, index)
         self.assertEqual(actual, expected)
 
@@ -225,6 +237,8 @@ class Leaf(list):
 
     @property
     def responses(self):
+        if len(self) < 3:
+            self.append([0] * len(self.index))
         return self[2]
 
     @guess.setter
