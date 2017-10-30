@@ -220,8 +220,6 @@ class FrameworkTests(unittest.TestCase):
             1
         ]]
         actual = export(game_log, index)
-        for a in actual[2]:
-            print(a)
         self.assertEqual(actual, expected)
 
 
@@ -274,10 +272,8 @@ def get_new_leaf(index, parent=None):
 
 
 def update(strategy, log, index):
-    print(log, strategy)
     if len(log) == 0:
         return strategy
-
 
     next_turn = log[0]
     response = next_turn['result']
@@ -285,7 +281,6 @@ def update(strategy, log, index):
     strategy.count += 1
     strategy.guess = guess
     if response == 'BB':
-        print('***', (strategy.parent and strategy.parent.guess), guess)
         strategy[2][-1] = 1
         while True:
             if strategy.parent is None:
@@ -299,65 +294,13 @@ def update(strategy, log, index):
             new_leaf = strategy.get_response(response)
             if new_leaf == 0:
                 new_leaf = strategy.init_response(guess, response)
-            elif new_leaf == 1:
-                strategy.remove_responses()
-                while True:
-                    if strategy.parent is None:
-                        return strategy
-                    else:
-                        strategy = strategy.parent
-            elif type(new_leaf) == int:
-                raise Exception('hi there {}'.format(new_leaf))
         return update(new_leaf, log[1:], index)
 
 
 def export(game_log, index, strategy=None):
-    print('------------')
     if strategy is None:
         strategy = get_new_leaf(index)
     for game in game_log:
         strategy = update(strategy, game['log'], index)
-        print(strategy)
-        # for turn in game['log']:
-        #     response_index = index[turn['result']]
-        #     print(turn, strategy)
-        #     if type(current_place) == list:
-        #         current_place[0] += 1
-        #         current_place[1] = turn['guess'][0]
-        #         current_place[2][response_index] += 1
-        #         current_place = current_place[2][response_index]
-        #     elif type(current_place) == int:
-        #         count = current_place
-        #         current_place = get_new_leaf(index)
 
-
-            # if current_place == 1:
-            #     current_place = get_new_leaf(index)
-            #     # current_place[0] += 1
-            # current_place[0] += 1
-            # current_place[1] = turn['guess'][0]
-            #
-            # # print('---', current_place)
-            # # print(current_place)
-            # if current_place[2][response_index] == 0:
-            #     # print('yyyyyyy')
-            #     current_place[2][response_index] += 1
-            # elif current_place[2][response_index] == 1:
-            #     # print('xxxxxxx')
-            #     current_place[2][response_index] = get_new_leaf(index)
-            #     current_place[2][response_index][0] = 1
-            #     # current_place[2][response_index][1] = turn['guess'][0]
-            #     # print(current_place)
-            # else:
-            #     print('RRRR', current_place[2][response_index])
-            #     print(turn)
-            #     # current_place[0] += 1
-            #     # current_place[2][response_index][0] += 1
-            #
-            # # print('///', current_place)
-            # current_place = current_place[2][response_index]
-            # # print('~~~', current_place)
-
-
-    print('===', strategy, strategy.guess)
     return strategy
