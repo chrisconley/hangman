@@ -203,12 +203,46 @@ class FrameworkTests(unittest.TestCase):
         self.assertEqual(actual, expected)
 
 
-class Leaf(dict):
+class Leaf(list):
     def __init__(self, index, parent=None):
         self.index = index
-        self.count = 0
-        self.guess = ''
         self.parent = parent
+        self.append(0)
+        self.append('')
+        self.append([0] * len(index))
+
+    @property
+    def count(self):
+        return self[0]
+
+    @count.setter
+    def count(self, value):
+        self[0] = value
+
+    @property
+    def guess(self):
+        return self[1]
+
+    @property
+    def responses(self):
+        return self[2]
+
+    @guess.setter
+    def guess(self, value):
+        self[1] = value
+
+    def init_response(self, guess, response):
+        response_index = self.index[response]
+        self.responses[response_index] = get_new_leaf(self.index, self)
+        self.responses[response_index].guess = guess
+        return self.responses[response_index]
+
+    def get_response(self, response):
+        response_index = self.index[response]
+        return self.responses[response_index]
+
+    def remove_responses(self):
+        self.pop()
 
 
 def get_new_leaf(index, parent=None):
@@ -223,7 +257,10 @@ def update(strategy, log, index):
     next_turn = log[0]
     response = next_turn['result']
     guess = next_turn['guess'][0]
+    strategy.count = strategy.count + 1
+    strategy.guess = guess
     if response == 'BB':
+        strategy.remove_responses()
         while True:
             if strategy.parent is None:
                 return strategy
@@ -232,12 +269,13 @@ def update(strategy, log, index):
     else:
         print('---', strategy)
         if strategy.count == 0:
-            strategy[response] = get_new_leaf(index, strategy)
-            strategy[response].guess = guess
-            # strategy[response].count += 1
+            new_leaf = strategy.init_response(guess, response)
         else:
-            strategy[response].count += 1
-        return update(strategy[response], log[1:], index)
+            new_leaf = strategy.get_response(response)
+            if new_leaf == 0:
+                new_leaf = strategy.init_response(guess, response)
+            print('hell', new_leaf)
+        return update(new_leaf, log[1:], index)
 
 
 def export(game_log, index, strategy=None):
