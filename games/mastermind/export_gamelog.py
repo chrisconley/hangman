@@ -46,7 +46,7 @@ def get_new_leaf(index, parent=None):
     return Leaf(index, parent)
 
 
-def update(strategy, log, index):
+def update(strategy, log, index, response_sentinel):
     if len(log) == 0:
         return strategy
 
@@ -55,7 +55,7 @@ def update(strategy, log, index):
     guess = next_turn['guess'][0]
     strategy.count += 1
     strategy.guess = guess
-    if response == 'BB':
+    if response == response_sentinel:
         strategy[2][-1] = 1
         while True:
             if strategy.parent is None:
@@ -69,13 +69,13 @@ def update(strategy, log, index):
             new_leaf = strategy.get_response(response)
             if new_leaf == 0:
                 new_leaf = strategy.init_response(guess, response)
-        return update(new_leaf, log[1:], index)
+        return update(new_leaf, log[1:], index, response_sentinel)
 
 
-def export(game_log, index, strategy=None):
+def export(game_log, index, response_sentinel, strategy=None):
     if strategy is None:
         strategy = get_new_leaf(index)
     for game in game_log:
-        strategy = update(strategy, game['log'], index)
+        strategy = update(strategy, game['log'], index, response_sentinel)
 
     return strategy

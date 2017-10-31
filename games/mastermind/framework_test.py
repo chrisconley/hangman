@@ -77,7 +77,7 @@ class FrameworkTests(unittest.TestCase):
             ]},
         ]
 
-        actual = export_gamelog.export(game_log, index)
+        actual = export_gamelog.export(game_log, index, response_sentinel='BB')
         self.assertEqual(actual, [1, '12', [
             0,
             [1, '11', [0, 0, 0, [1, '31', [0, 0, 0, 0, 1]], 0]],
@@ -109,7 +109,7 @@ class FrameworkTests(unittest.TestCase):
             ]},
         ]
 
-        actual = export_gamelog.export(game_log, index)
+        actual = export_gamelog.export(game_log, index, response_sentinel='BB')
         self.assertEqual(actual, [2, '12', [
             0,
             [2, '11', [0, 0, [1, '23', [0, 0, 0, 0, 1]], [1, '31', [0, 0, 0, 0, 1]], 0]],
@@ -134,7 +134,7 @@ class FrameworkTests(unittest.TestCase):
         ]
 
         expected = [1, '12', [0, 0, 0, 0, 1]]
-        actual = export_gamelog.export(game_log, index)
+        actual = export_gamelog.export(game_log, index, response_sentinel='BB')
         self.assertEqual(actual, expected)
 
     def test_game_log_to_strategy(self):
@@ -196,7 +196,7 @@ class FrameworkTests(unittest.TestCase):
             [4, '13', [0, [1, '32', [0, 0, 0, 0, 1]], [1, '22', [0, 0, 0, 0, 1]], [1, '11', [0, 0, 0, 0, 1]], 1]],
             1
         ]]
-        actual = export_gamelog.export(game_log, index)
+        actual = export_gamelog.export(game_log, index, response_sentinel='BB')
         self.assertEqual(actual, expected)
 
         all_words = word_generator.generate_words('123', 2)
@@ -215,4 +215,7 @@ class FrameworkTests(unittest.TestCase):
         metrics = analyze_strategy.analyze(all_words, {'': expected}, index, response_sentinel='BB')
         self.assertEqual(metrics['total_guesses'], 22)
 
+        strategy = [9, '12', [[1, '21', [0, 0, 0, 0, 1]], [2, '11', [0, 0, [1, '23', [0, 0, 0, 0, 1]], [1, '31', [0, 0, 0, 0, 1]], 0]], [1, '33', [0, 0, 0, 0, 1]], [4, '13', [0, [1, '32', [0, 0, 0, 0, 1]], [1, '22', [0, 0, 0, 0, 1]], [1, '11', [0, 0, 0, 0, 1]], 1]], 1]]
+        metrics = analyze_strategy.analyze(all_words, {'': strategy}, index, response_sentinel='BB')
+        self.assertEqual(metrics['total_guesses'], 22)
 

@@ -93,7 +93,7 @@ def get_next_guess(potential_outcomes, game_log):
         c = {g: data['reward'][g] for g in guesses if g in data['reward']}
         return get_actual_next_guess(c, game_log)
 
-    if True:
+    if False:
         sort_function = lambda guesses: sorted(guesses)[0]
     else:
         sort_function = sort_by_reward
@@ -163,6 +163,50 @@ class RIS(object):
         self.model = getattr(player_utils, model)
         self.foci = foci
 
+
+
+def get_index(word_length):
+    all_responses = {
+        2: [
+            'WW',  # 02
+            'W',  # 01
+            '',  # 00
+            'B',  # 10
+            'BB',  # 20
+        ],
+        3: [
+            'WWW',  # 03
+            'WW',  # 02
+            'W',  # 01
+            '',  # 00
+            'BWW',  # 12
+            'BW',  # 21
+            'B',  # 10
+            'BB',  # 20
+            'BBB'  # 30
+        ],
+        4: [
+            'WWWW',  # 04
+            'WWW',  # 03
+            'WW',  # 02
+            'W',  # 01
+            '',  # 00
+            'BWWW',  # 13
+            'BWW',  # 12
+            'BW',  # 11
+            'B',  # 10
+            'BBWW',  # 22
+            'BBW',  # 21
+            'BB',  # 20
+            'BBB',  # 30
+            'BBBB',  # 40
+
+        ]
+    }
+    responses = all_responses[word_length]
+    index = {r: i for i, r in enumerate(responses)}
+    return index
+
 if __name__ == '__main__':
     from argparse import ArgumentParser, ArgumentTypeError
     import argparse
@@ -201,6 +245,7 @@ if __name__ == '__main__':
     # TODO: In game log turn entry, capture expected info gain, minimax, success expectation
     # TODO: In aggregrated game logs, state avg number of turns, max number of turns, (maybe distribution too?)
     games = []
+    game_logs = []
     saved = defaultdict(set)
     for word in words_to_play:
         game_state, game_log = play(
@@ -212,11 +257,13 @@ if __name__ == '__main__':
         )
         assert(game_state == word)
         games.append(game_log)
-        print(json.dumps(game_log_as_json(
+        game_json = game_log_as_json(
             args.game,
             game_log,
             args.seed
-        )), file=args.outfile)
+        )
+        # print(json.dumps(game_json), file=args.outfile)
+        game_logs.append(game_json)
         print(','.join([word, str(len(game_log))]), file=args.outfile)
 
     print('Total Games: ', len(games), file=sys.stderr)
@@ -225,3 +272,14 @@ if __name__ == '__main__':
     print('Max guesses: ', max([len(l) for l in games]), file=sys.stderr)
     print('Min guesses: ', min([len(l) for l in games]), file=sys.stderr)
 
+    from games.mastermind import analyze_strategy, export_gamelog
+
+    word_length = len(words[0])
+    index = get_index(word_length)
+    response_sentinel = ''.join(['B'] * word_length)
+    strategy = export_gamelog.export(game_logs, index, response_sentinel)
+    print(strategy)
+    # for l in strategy[2]:
+    #     print(l, file=sys.stderr)
+    metrics = analyze_strategy.analyze(words, {'': strategy}, index, response_sentinel)
+    print(metrics, file=sys.stderr)
