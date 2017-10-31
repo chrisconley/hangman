@@ -2,10 +2,11 @@ import unittest
 
 from games import code_words
 from games.mastermind import opponent, word_generator
+from games.mastermind import export_gamelog, analyze_strategy
 
 
 class FrameworkTests(unittest.TestCase):
-    def test_it(self):
+    def test_analyze_strategy(self):
         responses = [
             'WWW',  # 03
             'WW',  # 02
@@ -53,34 +54,10 @@ class FrameworkTests(unittest.TestCase):
         }
 
         all_words = word_generator.generate_words('123', 3)
-        dictionary = code_words.Dictionary(all_words)
 
-        def play(code_word):
-            guesses = []
-            strategy_place = strategy['']
-            while True:
-                if type(strategy_place) == int and strategy_place == 1:
-                    guesses.append('gotit')
-                    break
-                if strategy_place[1] < 'A':
-                    guess = strategy_place[1]
-                else:
-                    strategy_place = strategy[strategy_place[1]]
-                    guess = strategy_place[1]
-                response = opponent.get_response(code_word, guess)
+        metrics = analyze_strategy.analyze(all_words, strategy, index, response_sentinel='BBB')
 
-                strategy_place = strategy_place[2][index[response]]
-                guesses.append(guess)
-                if response == 'BBB':
-                    break
-            return guesses
-
-        total_guesses = 0
-        for word in all_words:
-            guesses = play(word)
-            total_guesses += len(guesses)
-
-        self.assertEqual(total_guesses, 75)
+        self.assertEqual(metrics['total_guesses'], 75)
 
     def test_game_log_to_strategy_one_game(self):
         responses = [
@@ -100,10 +77,10 @@ class FrameworkTests(unittest.TestCase):
             ]},
         ]
 
-        actual = export(game_log, index)
+        actual = export_gamelog.export(game_log, index)
         self.assertEqual(actual, [1, '12', [
             0,
-            [1, '11', [0, 0, 0, [1, '31'], 0]],
+            [1, '11', [0, 0, 0, [1, '31', [0, 0, 0, 0, 1]], 0]],
             0,
             0,
             0
@@ -132,10 +109,10 @@ class FrameworkTests(unittest.TestCase):
             ]},
         ]
 
-        actual = export(game_log, index)
+        actual = export_gamelog.export(game_log, index)
         self.assertEqual(actual, [2, '12', [
             0,
-            [2, '11', [0, 0, [1, '23'], [1, '31'], 0]],
+            [2, '11', [0, 0, [1, '23', [0, 0, 0, 0, 1]], [1, '31', [0, 0, 0, 0, 1]], 0]],
             0,
             0,
             0
@@ -156,8 +133,8 @@ class FrameworkTests(unittest.TestCase):
             ]},
         ]
 
-        expected = [1, '12']
-        actual = export(game_log, index)
+        expected = [1, '12', [0, 0, 0, 0, 1]]
+        actual = export_gamelog.export(game_log, index)
         self.assertEqual(actual, expected)
 
     def test_game_log_to_strategy(self):
@@ -219,88 +196,23 @@ class FrameworkTests(unittest.TestCase):
             [4, '13', [0, [1, '32', [0, 0, 0, 0, 1]], [1, '22', [0, 0, 0, 0, 1]], [1, '11', [0, 0, 0, 0, 1]], 1]],
             1
         ]]
-        actual = export(game_log, index)
+        actual = export_gamelog.export(game_log, index)
         self.assertEqual(actual, expected)
 
+        all_words = word_generator.generate_words('123', 2)
+        metrics = analyze_strategy.analyze(all_words, {'': expected}, index, response_sentinel='BB')
+        self.assertEqual(metrics['total_guesses'], 22)
 
-class Leaf(list):
-    def __init__(self, index, parent=None):
-        self.index = index
-        self.parent = parent
-        self.append(0)
-        self.append('')
-        self.append([0] * len(index))
+        expected = [9, '12', [
+            1,
+            [2, '11', [0, 0, 1, 1, 0]],
+            [1, '33', [0, 0, 0, 0, 1]],
+            [4, '13', [0, 1, 1, 1, 1]],
+            1
+        ]]
 
-    @property
-    def count(self):
-        return self[0]
-
-    @count.setter
-    def count(self, value):
-        self[0] = value
-
-    @property
-    def guess(self):
-        return self[1]
-
-    @property
-    def responses(self):
-        if len(self) < 3:
-            self.append([0] * len(self.index))
-        return self[2]
-
-    @guess.setter
-    def guess(self, value):
-        self[1] = value
-
-    def init_response(self, guess, response):
-        response_index = self.index[response]
-        self.responses[response_index] = get_new_leaf(self.index, self)
-        self.responses[response_index].guess = guess
-        return self.responses[response_index]
-
-    def get_response(self, response):
-        response_index = self.index[response]
-        return self.responses[response_index]
-
-    def remove_responses(self):
-        self.pop()
+        all_words = word_generator.generate_words('123', 2)
+        metrics = analyze_strategy.analyze(all_words, {'': expected}, index, response_sentinel='BB')
+        self.assertEqual(metrics['total_guesses'], 22)
 
 
-def get_new_leaf(index, parent=None):
-    return Leaf(index, parent)
-
-
-def update(strategy, log, index):
-    if len(log) == 0:
-        return strategy
-
-    next_turn = log[0]
-    response = next_turn['result']
-    guess = next_turn['guess'][0]
-    strategy.count += 1
-    strategy.guess = guess
-    if response == 'BB':
-        strategy[2][-1] = 1
-        while True:
-            if strategy.parent is None:
-                return strategy
-            else:
-                strategy = strategy.parent
-    else:
-        if strategy.count == 0:
-            new_leaf = strategy.init_response(guess, response)
-        else:
-            new_leaf = strategy.get_response(response)
-            if new_leaf == 0:
-                new_leaf = strategy.init_response(guess, response)
-        return update(new_leaf, log[1:], index)
-
-
-def export(game_log, index, strategy=None):
-    if strategy is None:
-        strategy = get_new_leaf(index)
-    for game in game_log:
-        strategy = update(strategy, game['log'], index)
-
-    return strategy
