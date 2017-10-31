@@ -59,6 +59,27 @@ class FrameworkTests(unittest.TestCase):
 
         self.assertEqual(metrics['total_guesses'], 75)
 
+    def test_analyze_concise_strategy(self):
+        responses = [
+            'WW',  # 02
+            'W',  # 01
+            '',  # 00
+            'B',  # 10
+            'BB',  # 20
+        ]
+        index = {r: i for i, r in enumerate(responses)}
+        strategy = [9, '12', [
+            1,
+            [2, '11'],
+            [1, '33'],
+            [4, '13'],
+            1
+        ]]
+
+        all_words = word_generator.generate_words('123', 2)
+        metrics = analyze_strategy.analyze(all_words, {'': strategy}, index, response_sentinel='BB')
+        self.assertEqual(metrics['total_guesses'], 22)
+
     def test_game_log_to_strategy_one_game(self):
         responses = [
             'WW',  # 02
@@ -218,4 +239,3 @@ class FrameworkTests(unittest.TestCase):
         strategy = [9, '12', [[1, '21', [0, 0, 0, 0, 1]], [2, '11', [0, 0, [1, '23', [0, 0, 0, 0, 1]], [1, '31', [0, 0, 0, 0, 1]], 0]], [1, '33', [0, 0, 0, 0, 1]], [4, '13', [0, [1, '32', [0, 0, 0, 0, 1]], [1, '22', [0, 0, 0, 0, 1]], [1, '11', [0, 0, 0, 0, 1]], 1]], 1]]
         metrics = analyze_strategy.analyze(all_words, {'': strategy}, index, response_sentinel='BB')
         self.assertEqual(metrics['total_guesses'], 22)
-
