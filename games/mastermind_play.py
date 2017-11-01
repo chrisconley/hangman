@@ -29,9 +29,9 @@ def get_potential_outcomes(partial_dictionary, get_response, game_log):
     #     words = get_unique_guesses(partial_dictionary.as_words)
     # else:
     #     words = partial_dictionary.all_words #third option of .as_words
-    #words = get_unique_guesses(partial_dictionary.as_words)
+    words = get_unique_guesses(partial_dictionary.as_words)
     #words = partial_dictionary.as_words
-    words = partial_dictionary.all_words
+    #words = partial_dictionary.all_words
     for word_guess in words:
         for actual_word in partial_dictionary.as_words:
             response_key = get_response(actual_word, word_guess)
@@ -272,7 +272,7 @@ if __name__ == '__main__':
     print('Max guesses: ', max([len(l) for l in games]), file=sys.stderr)
     print('Min guesses: ', min([len(l) for l in games]), file=sys.stderr)
 
-    from games.mastermind import analyze_strategy, export_gamelog
+    from games.mastermind import analyze_strategy, export_gamelog, strategies
 
     word_length = len(words[0])
     index = get_index(word_length)
@@ -282,4 +282,14 @@ if __name__ == '__main__':
     # for l in strategy[2]:
     #     print(l, file=sys.stderr)
     metrics = analyze_strategy.analyze(words, {'': strategy}, index, response_sentinel)
+    print(metrics, file=sys.stderr)
+
+    print('CHRIS-BEST')
+    strategy = strategies.STRATEGIES['chris-best']
+    metrics = analyze_strategy.analyze(words, strategy, index, response_sentinel)
+    print(metrics, file=sys.stderr)
+
+    print('KOYAMA-LAI')
+    strategy = strategies.STRATEGIES['koyama-lai']
+    metrics = analyze_strategy.analyze(words, strategy, index, response_sentinel)
     print(metrics, file=sys.stderr)

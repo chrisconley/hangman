@@ -11,6 +11,11 @@ def play(code_word, strategy, index, response_sentinel):
             guesses.append('gotit')
             break
 
+        if type(strategy_place) == int and strategy_place == 0:
+            print('----', "I don't think we should be here {}, {}, {}, {}".format(code_word, opponent.get_response(code_word, guess), guesses, index))
+            guesses.append('gotit')
+            break
+
         # If this "guess" is a reference to a sub-tree, then update where
         # we are in the strategy tree.
         guess = strategy_place[1]
@@ -37,7 +42,10 @@ def play(code_word, strategy, index, response_sentinel):
             break
 
         # Update our place in the strategy tree for the next while loop iteration
-        strategy_place = strategy_place[2][index[response]]
+        try:
+            strategy_place = strategy_place[2][index[response]]
+        except IndexError as e:
+            print('!!!!!', guesses, response)
 
     return guesses
 
