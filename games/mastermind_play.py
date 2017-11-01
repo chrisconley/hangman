@@ -68,7 +68,7 @@ def _get_counts(potential_outcomes, success_pmf):
 
 def get_next_guess(potential_outcomes, game_log):
     # if len(game_log) == 0:
-    #     return '1234'
+    #     return Guess('1123', {})
 
     foci = {
         'info': 1.0,
@@ -93,7 +93,7 @@ def get_next_guess(potential_outcomes, game_log):
         c = {g: data['reward'][g] for g in guesses if g in data['reward']}
         return get_actual_next_guess(c, game_log)
 
-    if False:
+    if True:
         sort_function = lambda guesses: sorted(guesses)[0]
     else:
         sort_function = sort_by_reward
@@ -251,7 +251,7 @@ if __name__ == '__main__':
         game_state, game_log = play(
             word,
             code_words.Dictionary(words),
-            opponent.get_response,
+            opponent.get_response_alternative,
             game_log=opponent.GameLog(),
             # use_cache=False,
         )
@@ -277,18 +277,18 @@ if __name__ == '__main__':
     word_length = len(words[0])
     index = get_index(word_length)
     response_sentinel = ''.join(['B'] * word_length)
-    strategy = export_gamelog.export(game_logs, index, response_sentinel)
-    print(strategy)
-    # for l in strategy[2]:
-    #     print(l, file=sys.stderr)
-    metrics = analyze_strategy.analyze(words, {'': strategy}, index, response_sentinel)
-    print(metrics, file=sys.stderr)
-
-    print('CHRIS-BEST')
-    strategy = strategies.STRATEGIES['chris-best']
-    metrics = analyze_strategy.analyze(words, strategy, index, response_sentinel)
-    print(metrics, file=sys.stderr)
-
+    # strategy = export_gamelog.export(game_logs, index, response_sentinel)
+    # print(strategy)
+    # # for l in strategy[2]:
+    # #     print(l, file=sys.stderr)
+    # metrics = analyze_strategy.analyze(words, {'': strategy}, index, response_sentinel)
+    # print(metrics, file=sys.stderr)
+    #
+    # print('CHRIS-BEST')
+    # strategy = strategies.STRATEGIES['chris-best']
+    # metrics = analyze_strategy.analyze(words, strategy, index, response_sentinel)
+    # print(metrics, file=sys.stderr)
+    #
     print('KOYAMA-LAI')
     strategy = strategies.STRATEGIES['koyama-lai']
     metrics = analyze_strategy.analyze(words, strategy, index, response_sentinel)

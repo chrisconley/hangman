@@ -3,6 +3,7 @@ from games.mastermind import opponent
 
 def play(code_word, strategy, index, response_sentinel):
     guesses = []
+    responses = []
     strategy_place = strategy['']
     while True:
         # For compact representations where they don't give us the final correct code word
@@ -11,8 +12,8 @@ def play(code_word, strategy, index, response_sentinel):
             guesses.append('gotit')
             break
 
-        if type(strategy_place) == int and strategy_place == 0:
-            print('----', "I don't think we should be here {}, {}, {}, {}".format(code_word, opponent.get_response(code_word, guess), guesses, index))
+        if type(strategy_place) == int and strategy_place != 1:
+            print('----', "I don't think we should be here {}, {}, {}, {}, {}".format(code_word, responses, opponent.get_response(code_word, guess), guesses, index))
             guesses.append('gotit')
             break
 
@@ -23,7 +24,8 @@ def play(code_word, strategy, index, response_sentinel):
             strategy_place = strategy[guess]
             guess = strategy_place[1]
 
-        response = opponent.get_response(code_word, guess)
+        response = opponent.get_response_alternative(code_word, guess)
+        responses.append(response)
 
         # For compact representations where they don't give us the final correct code word
         # add a response for this turn. If the response doesn't match the sentinel, then we'll need
@@ -34,6 +36,9 @@ def play(code_word, strategy, index, response_sentinel):
             if response != response_sentinel:
                 guesses.append('gotit')
             break
+
+        assert len(strategy_place[2]) == 14
+        assert strategy_place[0] == sum([c[0] if type(c) == list else c for c in strategy_place[2]])
 
         # Append the actual guess and exit if we've correctly guessed the codeword.
         guesses.append(guess)
