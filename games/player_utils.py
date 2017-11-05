@@ -18,7 +18,8 @@ def _get_pmf_for_entropy(possible_responses):
     for response, code_words in possible_responses.items():
         assert code_words.isdisjoint(seen_words), 'There should not be duplicate code words across responses'
         seen_words |= code_words
-        counter[response] = Decimal(len(code_words))
+        counter[response] = len(code_words)
+
     return entropy.get_pmf(counter)
 
 
@@ -100,7 +101,8 @@ def build_strategy(foci, model=weighted_sum, reward_pmf=None, should_sort=False)
 
     def strategy(potential_outcomes, game_log):
         data = _get_counts(potential_outcomes, reward_pmf)
-
+        print('###', len(potential_outcomes.all_code_words))
+        print('---', potential_outcomes.all_code_words)
         if len(potential_outcomes.all_code_words) == 1:
             return Guess(list(potential_outcomes.all_code_words)[0], {})
 
@@ -136,7 +138,7 @@ def get_actual_next_guess(choices, game_log, sort_function=None):
     most_common_guesses = []
     most_common_count = None
     for guess, count in OrderedCounter(choices).most_common():
-        # count = count.quantize(Decimal('1e-20'))
+        count = Decimal(count).quantize(Decimal('1e-10'))
         if guess in game_log.guesses:
             continue
         if most_common_count is None:

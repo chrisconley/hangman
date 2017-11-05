@@ -111,9 +111,8 @@ def log_probability(probability):
     -xlog(x) (base 2)
     """
     if probability == 0.0:
-        return Fraction(0)
-    dec_prob = Decimal(probability.numerator) / Decimal(probability.denominator)
-    return -probability * Fraction(dec_prob.ln() / Decimal(2.0).ln())
+        return 0.0
+    return -probability * math.log(probability, 2)
 
 
 def get_entropy_deprecated(probabilities):

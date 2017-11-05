@@ -29,9 +29,9 @@ def get_potential_outcomes(partial_dictionary, get_response, game_log):
     #     words = get_unique_guesses(partial_dictionary.as_words)
     # else:
     #     words = partial_dictionary.all_words #third option of .as_words
-    words = get_unique_guesses(partial_dictionary.as_words)
+    #words = get_unique_guesses(partial_dictionary.as_words)
     #words = partial_dictionary.as_words
-    #words = partial_dictionary.all_words
+    words = partial_dictionary.all_words
     for word_guess in words:
         for actual_word in partial_dictionary.as_words:
             response_key = get_response(actual_word, word_guess)
@@ -79,6 +79,7 @@ def get_next_guess(potential_outcomes, game_log):
     if len(potential_outcomes.all_code_words) == 1:
         return Guess(list(potential_outcomes.all_code_words)[0], {})
 
+
     def weighted_product(data, foci):
         guesses = data['info'].keys()
         products = defaultdict(lambda: 1)
@@ -93,7 +94,7 @@ def get_next_guess(potential_outcomes, game_log):
         c = {g: data['reward'][g] for g in guesses if g in data['reward']}
         return get_actual_next_guess(c, game_log)
 
-    if True:
+    if True: #5762 vs 6017
         sort_function = lambda guesses: sorted(guesses)[0]
     else:
         sort_function = sort_by_reward
@@ -262,7 +263,7 @@ if __name__ == '__main__':
             game_log,
             args.seed
         )
-        # print(json.dumps(game_json), file=args.outfile)
+        print(json.dumps(game_json), file=args.outfile)
         game_logs.append(game_json)
         print(','.join([word, str(len(game_log))]), file=args.outfile)
 
