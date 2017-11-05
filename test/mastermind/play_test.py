@@ -51,7 +51,7 @@ class MastermindPlayTests(unittest.TestCase):
             '3632',
             dictionary,
             opponent.get_potentials,
-            player.build_strategy({'info': 1.0}, model=player_utils.weighted_sum),
+            player.build_strategy({'info': 1.0}, model=player_utils.weighted_sum, sorts=[player_utils.random_sort]),
             opponent.get_response_alternative,
             opponent.GameLog(),
         )
@@ -62,7 +62,7 @@ class MastermindPlayTests(unittest.TestCase):
             {'guess': '1356', 'result': 'WW'},
             {'guess': '2215', 'result': 'W'},
             {'guess': '3544', 'result': 'B'},
-            {'guess': '3133', 'result': 'BB'},
+            {'guess': '3131', 'result': 'BB'},
             {'guess': '3632', 'result': 'BBBB'},
         ])
 
@@ -73,7 +73,7 @@ class MastermindPlayTests(unittest.TestCase):
             '3632',
             dictionary,
             opponent.get_potentials,
-            player.build_strategy({'minimax': 1.0}, model=player_utils.weighted_sum, should_sort=True),
+            player.build_strategy({'minimax': 1.0}, model=player_utils.weighted_sum, sorts=[player_utils.lexical_sort]),
             opponent.get_response_alternative,
             opponent.GameLog(),
         )
@@ -94,7 +94,7 @@ class MastermindPlayTests(unittest.TestCase):
             '3632',
             dictionary,
             opponent.get_minimax_potentials,
-            player.build_strategy({'minimax': 1.0}, model=player_utils.weighted_sum, should_sort=True),
+            player.build_strategy({'minimax': 1.0}, model=player_utils.weighted_sum, sorts=[player_utils.lexical_sort]),
             opponent.get_response,
             opponent.GameLog(),
         )
@@ -116,7 +116,7 @@ class MastermindPlayTests(unittest.TestCase):
             dictionary,
             opponent.get_minimax_potentials,
             player.build_knuth_strategy(),
-            opponent.get_response,
+            opponent.get_response_alternative,
             opponent.GameLog(),
         )
 
@@ -125,6 +125,6 @@ class MastermindPlayTests(unittest.TestCase):
             {'guess': '1122', 'result': 'B'},
             {'guess': '1344', 'result': 'W'},
             {'guess': '3526', 'result': 'BWW'},
-            {'guess': '1162', 'result': 'BW'}, # In Knuth's paper, this guess is 1462
+            {'guess': '1462', 'result': 'BW'},
             {'guess': '3632', 'result': 'BBBB'},
         ])

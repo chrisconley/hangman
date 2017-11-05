@@ -116,7 +116,7 @@ if __name__ == '__main__':
     if args.seed:
         random.seed(args.seed, version=1)
 
-    word_to_play = words
+    words_to_play = words
     if args.limit:
         words_to_play = random.sample(words, args.limit)
 
@@ -133,9 +133,10 @@ if __name__ == '__main__':
         game_state, game_log = play(
             word,
             code_words.Dictionary(words),
-            opponent.get_potentials,
-            player.build_strategy(args.strategy.foci, args.strategy.model),
-            opponent.get_response,
+            opponent.get_minimax_potentials,
+            #player.build_knuth_strategy(),
+            player.build_strategy(args.strategy.foci, args.strategy.model, sorts=[player_utils.valid_sort, player_utils.lexical_sort]),
+            opponent.get_response_alternative,
             game_log=opponent.GameLog()
         )
         assert(game_state == word)

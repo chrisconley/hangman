@@ -34,7 +34,8 @@ class GetNextGuessTests(unittest.TestCase):
             'r': Decimal(0.0),
             's': Decimal(0.0),
         }
-        next_guess = player_utils.get_actual_next_guess(choices, GameLog())
+        potential_outcomes = games.code_words.PotentialOutcomes()
+        next_guess = player_utils.get_actual_next_guess(choices, GameLog(), [], potential_outcomes)
         self.assertEqual(next_guess, 'g')
 
     def test_actual_next_guess_tied(self):
@@ -44,7 +45,8 @@ class GetNextGuessTests(unittest.TestCase):
             'c': Decimal(1.4056390622295662),
             'n': Decimal(1.061278124459133),
         }
-        next_guess = player_utils.get_actual_next_guess(choices, GameLog())
+        potential_outcomes = games.code_words.PotentialOutcomes()
+        next_guess = player_utils.get_actual_next_guess(choices, GameLog(), [], potential_outcomes)
         self.assertEqual(next_guess, 'c')
 
     def test_actual_next_guess_already_guessed(self):
@@ -53,8 +55,9 @@ class GetNextGuessTests(unittest.TestCase):
             'b': Decimal(1),
             'n': Decimal(0.5),
         }
+        potential_outcomes = games.code_words.PotentialOutcomes()
         game_log = GameLog([{'guess': 'b'}])
-        next_guess = player_utils.get_actual_next_guess(choices, game_log)
+        next_guess = player_utils.get_actual_next_guess(choices, game_log, [], potential_outcomes)
         self.assertEqual(next_guess, 'n')
 
     def test_actual_next_guess_no_guesses_left(self):
@@ -62,12 +65,13 @@ class GetNextGuessTests(unittest.TestCase):
         choices = {
             'b': Decimal()
         }
+        potential_outcomes = games.code_words.PotentialOutcomes()
         game_log = GameLog([{'guess': 'b'}])
-        next_guess = player_utils.get_actual_next_guess(choices, game_log)
+        next_guess = player_utils.get_actual_next_guess(choices, game_log, [], potential_outcomes)
         self.assertEqual(next_guess, None)
 
         choices = {}
-        next_guess = player_utils.get_actual_next_guess(choices, GameLog())
+        next_guess = player_utils.get_actual_next_guess(choices, GameLog(), [], potential_outcomes)
         self.assertEqual(next_guess, None)
 
 
@@ -140,13 +144,14 @@ class ModelsTests(unittest.TestCase):
         self.assertDecimalAlmostEqual(results['t'], Decimal(0.87853), places=4)
         self.assertDecimalAlmostEqual(results['a'], Decimal(0.60846), places=5)
 
+
 class BuildStrategyTests(unittest.TestCase):
     def test_build_strategy_with_one_word_left(self):
         strategy = player_utils.build_strategy(
             foci={},
             model=Mock('model', return_value={'g': Decimal(1.0), 't': Decimal(1.0)}),
             reward_pmf=Mock('reward_pmf', return_value={'*': Decimal(1.0), '!': Decimal(1.0)}),
-            should_sort=False
+            sorts=[]
         )
 
         potential_outcomes = games.code_words.PotentialOutcomes()
@@ -161,7 +166,7 @@ class BuildStrategyTests(unittest.TestCase):
             foci={},
             model=Mock('model', return_value={'e': Decimal(1.0), 't': Decimal(1.0)}),
             reward_pmf=Mock('reward_pmf', return_value={'*': Decimal(1.0), '!': Decimal(1.0)}),
-            should_sort=False
+            sorts=[player_utils.random_sort]
         )
 
         potential_outcomes = games.code_words.PotentialOutcomes()
@@ -178,7 +183,7 @@ class BuildStrategyTests(unittest.TestCase):
             foci={},
             model=Mock('model', return_value={'e': Decimal(1.0), 't': Decimal(1.0)}),
             reward_pmf=Mock('reward_pmf', return_value={'*': Decimal(1.0), '!': Decimal(1.0)}),
-            should_sort=True
+            sorts=[player_utils.lexical_sort]
         )
 
         potential_outcomes = games.code_words.PotentialOutcomes()
@@ -188,6 +193,45 @@ class BuildStrategyTests(unittest.TestCase):
         potential_outcomes.add('e', '---e', 'cote')
         result = strategy(potential_outcomes, GameLog())
         self.assertEqual(result, 'e')
+
+    def test_build_strategy_valid_sort_with_lexical(self):
+        seed = 134
+        random.seed(seed)
+        strategy = player_utils.build_strategy(
+            foci={},
+            model=Mock('model', return_value={'1525': Decimal(1.0), '3526': Decimal(1.0), '3527': Decimal(1.0)}),
+            reward_pmf=Mock('reward_pmf', return_value={'*': Decimal(1.0), '!': Decimal(1.0)}),
+            sorts=[player_utils.valid_sort, player_utils.lexical_sort]
+        )
+
+        potential_outcomes = games.code_words.PotentialOutcomes()
+        potential_outcomes.add('1525', '', '3632')
+        potential_outcomes.add('3527', 'BW', '3632')
+        potential_outcomes.add('3526', 'BWW', '3632')
+        potential_outcomes.add('1223', 'BW', '3526')
+        potential_outcomes.add('1223', 'BW', '3527')
+
+        result = strategy(potential_outcomes, GameLog())
+        self.assertEqual(result, '3526')
+
+    def test_build_strategy_defaults_to_random_choice(self):
+        seed = 12
+        random.seed(seed)
+        strategy = player_utils.build_strategy(
+            foci={},
+            model=Mock('model', return_value={'e': Decimal(1.0), 't': Decimal(1.0)}),
+            reward_pmf=Mock('reward_pmf', return_value={'*': Decimal(1.0), '!': Decimal(1.0)}),
+            sorts=[]
+        )
+
+        potential_outcomes = games.code_words.PotentialOutcomes()
+        potential_outcomes.add('t', '--t-', 'cate')
+        potential_outcomes.add('t', '--t-', 'cote')
+        potential_outcomes.add('e', '---e', 'cate')
+        potential_outcomes.add('e', '---e', 'cote')
+
+        result = strategy(potential_outcomes, GameLog())
+        self.assertEqual(result, 't')
 
 
 class CounterTests(unittest.TestCase):

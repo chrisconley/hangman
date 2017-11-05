@@ -1,4 +1,5 @@
 from collections import Counter, OrderedDict, defaultdict
+import copy
 from decimal import Decimal
 import random
 
@@ -95,16 +96,18 @@ class Guess(str):
         return obj
 
 
-def build_strategy(foci, model=weighted_sum, reward_pmf=None, should_sort=False):
+def build_strategy(foci, model=weighted_sum, reward_pmf=None, sorts=[]):
 
     def strategy(potential_outcomes, game_log):
         data = _get_counts(potential_outcomes, reward_pmf)
+
+        #print('heyo', len(potential_outcomes.all_code_words), sorted(potential_outcomes.all_code_words))
 
         if len(potential_outcomes.all_code_words) == 1:
             return Guess(list(potential_outcomes.all_code_words)[0], {})
 
         choices = model(data, foci)
-        next_guess = get_actual_next_guess(choices, game_log, should_sort)
+        next_guess = get_actual_next_guess(choices, game_log, copy.copy(sorts), potential_outcomes)
         guess_data = {}
         for strategy, outcomes in data.items():
             guess_data[strategy] = outcomes[next_guess]
@@ -113,7 +116,23 @@ def build_strategy(foci, model=weighted_sum, reward_pmf=None, should_sort=False)
     return strategy
 
 
-def get_actual_next_guess(choices, game_log, should_sort=False):
+def lexical_sort(guesses, potential_outcomes):
+    return {sorted(guesses)[0]: Decimal(1)}
+
+
+def random_sort(guesses, potential_outcomes):
+    return {random.choice(sorted(guesses)): Decimal(1)}
+
+
+def valid_sort(guesses, potential_outcomes):
+    potential_words = potential_outcomes.all_code_words
+    results = {}
+    for guess in guesses:
+        results[guess] = Decimal(1.0) if guess in potential_words else Decimal(0.0)
+    return results
+
+
+def get_actual_next_guess(choices, game_log, sorts, potential_outcomes):
     if len(choices) == 0:
         return None
 
@@ -132,7 +151,18 @@ def get_actual_next_guess(choices, game_log, should_sort=False):
             break
     if most_common_count is None:
         return None
-    if should_sort:
-        return sorted(most_common_guesses)[0]
+
+    if len(most_common_guesses) == 1:
+        return most_common_guesses[0]
+
+    if len(sorts) >= 1:
+        next_sort = sorts.pop(0)
+        return get_actual_next_guess(
+            next_sort(most_common_guesses, potential_outcomes),
+            game_log,
+            sorts,
+            potential_outcomes
+        )
     else:
-        return random.choice(sorted(most_common_guesses))
+        result = random.choice(sorted(most_common_guesses))
+        return result

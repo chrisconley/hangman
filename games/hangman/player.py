@@ -18,12 +18,12 @@ def _get_pmf_for_success(possible_responses):
     return entropy.get_pmf(counter)
 
 
-def build_strategy(foci, model, should_sort=False):
+def build_strategy(foci, model, sorts=[]):
     return generic_build_strategy(
         foci=foci,
         model=model,
         reward_pmf=_get_pmf_for_success,
-        should_sort=should_sort)
+        sorts=sorts)
 
 
 def get_next_guess_naive(potentials, game_log):

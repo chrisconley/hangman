@@ -31,19 +31,19 @@ def build_knuth_strategy():
     minimax_strategy = build_strategy(
         foci={'minimax': 1.0},
         model=player_utils.weighted_product,
-        should_sort=True)
+        sorts=[player_utils.valid_sort, player_utils.lexical_sort])
 
     def strategy(potential_outcomes, game_log):
         if len(game_log) == 0:
-            return '1122'
+            return player_utils.Guess('1122', {})
         else:
             return minimax_strategy(potential_outcomes, game_log)
     return strategy
 
 
-def build_strategy(foci, model, should_sort=False):
+def build_strategy(foci, model, sorts=[]):
     return player_utils.build_strategy(
         foci=foci,
         model=model,
         reward_pmf=_get_pmf_for_success,
-        should_sort=should_sort)
+        sorts=sorts)
