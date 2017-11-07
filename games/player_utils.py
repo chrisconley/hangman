@@ -106,8 +106,15 @@ def build_strategy(foci, model=weighted_sum, reward_pmf=None, sorts=[]):
         if len(potential_outcomes.all_code_words) == 1:
             return Guess(list(potential_outcomes.all_code_words)[0], {})
 
+        def reward_sort(guesses, p):
+            c = {g: data['reward'][g] for g in guesses if g in data['reward']}
+            print(c)
+            return c
+
+        sorts = [lexical_sort] # [valid_sort, reward_sort, lexical_sort]
+
         choices = model(data, foci)
-        next_guess = get_actual_next_guess(choices, game_log, copy.copy(sorts), potential_outcomes)
+        next_guess = get_actual_next_guess(choices, game_log, sorts, potential_outcomes)
         guess_data = {}
         for strategy, outcomes in data.items():
             guess_data[strategy] = outcomes[next_guess]

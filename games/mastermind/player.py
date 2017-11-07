@@ -35,7 +35,8 @@ def build_knuth_strategy():
 
     def strategy(potential_outcomes, game_log):
         if len(game_log) == 0:
-            return player_utils.Guess('1122', {})
+            return player_utils.Guess('1122', {}
+                                      )
         else:
             return minimax_strategy(potential_outcomes, game_log)
     return strategy

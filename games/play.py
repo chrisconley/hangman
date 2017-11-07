@@ -148,6 +148,7 @@ if __name__ == '__main__':
             args.seed
         )), file=args.outfile)
 
+    print('Total guesses: ', sum([len(l) for l in games]), file=sys.stderr)
     print('Average guesses: ', sum([len(l) for l in games])/len(games), file=sys.stderr)
     print('Max guesses: ', max([len(l) for l in games]), file=sys.stderr)
 

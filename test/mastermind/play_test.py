@@ -120,6 +120,9 @@ class MastermindPlayTests(unittest.TestCase):
             opponent.GameLog(),
         )
 
+        for t in game_log:
+            print(t)
+
         # From http://www.cs.uni.edu/~wallingf/teaching/cs3530/resources/knuth-mastermind.pdf
         self.assertEqual(game_log, [
             {'guess': '1122', 'result': 'B'},
