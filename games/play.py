@@ -133,22 +133,25 @@ if __name__ == '__main__':
         game_state, game_log = play(
             word,
             code_words.Dictionary(words),
-            opponent.get_minimax_potentials,
+            opponent.get_potentials,
             #player.build_knuth_strategy(),
             player.build_strategy(args.strategy.foci, args.strategy.model, sorts=[player_utils.valid_sort, player_utils.lexical_sort]),
-            opponent.get_response_alternative,
+            opponent.get_response,
             game_log=opponent.GameLog()
         )
         assert(game_state == word)
         games.append(game_log)
-        print(json.dumps(game_log_as_json(
-            args.game,
-            args.strategy,
-            game_log,
-            args.seed
-        )), file=args.outfile)
+        # print(json.dumps(game_log_as_json(
+        #     args.game,
+        #     args.strategy,
+        #     game_log,
+        #     args.seed
+        # )), file=args.outfile)
 
+    print('Total Games: ', len(games), file=sys.stderr)
     print('Total guesses: ', sum([len(l) for l in games]), file=sys.stderr)
     print('Average guesses: ', sum([len(l) for l in games])/len(games), file=sys.stderr)
+    print('Average incorrect guesses: ', sum([len([True for t in l if t['result'] == '!']) for l in games]) / len(games), file=sys.stderr)
+    print('Max guesses: ', max([len(l) for l in games]), file=sys.stderr)
     print('Max guesses: ', max([len(l) for l in games]), file=sys.stderr)
 
