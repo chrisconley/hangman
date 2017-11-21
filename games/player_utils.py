@@ -111,9 +111,9 @@ def build_strategy(foci, model=weighted_sum, reward_pmf=None, sorts=[]):
             return c
 
         # sorts_to_use = [lexical_sort]
-        sorts_to_use = [reward_sort, lexical_sort]  # [valid_sort, reward_sort, lexical_sort]
+        # sorts_to_use = [reward_sort, lexical_sort]  # [valid_sort, reward_sort, lexical_sort]
         # sorts_to_use = [valid_sort, lexical_sort]
-        # sorts_to_use = copy.copy(sorts)
+        sorts_to_use = copy.copy(sorts)
 
         choices = model(data, foci)
         next_guess = get_actual_next_guess(choices, game_log, sorts_to_use, potential_outcomes)
