@@ -304,13 +304,26 @@ class GenerateTests(unittest.TestCase):
         boards = generate.run(ship_lengths=[2, 3, 2], size=[4, 4])
         self.assertEqual(len(boards), 1600)
 
-    def test_run_random_3_2_1_on_4x4(self):
+    def test_run_3_2_1_on_4x4(self):
         boards = generate.run(ship_lengths=[3, 2, 1], size=[4, 4])
         self.assertEqual(len(boards), 5808)
 
-    def test_run_random_2_2_3_on_5x5(self):
+    def test_run_2_2_3_on_5x5(self):
         boards = generate.run(ship_lengths=[2, 2, 3], size=[5, 5])
         self.assertEqual(len(boards), 12798)
+
+    # https://wiki.haskell.org/Battleship_game_combinatorics
+    # Note that the numbers on that page follow the rule that ships are not allowed
+    # to touch each other, which varies from our algorithm in which we do all ships to be
+    # adjacent.
+    def test_run_2_on_10x10(self):
+        boards = generate.run(ship_lengths=[2], size=[10, 10])
+        self.assertEqual(len(boards), 180)
+
+    # https://wiki.haskell.org/Battleship_game_combinatorics
+    def test_run_3_on_10x10(self):
+        boards = generate.run(ship_lengths=[3], size=[10, 10])
+        self.assertEqual(len(boards), 160)
 
     @unittest.skip('Takes >5 minutes to run')
     def test_run_large_board(self):
